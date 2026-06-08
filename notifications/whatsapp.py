@@ -22,7 +22,7 @@ from typing import Optional
 import requests
 
 from config import (
-    WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN,
+    WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN, MIN_CONFIDENCE,
     WHATSAPP_BACKEND, WHATSAPP_BRIDGE_URL, WHATSAPP_BRIDGE_TOKEN,
     WHATSAPP_BRIDGE_AUTOSTART, WHATSAPP_BRIDGE_DIR, WHATSAPP_BRIDGE_READY_TIMEOUT,
 )
@@ -1014,8 +1014,15 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
     All figures are net of an assumed round-trip transaction cost (see
     config.TRANSACTION_COST). Messages over MAX_CHARS are split and sent in order.
     """
+    # Human-readable description of the active screens — reused in logs and the
+    # 'no setups' note so both reflect the .env-configured thresholds.
+    screen_desc = f"net return ≥ {MIN_AVG_RETURN:.2%}"
+    if MIN_CONFIDENCE > 0:
+        screen_desc += f" & win rate ≥ {MIN_CONFIDENCE:.0%}"
+
     if not signals:
-        return True
+        log.info("whatsapp: no setups fired — sending 'no setups' note")
+        return send_no_setups_alert(run_date, screen_desc)
 
     stats   = _load_stats()
     weights = _load_weights()
@@ -1023,7 +1030,11 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
     # ── 1. Sort stocks by conviction, highest first ───────────────────────────
     ranked = rank_by_conviction(signals)
 
-    # ── 2. Keep stocks whose blended NET expected return clears the threshold ─
+    # Date of the most recent OHLCV bar the signals were evaluated against —
+    # can lag run_date (pipeline execution date) over weekends/holidays/delays.
+    data_date = max((s.get("date", "") for s in signals if s.get("date")), default="")
+
+    # ── 2. Keep stocks that clear BOTH the net avg-return AND confidence gates ─
     qualifying: list[tuple] = []
     for symbol, sigs, dominant, score in ranked:
         net_ret  = _stock_avg_return(sigs, stats, weights)
@@ -1031,28 +1042,22 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
         net_wrlo = _stock_wr_lower(sigs, stats, weights)
         net_loss = _stock_avg_loss(sigs, stats, weights)
         net_sl   = _stock_sl_rate(sigs, stats, weights)
-        if net_ret >= MIN_AVG_RETURN:
+        if net_ret >= MIN_AVG_RETURN and net_conf >= MIN_CONFIDENCE:
             qualifying.append((symbol, sigs, dominant, score,
                                net_ret, net_conf, net_wrlo, net_loss, net_sl))
 
     if not qualifying:
-        log.info(
-            f"whatsapp: 0/{len(ranked)} stocks cleared net avg-return threshold "
-            f"({MIN_AVG_RETURN:.2%}) — skipping alert"
-        )
-        return True
+        log.info(f"whatsapp: 0/{len(ranked)} stocks cleared screen ({screen_desc}) "
+                 f"— sending 'no setups' note")
+        return send_no_setups_alert(run_date, screen_desc)
 
-    log.info(
-        f"whatsapp: {len(qualifying)}/{len(ranked)} stocks cleared "
-        f"{MIN_AVG_RETURN:.2%} net avg-return threshold"
-    )
+    log.info(f"whatsapp: {len(qualifying)}/{len(ranked)} stocks cleared screen ({screen_desc})")
+
+    # Log the realised-outcome tracking rows for the picks we're about to send.
+    _record_pick_outcomes(qualifying, stats, weights, data_date)
 
     n_sigs   = sum(len(sigs) for t in qualifying for sigs in (t[1],))
     n_stocks = len(qualifying)
-
-    # Date of the most recent OHLCV bar the signals were evaluated against —
-    # can lag run_date (pipeline execution date) over weekends/holidays/delays.
-    data_date = max((s.get("date", "") for s in signals if s.get("date")), default="")
 
     def _setup_line(setup_name: str, direction: str) -> str:
         """
@@ -1225,6 +1230,48 @@ def send_analysis_started_alert(kind: str, run_date: str,
         if i < len(targets) - 1:
             time.sleep(WAIT_TIME + CLOSE_TIME + 3)
     return ok
+
+
+def send_no_setups_alert(run_date: str, screen_desc: str = "") -> bool:
+    """
+    Tell the owner that no stocks cleared today's screen, so a quiet morning
+    reads as 'scanned, nothing qualified' rather than 'did it even run?'.
+    Goes to WHATSAPP_PHONE (same audience as the technical signal alerts).
+    """
+    extra = f" ({screen_desc})" if screen_desc else ""
+    msg = (f"*Trade Setups — {run_date}*\n"
+           f"_No stocks cleared today's screen{extra}. "
+           f"No new positions today._")
+    return send_whatsapp(msg)
+
+
+def _record_pick_outcomes(qualifying: list[tuple], stats: dict, weights: dict,
+                          signal_date: str) -> None:
+    """
+    Log each sent pick into the outcome tracker (entry = next session's open;
+    realised return filled in by later pipeline runs). Never blocks the alert.
+    """
+    if not signal_date:
+        return
+    try:
+        from analytics import outcomes
+        picks = []
+        for (symbol, sigs, dominant, score,
+             net_ret, net_conf, net_wrlo, net_loss, net_sl) in qualifying:
+            horizon = max(1, round(_stock_metric(sigs, stats, weights, "best_days", 1)))
+            setup_names = ",".join(sorted({s["setup_name"] for s in sigs}))
+            picks.append({
+                "symbol"         : symbol,
+                "direction"      : dominant,
+                "horizon_days"   : horizon,
+                "expected_return": net_ret,
+                "expected_conf"  : net_conf,
+                "n_setups"       : len(sigs),
+                "setups"         : setup_names,
+            })
+        outcomes.record_picks(picks, signal_date)
+    except Exception as exc:
+        log.warning(f"whatsapp: outcome recording skipped — {exc}")
 
 
 def send_ingestion_failure_alert(failed_symbols: list[str], run_date: str) -> bool:

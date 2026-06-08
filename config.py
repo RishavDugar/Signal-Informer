@@ -48,6 +48,12 @@ NOTIFY_ON_INGESTION_FAILURE = os.getenv("NOTIFY_ON_INGESTION_FAILURE", "true").l
 # TRANSACTION_COST below — so it screens on what an investor actually keeps.
 MIN_AVG_RETURN = float(os.getenv("MIN_AVG_RETURN", "0.005"))
 
+# Minimum conviction-weighted win rate (0.0-1.0) for a stock to appear in alerts.
+# A stock must clear BOTH this and MIN_AVG_RETURN. 0.0 = no confidence gate
+# (avg-return screen only). Example: 0.55 = only alert when the blended historical
+# win rate is >= 55%.
+MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.0"))
+
 # Round-trip transaction cost (fraction of notional) charged against every
 # backtested trade before its return is booked. Covers brokerage + STT +
 # exchange/SEBI fees + GST + a slippage allowance. Gross backtest returns
@@ -101,6 +107,12 @@ NEWS_TOP_N      = int(os.getenv("NEWS_TOP_N",      "5"))    # max picks per morn
 
 # Scout passes (hidden gems / small-cap growth / smart money)
 SCOUT_DEDUP_DAYS = int(os.getenv("SCOUT_DEDUP_DAYS", "5"))  # days before re-surfacing a scout pick
+
+# ── Outcome tracking / performance scorecard ──────────────────────────────────
+# Trailing window (days) summarised by the pick-performance scorecard.
+SCORECARD_DAYS = int(os.getenv("SCORECARD_DAYS", "30"))
+# Weekday the weekly WhatsApp scorecard is sent (0=Mon .. 6=Sun). Default 4=Fri.
+SCORECARD_WEEKDAY = int(os.getenv("SCORECARD_WEEKDAY", "4"))
 
 # Ensure directories exist at import time
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)

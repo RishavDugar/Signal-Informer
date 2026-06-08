@@ -75,11 +75,28 @@ async function refreshPills() {
 async function loadDashboard() {
   const v = $("#view-dashboard");
   v.innerHTML = `<div class="loading">Loading status…</div>`;
-  const s = await api("/api/status");
+  const [s, oc] = await Promise.all([api("/api/status"), api("/api/outcomes").catch(() => null)]);
   const c = s.counts || {};
   const ing = s.last_ingestion;
 
   const stat = (k, val, sub) => `<div class="card stat"><div class="k">${k}</div><div class="v">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ""}</div>`;
+
+  // Pick-performance scorecard (realised vs expected, net of costs)
+  let scHtml = "";
+  if (oc && oc.n != null) {
+    if (!oc.n) {
+      scHtml = `<div class="card" style="margin-top:16px"><h3>Pick performance (last ${oc.days || 30}d)</h3>
+        <div class="empty">No closed picks yet${oc.pending ? ` · ${oc.pending} still open` : ""}. Results appear as picks reach their horizon.</div></div>`;
+    } else {
+      scHtml = `<div style="margin-top:16px"><h3 class="job-group-title">Pick performance — last ${oc.days}d (net of costs)</h3>
+        <div class="grid cards">
+          ${stat("Win rate", (oc.win_rate * 100).toFixed(0) + "%", `${oc.n} closed · ${oc.pending} open`)}
+          ${stat("Avg realised", pct(oc.avg_realized, 2), `expected ${pct(oc.avg_expected, 2)}`)}
+          ${stat("Best", pct(oc.best.ret, 1), esc(oc.best.symbol))}
+          ${stat("Worst", pct(oc.worst.ret, 1), esc(oc.worst.symbol))}
+        </div></div>`;
+    }
+  }
 
   v.innerHTML = `
     <div class="grid cards">
@@ -139,7 +156,8 @@ async function loadDashboard() {
         </div>
         ${whatsappHint(s.whatsapp)}
       </div>
-    </div>`;
+    </div>
+    ${scHtml}`;
 }
 const fmtTime = (t) => t ? esc(t).replace("T", " ").slice(0, 19) : "—";
 

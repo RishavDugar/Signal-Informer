@@ -230,6 +230,15 @@ def run_pipeline(symbols: list[str] | None = None) -> None:
         log.error("pipeline: all downloads failed — aborting setup run")
         return
 
+    # ── 7b. Fill realised returns for past picks now that new data has arrived ─
+    try:
+        from analytics.outcomes import update_outcomes
+        n_closed = update_outcomes()
+        if n_closed:
+            log.info(f"pipeline: outcome tracker — {n_closed} pick(s) reached their horizon")
+    except Exception as exc:
+        log.warning(f"pipeline: outcome update skipped — {exc}")
+
     # ── 8. Load setups ────────────────────────────────────────────────────────
     setups = load_setups()
     if not setups:
@@ -252,9 +261,17 @@ def run_pipeline(symbols: list[str] | None = None) -> None:
 
     log.info(f"pipeline: {len(fired_signals)} signal(s) fired")
 
-    # ── 12. WhatsApp alerts for signals (one batched message) ────────────────
-    if NOTIFY_ON_SIGNAL and fired_signals:
+    # ── 12. WhatsApp alert (picks, or a 'no setups today' note if none clear) ─
+    # Called even with zero fired signals so a quiet day still sends a heads-up.
+    if NOTIFY_ON_SIGNAL:
         send_batch_signal_alert(fired_signals, today)
+
+    # ── 13. Weekly pick-performance scorecard (sent on SCORECARD_WEEKDAY) ─────
+    try:
+        from analytics.outcomes import send_weekly_scorecard_if_due
+        send_weekly_scorecard_if_due()
+    except Exception as exc:
+        log.warning(f"pipeline: weekly scorecard skipped — {exc}")
 
     log.info(f"pipeline: DONE  run_date={today}")
 

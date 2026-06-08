@@ -9,8 +9,11 @@ Every weekday at **8 AM IST** the technical pipeline runs:
 1. Downloads the previous day's OHLCV data for all stocks
 2. Validates, sanitises, and stores it in a local SQLite database
 3. Runs 18 technical setups against all stocks
-4. Ranks stocks by **weighted conviction** (same-direction signal count × backtested avg return)
-5. Sends a formatted WhatsApp alert for the top stocks
+4. Ranks stocks by **weighted conviction** (same-direction signal count × backtested **net-of-cost** avg return)
+5. Screens on **two configurable gates** — minimum net avg return *and* minimum win rate — and sends an investor-readable WhatsApp alert (or a "no setups today" note if nothing clears)
+6. Records every sent pick into an **outcome tracker** that later measures the realised return vs. what the backtest promised, and WhatsApps a weekly **scorecard**
+
+Messages are delivered by a **headless WhatsApp bridge** (works with the screen off / device locked — see [WhatsApp delivery](#whatsapp-delivery-headless-bridge)), and both pipelines run as native Windows scheduled tasks that wake the laptop from Modern Standby.
 
 ---
 
@@ -21,8 +24,14 @@ Every weekday at **8 AM IST** the technical pipeline runs:
 pip install -r requirements.txt
 
 # 2. Configure
-# edit .env — set WHATSAPP_PHONE, WHATSAPP_PHONES and MIN_AVG_RETURN
+# edit .env — set WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN, MIN_CONFIDENCE
 # (.env is the single config file; there is no .env.example template)
+
+# 2b. WhatsApp bridge — ONE-TIME link (headless sender; works screen-off/locked)
+cd notifications/whatsapp_bridge && npm install && node bridge.js
+#    Scan the QR with WhatsApp > Linked Devices, wait for "READY", Ctrl-C.
+#    Then: python -m notifications.whatsapp   # self-check, should print READY
+cd ../..
 
 # 3. Bootstrap: wipes any existing data, downloads history, runs backtester
 #    First run: ~15-25 min.  Re-run: same — previous data is wiped first.
@@ -44,7 +53,7 @@ python pipeline.py
 python tests/verify_setups.py
 
 # 8. Verify backtester avg-return + direction-split model (optional)
-python tests/simulate_backtester.py   # 269 assertions
+python tests/simulate_backtester.py   # 283 assertions (incl. cost-netting, Wilson, profit factor)
 ```
 
 ---
@@ -136,7 +145,15 @@ Signal Infomer/
 │   └── pipeline.py              ← orchestrates fetch → analyze → dedup → send
 │
 ├── notifications/
-│   └── whatsapp.py              ← pywhatkit sender + conviction ranking + avg-return filter
+│   ├── whatsapp.py              ← send backend (bridge/pywhatkit) + conviction ranking +
+│   │                              net-of-cost screens + investor-readable + outcome recording
+│   └── whatsapp_bridge/         ← headless Node sender (whatsapp-web.js + Puppeteer)
+│       ├── bridge.js            ← localhost HTTP API: /status, /send (works screen-off/locked)
+│       ├── package.json
+│       └── README.md            ← one-time QR-link setup
+│
+├── analytics/
+│   └── outcomes.py              ← pick outcome tracker + realised-vs-expected scorecard
 │
 ├── utils/
 │   ├── logger.py                ← rotating file log + UTF-8 safe console handler
@@ -144,7 +161,7 @@ Signal Infomer/
 │
 ├── tests/
 │   ├── verify_setups.py         ← synthetic-data tests (all strategies, both directions)
-│   └── simulate_backtester.py  ← 269-assertion avg-return + direction-split verification
+│   └── simulate_backtester.py  ← 283-assertion model verification (cost-netting, Wilson, profit factor)
 │
 ├── db/
 │   ├── market_data.db           ← SQLite database (auto-created)
@@ -177,20 +194,40 @@ Signal Infomer/
 
 ## Configuration (.env)
 
-```ini
-# ── WhatsApp (pywhatkit) ──────────────────────────────────────────────────────
-# Single recipient — used by technical-pipeline signal alerts and
-# ingestion-failure alerts.
-WHATSAPP_PHONE=+91XXXXXXXXXX
-# News-analyzer alerts ONLY (main AI picks + all 3 scout lenses): comma-
-# separated list, broadcast to every number. Falls back to WHATSAPP_PHONE
-# above when left blank, so single-recipient setups need no changes.
-WHATSAPP_PHONES=+91XXXXXXXXXX,+91YYYYYYYYYY
+`.env` is the **single** config file (no `.env.example`). Anything omitted falls back to the default in `config.py`.
 
-# ── Database ──────────────────────────────────────────────────────────────────
-DB_PATH=db/market_data.db
-BACKUP_DIR=db/backups
-MAX_BACKUPS=7
+```ini
+# ── WhatsApp send backend ─────────────────────────────────────────────────────
+# bridge    => headless Node service (notifications/whatsapp_bridge); works with
+#              the screen off / device locked. Recommended. One-time QR link.
+# pywhatkit => legacy GUI automation; only works while unlocked + focused.
+WHATSAPP_BACKEND=bridge
+WHATSAPP_BRIDGE_URL=http://127.0.0.1:8765
+WHATSAPP_BRIDGE_TOKEN=                 # optional shared secret (match Node BRIDGE_TOKEN)
+WHATSAPP_BRIDGE_AUTOSTART=true         # launch the bridge headless if not running
+WHATSAPP_BRIDGE_READY_TIMEOUT=75
+
+# ── WhatsApp recipients ───────────────────────────────────────────────────────
+WHATSAPP_PHONE=+91XXXXXXXXXX           # technical signal + ingestion + scorecard alerts
+WHATSAPP_PHONES=+91XXXXXXXXXX,+91YYYYYYYYYY   # news/scout broadcast (+ news "Started" note)
+
+# ── Notifications & screens (echoed in the logs) ──────────────────────────────
+NOTIFY_ON_SIGNAL=true
+NOTIFY_ON_INGESTION_FAILURE=true
+# A stock must clear BOTH gates to be alerted (else a "no setups today" note sends):
+MIN_AVG_RETURN=0.005     # 1) min conviction-weighted NET (after-cost) avg return per trade
+MIN_CONFIDENCE=0.0       # 2) min conviction-weighted win rate (0.0 = off; e.g. 0.55)
+
+# ── Backtester economics ──────────────────────────────────────────────────────
+TRANSACTION_COST=0.0030  # round-trip cost netted from every trade (30 bps blended)
+WR_CONFIDENCE=0.90       # confidence level for the Wilson "worst-case" win rate
+BACKTEST_WINDOW_DAYS=1100
+MAX_HOLD_DAYS=10
+BEST_DAY_THRESHOLD=0.005 # prefer earlier exit if avg return within this of the peak
+
+# ── Pick performance scorecard ────────────────────────────────────────────────
+SCORECARD_DAYS=30        # trailing window summarised
+SCORECARD_WEEKDAY=4      # weekday the weekly WhatsApp scorecard is sent (0=Mon..6=Sun)
 
 # ── Data collection ───────────────────────────────────────────────────────────
 MAX_WORKERS=20
@@ -198,19 +235,10 @@ RETRY_ATTEMPTS=3
 RETRY_DELAY_SECONDS=5
 HISTORY_DAYS=1000
 
-# ── Backtester ────────────────────────────────────────────────────────────────
-BACKTEST_WINDOW_DAYS=1100
-MAX_HOLD_DAYS=5
-# Tie-break: prefer earlier exit if avg return is within this margin of best day.
-# Now in avg-return units (e.g. 0.005 = 0.5%), not win-rate units.
-BEST_DAY_THRESHOLD=0.005
-
-# ── Notifications ─────────────────────────────────────────────────────────────
-NOTIFY_ON_SIGNAL=true
-NOTIFY_ON_INGESTION_FAILURE=true
-# Min conviction-weighted avg return per trade for a stock to appear in alerts.
-# Setups with negative expected value are excluded. 0.005 = 0.5%.
-MIN_AVG_RETURN=0.005
+# ── Database ──────────────────────────────────────────────────────────────────
+DB_PATH=db/market_data.db
+BACKUP_DIR=db/backups
+MAX_BACKUPS=7
 
 # ── News pipeline (7 AM IST) ──────────────────────────────────────────────────
 NEWS_SCHEDULE_HOUR=7
@@ -241,9 +269,17 @@ Computes the **average % return per trade** per setup using a rolling window ove
 |---|---|
 | Signal fires | End of day D0 — using data through D0 close |
 | Entry | D1 **open** (the morning after the signal) |
-| Long exits tested | D2 open, D2 close, … D6 open, D6 close (d=1..5 buckets) |
+| Long exits tested | D1 close, then D2..D`MAX_HOLD_DAYS` open & close (d=1..10 by default) |
 | Short exits | Intraday only — squared off at D1 close or SL |
 | Stoploss | Checked from D1 onwards; configurable via `sl_pct` |
+
+> **All returns are NET of `TRANSACTION_COST`** (round-trip, default 30 bps),
+> subtracted at the trade level so a trade only counts as a "win" if it beats
+> costs. Beyond avg return and win rate, each setup also reports a **Wilson
+> lower-bound win rate** (the worst-case rate we're `WR_CONFIDENCE`-confident it
+> beats — penalises small samples), plus **profit factor / avg-win / avg-loss**.
+> After costs, the short book and most setups lose their apparent edge — only a
+> few long mean-reversion/trend setups retain a genuine net edge.
 
 ### Stoploss
 
@@ -449,7 +485,7 @@ Dr Reddy's received ...
 
 ### Send confirmation, retries & multi-recipient broadcast
 
-`send_whatsapp()` in [notifications/whatsapp.py](notifications/whatsapp.py) wraps `pywhatkit.sendwhatmsg_instantly` with one automatic retry (`retries=1` — pywhatkit drives WhatsApp Web through a real browser tab, so a slow page load or focus glitch is the typical transient failure and usually succeeds on the second try). It logs `whatsapp: message sent OK` / `whatsapp: send FAILED after N attempt(s)` so a failed send is never silently swallowed, and only ever returns `True` on a confirmed send.
+`send_whatsapp()` in [notifications/whatsapp.py](notifications/whatsapp.py) dispatches to the configured backend (`WHATSAPP_BACKEND`) with one automatic retry. The default **bridge** backend POSTs to the headless Node service and only returns `True` on a *confirmed* send (the bridge resolves the WhatsApp id and reports the server-side message id) — unlike the legacy pywhatkit path, which could silently fail when the screen was locked. It logs `message sent OK via {backend}` / `send FAILED after N attempt(s)` so a failure is never swallowed. See [WhatsApp delivery](#whatsapp-delivery-headless-bridge).
 
 `send_news_picks_alert()` — the single entry point for **all** news-analyzer messages (main AI picks + Hidden Gems + Small-Cap Growth + Smart Money) — broadcasts every message part to **every** number in `WHATSAPP_PHONES` (.env, comma-separated; falls back to the single `WHATSAPP_PHONE` when unset), sleeping `WAIT_TIME + CLOSE_TIME + 3` seconds between sends, and logs a final `X/Y send(s) FAILED across N recipient(s)` / `all X send(s) confirmed` summary. It returns `True` only if every part reached every recipient.
 
@@ -484,31 +520,105 @@ dominant  = BUY if buy_w >= sell_w else SELL
 score     = max(buy_w, sell_w) + neutral_w − min(buy_w, sell_w) × 0.25
 ```
 
-Only stocks whose conviction-weighted avg return ≥ `MIN_AVG_RETURN` (0.5%) are included.  
-Setups with avg return below 0.5% get weight = 0.10 (negligible) even if they fire.
+A stock is included only if it clears **both** configurable screens (both echoed
+in the log: `cleared screen (net return ≥ X% & win rate ≥ Y%)`):
+- conviction-weighted **net** avg return ≥ `MIN_AVG_RETURN` (default 0.5%), and
+- conviction-weighted win rate ≥ `MIN_CONFIDENCE` (default 0.0 = off).
+
+Setups whose net avg return is below `MIN_AVG_RETURN` get weight = 0.10 (negligible)
+even if they fire. If no stock clears, a "no setups today" note is sent.
 
 ---
 
 ## WhatsApp Message Format (Technical)
 
+Written for an investor, not a quant — plain-English strategy names, a conviction
+rating, the net (after-cost) expectation, an honest track record (point win rate
+plus the Wilson "worst case"), and the risk. All figures are net of `TRANSACTION_COST`.
+
 ```
-*Signal Alert -- 2026-06-05*
-_176 signal(s) | 12 stock(s) >= 0.50% avg return_
+*Trade Setups — 2026-06-08*
+_Based on prices through 2026-06-05_
+_2 stock(s) cleared our after-cost screen_
 
-----------------------------------
-*OFSS*  (BUY | score 2.27 | 3 setup(s) | Avg +1.8%)
-_OHLC 04 Jun: O 9875  H 10209  L 9775  C 10098  Chg: +100_
+━━━━━━━━━━━━━━━━━━━━
+*ADANIENT*  —  BUY 📈
+Conviction ●●●●○
+📊 Expected: +1.6% per trade (after costs)
+✅ Track record: won 59% of past trades (worst case ≥ 55%)
+⚠️ Risk: avg loss -3.0% when wrong · stopped out 19% of the time
+_OHLC 05 Jun: O 2992  H 3060  L 2922  C 3048  Chg: +75.40_
 
-*ADX_GAPPER*  (BUY)  d1: O +1.2%/C +1.5% (n=18)
-_Gap against a strong ADX trend — reversal back in trend direction_
+_Why (2 strategies agree):_
+• *Strong-Trend Re-Entry* — A strong trend dipped to its 20-day average — a classic
+  lower-risk spot to join the move.  _(won 60% of 193 · +1.3% over 6d)_
+• *Volume Climax Reversal* — A spike of panic/euphoria volume often marks a turn.
+  _(won 58% of 271 · +1.8% over 7d)_
 
-*EIGHTY_TWENTY*  (BUY)  Best d2: O +1.8%/C +2.1% (n=45) | d1: O +0.9%/C +1.1%
-_Prior day opened at one extreme, closed at the opposite_
+_Model-based signals, net of estimated costs. Past performance is not a guarantee._
 ```
 
-**Avg-return tag format:**
-- `d1: O +1.2%/C +1.5% (n=48)` — day 1 is best; O = open exit, C = close exit avg return
-- `Best d2: O +1.8%/C +2.1% (n=45) | d1: O +0.9%/C +1.1%` — day 2 is better; shows day-1 comparison
+When **nothing** clears the screens, a short note is sent instead so a quiet
+morning never looks like a failed run:
+
+```
+*Trade Setups — 2026-06-08*
+_No stocks cleared today's screen (net return ≥ 0.50% & win rate ≥ 55%). No new positions today._
+```
+
+Each pipeline also sends a one-line **"Started … Analysis for {date}"** heads-up
+before scanning (news → all `WHATSAPP_PHONES`; technical → `WHATSAPP_PHONE`),
+which doubles as a "did the job fire?" heartbeat and warms up the bridge.
+
+---
+
+## WhatsApp Delivery (headless bridge)
+
+`pywhatkit` sends by simulating keystrokes into WhatsApp Web, which Windows
+**blocks when the session is locked / screen off** — the message gets typed but
+the Enter to send never lands. The default backend instead drives WhatsApp Web
+over the **DevTools protocol** via a small Node service, so it sends reliably
+with the screen off and the device locked.
+
+- **Service:** [notifications/whatsapp_bridge/bridge.js](notifications/whatsapp_bridge/bridge.js) — whatsapp-web.js + Puppeteer + Express, exposing `GET /status` and `POST /send` on `127.0.0.1:8765`. Session persists (`LocalAuth`), so you scan the QR **once**.
+- **One-time link:** `cd notifications/whatsapp_bridge && npm install && node bridge.js`, scan via WhatsApp → Linked Devices. (On Windows PowerShell use `node bridge.js`, not `npm start`, to avoid the execution-policy block.)
+- **No terminal needed thereafter:** the pipelines auto-start the bridge headless/detached on first send (`WHATSAPP_BRIDGE_AUTOSTART`); the scheduler also self-checks it at launch.
+- **Self-check:** `python -m notifications.whatsapp` prints `READY ✅` or an actionable reason. The dashboard shows a live health pill.
+- **Swappable:** set `WHATSAPP_BACKEND=pywhatkit` to fall back to the legacy GUI sender; the official Cloud API is a clean future swap since the backend is abstracted. Still unofficial WhatsApp Web automation — keep volume reasonable.
+
+---
+
+## Outcome Tracking & Scorecard
+
+The feedback loop that measures whether the picks actually worked — net of costs,
+against what the backtest promised. ([analytics/outcomes.py](analytics/outcomes.py))
+
+1. **Record** — when a technical alert is sent, each qualifying stock is logged to
+   `pick_outcomes` (entry = the next session's open; horizon = its conviction-weighted `best_days`).
+2. **Update** — every daily pipeline run fills entry/exit prices as new OHLCV
+   lands and, once a pick reaches its horizon, computes the **realised net return**
+   (exit close vs. D+1 open, minus `TRANSACTION_COST`; SELL profits when price falls) and marks it closed.
+3. **Scorecard** — `scorecard(SCORECARD_DAYS)` aggregates the trailing window: win
+   rate, **avg realised vs. avg expected**, best/worst, and a BUY/SELL split. A
+   persistent realised-vs-expected gap is the early-warning sign of model drift.
+4. **Weekly WhatsApp** — sent on `SCORECARD_WEEKDAY` (default Friday) to `WHATSAPP_PHONE`,
+   and shown as a card on the dashboard. Trigger manually with
+   `python -c "from analytics.outcomes import send_scorecard_now; send_scorecard_now()"`.
+
+```
+*Pick Scorecard — last 30d*
+_18 closed · 4 still open · net of costs_
+
+✅ Win rate: 56% (10/18)
+📊 Avg realised: +0.71%  (expected +1.40%)
+📈 Best: +4.20% TATAMOTORS
+📉 Worst: -3.10% INFY
+  BUY 14 (57%, +0.95%)  ·  SELL 4 (50%, -0.10%)
+```
+
+> This is the single most important honesty check in the system: the backtest is
+> in-sample and survivorship-biased, so its numbers are *hypotheses*. The
+> scorecard is what tells you whether the edge survives in the wild.
 
 ---
 
@@ -553,6 +663,7 @@ All setups tunable via hyperparameter search including `sl_pct` (stoploss distan
 | `adjustment_log` | Retroactive corporate action adjustments |
 | `news_recommendations` | AI news picks with 28-day dedup window |
 | `scout_recommendations` | Scout-lens picks (Hidden Gems / Small-Cap Growth / Smart Money), keyed by `(scout_type, symbol, rec_date)`, 5-day dedup window |
+| `pick_outcomes` | One row per sent technical pick; entry (D+1 open) → realised net return at the pick's horizon, vs. expected. Powers the scorecard. |
 
 ---
 
@@ -723,7 +834,7 @@ schtasks /Change /TN "SignalInfomer\DailyPipeline" /ENABLE
 
 ```bash
 python tests/verify_setups.py         # setup signal logic (synthetic OHLCV, both directions)
-python tests/simulate_backtester.py   # avg-return + direction-split model (269 assertions)
+python tests/simulate_backtester.py   # avg-return + direction-split model (283 assertions)
 ```
 
 ---
@@ -745,7 +856,9 @@ python -c "from utils.backup import restore_latest_backup; restore_latest_backup
 ```bash
 # ── First-time setup ─────────────────────────────────────────────────────────
 pip install -r requirements.txt
-# edit .env  — set WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN, OLLAMA_*
+# edit .env  — set WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN, MIN_CONFIDENCE, OLLAMA_*
+cd notifications/whatsapp_bridge && npm install && node bridge.js   # scan QR once, Ctrl-C
+cd ../.. && python -m notifications.whatsapp                        # bridge self-check (READY?)
 python initialize.py                # ~15-25 min
 
 # ── Tune parameters (after initialize) ───────────────────────────────────────
@@ -760,4 +873,8 @@ python setup_windows_task.py        # register once; runs automatically every we
 python -m news_analyzer.pipeline    # news picks now
 python pipeline.py                  # technical signals now
 python pipeline.py --symbols INFY.NS WIPRO.NS   # specific stocks only
+
+# ── WhatsApp & performance ────────────────────────────────────────────────────
+python -m notifications.whatsapp    # bridge self-check (READY / needs QR)
+python -c "from analytics.outcomes import send_scorecard_now; send_scorecard_now()"  # send scorecard now
 ```

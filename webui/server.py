@@ -49,6 +49,11 @@ def api_setups():
     return jsonify(queries.setups())
 
 
+@app.get("/api/outcomes")
+def api_outcomes():
+    return jsonify(queries.outcomes_scorecard())
+
+
 @app.get("/api/stocks")
 def api_stocks():
     return jsonify(queries.stocks())

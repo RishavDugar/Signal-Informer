@@ -126,6 +126,16 @@ def whatsapp_status() -> dict:
                 "state": f"error: {exc}", "configured": False}
 
 
+def outcomes_scorecard() -> dict:
+    """Realised-vs-expected pick performance over the trailing window. Never raises."""
+    try:
+        from analytics.outcomes import scorecard
+        return scorecard()
+    except Exception as exc:
+        log.warning(f"webui: outcomes scorecard failed — {exc}")
+        return {"n": 0, "pending": 0, "error": str(exc)}
+
+
 def ollama_status() -> dict:
     try:
         import requests
