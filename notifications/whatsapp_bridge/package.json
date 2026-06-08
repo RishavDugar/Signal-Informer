@@ -1,0 +1,15 @@
+{
+  "name": "signal-infomer-whatsapp-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless WhatsApp sender for Signal Infomer. Sends over the WhatsApp Web protocol (Puppeteer/DevTools) so it works with the screen off / device locked — unlike GUI automation.",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}

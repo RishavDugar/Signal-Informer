@@ -1,0 +1,27 @@
+# Environment & secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+logs/
+*.log
+
+# Database files (large binaries, regenerated locally)
+db/*.db
+db/backups/
+
+# WhatsApp bridge: Node deps + live session/auth data
+notifications/whatsapp_bridge/node_modules/
+notifications/whatsapp_bridge/.wwebjs_auth/
+notifications/whatsapp_bridge/.wwebjs_cache/
+
+# Generated cache files
+PyWhatKit_DB.txt
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

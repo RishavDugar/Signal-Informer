@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Infomer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <div class="brand-name">Signal Infomer</div>
+        <div class="brand-sub">trading control panel</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-item active" data-view="dashboard"><span>▤</span> Dashboard</button>
+      <button class="nav-item" data-view="run"><span>▶</span> Run jobs</button>
+      <button class="nav-item" data-view="signals"><span>↯</span> Signals</button>
+      <button class="nav-item" data-view="news"><span>✶</span> News &amp; Scouts</button>
+      <button class="nav-item" data-view="setups"><span>⚙</span> Setups</button>
+      <button class="nav-item" data-view="stocks"><span>≣</span> Stocks</button>
+      <button class="nav-item" data-view="config"><span>⛯</span> Config</button>
+      <button class="nav-item" data-view="logs"><span>❯</span> Logs</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div id="whatsapp-pill" class="pill">whatsapp …</div>
+      <div id="ollama-pill" class="pill">ollama …</div>
+      <div id="db-pill" class="pill">db …</div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="topbar">
+      <h1 id="view-title">Dashboard</h1>
+      <div class="topbar-actions">
+        <span id="clock" class="muted"></span>
+        <button id="refresh-btn" class="btn ghost">↻ Refresh</button>
+      </div>
+    </header>
+
+    <section id="view-dashboard" class="view"></section>
+    <section id="view-run" class="view hidden"></section>
+    <section id="view-signals" class="view hidden"></section>
+    <section id="view-news" class="view hidden"></section>
+    <section id="view-setups" class="view hidden"></section>
+    <section id="view-stocks" class="view hidden"></section>
+    <section id="view-config" class="view hidden"></section>
+    <section id="view-logs" class="view hidden"></section>
+  </main>
+
+  <!-- Job console drawer -->
+  <div id="console" class="console hidden">
+    <div class="console-head">
+      <span id="console-title">Job</span>
+      <div>
+        <span id="console-status" class="badge">running</span>
+        <button id="console-stop" class="btn danger sm">Stop</button>
+        <button id="console-close" class="btn ghost sm">✕</button>
+      </div>
+    </div>
+    <pre id="console-body"></pre>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

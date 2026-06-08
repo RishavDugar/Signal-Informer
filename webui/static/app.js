@@ -1,0 +1,486 @@
+"use strict";
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error(`${path} → ${r.status}`);
+  return r.json();
+}
+function toast(msg, kind = "ok") {
+  const t = $("#toast");
+  t.textContent = msg; t.className = `toast ${kind}`;
+  setTimeout(() => t.classList.add("hidden"), 2600);
+}
+const pct = (v, dp = 1) => (v == null || isNaN(v)) ? "—" :
+  `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${(v * 100).toFixed(dp)}%</span>`;
+const rawpct = (v, dp = 1) => (v == null || isNaN(v)) ? "—" :
+  `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${Number(v).toFixed(dp)}%</span>`;
+const num = (v) => (v == null || v === "") ? "—" : v;
+
+// ── view routing ─────────────────────────────────────────────────────────────
+const VIEWS = {
+  dashboard: { title: "Dashboard", load: loadDashboard },
+  run: { title: "Run jobs", load: loadRun },
+  signals: { title: "Signals", load: loadSignals },
+  news: { title: "News & Scout picks", load: loadNews },
+  setups: { title: "Setups", load: loadSetups },
+  stocks: { title: "Stocks", load: loadStocks },
+  config: { title: "Configuration", load: loadConfig },
+  logs: { title: "Logs", load: loadLogs },
+};
+let current = "dashboard";
+
+function show(view) {
+  current = view;
+  $$(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+  $$(".view").forEach(v => v.classList.add("hidden"));
+  $(`#view-${view}`).classList.remove("hidden");
+  $("#view-title").textContent = VIEWS[view].title;
+  VIEWS[view].load();
+}
+
+$$(".nav-item").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
+$("#refresh-btn").addEventListener("click", () => VIEWS[current].load());
+
+setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+
+// ── status pills (poll) ──────────────────────────────────────────────────────
+async function refreshPills() {
+  try {
+    const s = await api("/api/status");
+    const db = $("#db-pill"); db.className = "pill " + (s.db_ok ? "ok" : "bad");
+    db.textContent = s.db_ok ? `db ok · ${s.db_size_mb} MB` : "db error";
+    const o = $("#ollama-pill"); o.className = "pill " + (s.ollama.up ? "ok" : "bad");
+    o.textContent = s.ollama.up ? `ollama · ${(s.ollama.models || []).length} model(s)` : "ollama down";
+    const w = $("#whatsapp-pill"); const wa = s.whatsapp || {};
+    if (wa.backend === "bridge") {
+      w.className = "pill " + (wa.ready ? "ok" : "bad");
+      w.textContent = wa.ready ? "whatsapp ready" : `whatsapp ${esc(wa.state || "down")}`;
+      w.title = wa.ready ? "Headless bridge logged in"
+        : (wa.state === "qr" ? "Bridge needs a one-time QR scan — run `node bridge.js`"
+           : "Bridge not ready — see logs / run `node bridge.js`");
+    } else {
+      w.className = "pill"; w.textContent = `whatsapp · ${esc(wa.backend || "?")}`;
+      w.title = "Legacy pywhatkit backend (only works while unlocked)";
+    }
+  } catch (e) { /* ignore */ }
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const v = $("#view-dashboard");
+  v.innerHTML = `<div class="loading">Loading status…</div>`;
+  const s = await api("/api/status");
+  const c = s.counts || {};
+  const ing = s.last_ingestion;
+
+  const stat = (k, val, sub) => `<div class="card stat"><div class="k">${k}</div><div class="v">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ""}</div>`;
+
+  v.innerHTML = `
+    <div class="grid cards">
+      ${stat("Stocks", num(c.stocks), `${num(c.ohlcv)} OHLCV rows`)}
+      ${stat("Signals", num(c.setup_signals), `latest ${s.last_signal_date || "—"}`)}
+      ${stat("News picks", num(c.news_recommendations), `scouts ${num(c.scout_recommendations)}`)}
+      ${stat("Setups loaded", num(s.setups_loaded), `min avg ${(s.config.min_avg_return * 100).toFixed(2)}%`)}
+      ${stat("Last OHLCV", s.last_ohlcv_date || "—", `db ${s.db_size_mb} MB`)}
+      ${stat("Ingestion runs", num(c.ingestion_runs), ing ? `last: ${ing.status}` : "none yet")}
+    </div>
+
+    <div class="grid two" style="margin-top:16px">
+      <div class="card">
+        <h3>Calibration data</h3>
+        <table>
+          <tbody>
+            <tr><td>Backtester weights</td><td class="num">${s.weights.exists ? `${s.weights.setups} setups` : "<span class='neg'>missing</span>"}</td></tr>
+            <tr><td class="faint">generated</td><td class="num faint mono">${fmtTime(s.weights.generated_at)}</td></tr>
+            <tr><td>Optimal params</td><td class="num">${s.params.exists ? `${s.params.setups} setups` : "<span class='neg'>missing</span>"}</td></tr>
+            <tr><td class="faint">generated</td><td class="num faint mono">${fmtTime(s.params.generated_at)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Last ingestion run</h3>
+        ${ing ? `<table><tbody>
+          <tr><td>Status</td><td class="num"><span class="badge ${ing.status === 'SUCCESS' ? 'green' : (ing.status === 'FAILED' ? 'red' : 'amber')}">${ing.status}</span></td></tr>
+          <tr><td>Total / OK / Failed</td><td class="num mono">${ing.total_stocks} / ${ing.successful} / ${ing.failed}</td></tr>
+          <tr><td class="faint">run at (UTC)</td><td class="num faint mono">${esc(ing.run_at || "")}</td></tr>
+        </tbody></table>` : `<div class="empty">No ingestion runs yet</div>`}
+      </div>
+    </div>
+
+    <div class="grid two" style="margin-top:16px">
+      <div class="card">
+        <h3>Schedule &amp; services</h3>
+        <table><tbody>
+          <tr><td>News pipeline</td><td class="num mono">${s.config.news_schedule} IST</td></tr>
+          <tr><td>Technical pipeline</td><td class="num mono">${s.config.schedule} IST</td></tr>
+          <tr><td>WhatsApp sender</td><td class="num">${whatsappBadge(s.whatsapp)}</td></tr>
+          <tr><td>Ollama</td><td class="num">${s.ollama.up ? `<span class="badge green">up</span> ${esc((s.ollama.models || [])[0] || "")}` : "<span class='badge red'>down</span>"}</td></tr>
+          <tr><td>Ollama model (cfg)</td><td class="num mono">${esc(s.config.ollama_model)}</td></tr>
+        </tbody></table>
+      </div>
+      <div class="card">
+        <h3>Quick actions</h3>
+        <div class="job-flags">
+          <button class="btn primary" onclick="runJob('pipeline')">Run technical pipeline</button>
+          <button class="btn" onclick="runJob('news')">Run news + AI picks</button>
+          <button class="btn" onclick="runJob('backup')">Backup DB</button>
+          <button class="btn" onclick="runJob('integrity')">Integrity check</button>
+        </div>
+        <div class="muted" style="margin-top:14px;font-size:12.5px">
+          WhatsApp: ${esc(s.config.whatsapp_phone)}
+          ${(s.config.whatsapp_phones || []).length > 1 ? `· ${s.config.whatsapp_phones.length} recipients` : ""}
+          · via ${esc((s.whatsapp || {}).backend || "?")}
+        </div>
+        ${whatsappHint(s.whatsapp)}
+      </div>
+    </div>`;
+}
+const fmtTime = (t) => t ? esc(t).replace("T", " ").slice(0, 19) : "—";
+
+// WhatsApp send-backend badge + actionable hint when the headless bridge needs attention.
+function whatsappBadge(wa) {
+  wa = wa || {};
+  if (wa.backend !== "bridge")
+    return `<span class="badge amber">pywhatkit</span> <span class="faint">unlocked-only</span>`;
+  if (wa.ready) return `<span class="badge green">bridge ready</span>`;
+  return `<span class="badge red">bridge ${esc(wa.state || "down")}</span>`;
+}
+function whatsappHint(wa) {
+  wa = wa || {};
+  if (wa.backend !== "bridge" || wa.ready) return "";
+  const msg = wa.state === "qr"
+    ? "WhatsApp bridge needs a one-time QR scan — run <span class='mono'>node bridge.js</span> in notifications/whatsapp_bridge and scan with WhatsApp &gt; Linked Devices."
+    : "WhatsApp bridge is not ready — alerts may not send. Check Logs, or run <span class='mono'>node bridge.js</span> once to (re)link.";
+  return `<div class="muted" style="margin-top:8px;font-size:12px;color:#ff8a8a">⚠ ${msg}</div>`;
+}
+
+// ── Run jobs ─────────────────────────────────────────────────────────────────
+async function loadRun() {
+  const v = $("#view-run");
+  v.innerHTML = `<div class="loading">Loading jobs…</div>`;
+  const [catalog, running] = await Promise.all([api("/api/jobs/catalog"), api("/api/jobs")]);
+
+  const groups = {};
+  catalog.forEach(j => { (groups[j.group] = groups[j.group] || []).push(j); });
+
+  let html = "";
+  for (const [group, jobs] of Object.entries(groups)) {
+    html += `<div class="job-group-title">${esc(group)}</div><div class="grid two">`;
+    for (const j of jobs) {
+      const flags = j.flags.map(f =>
+        `<label class="chk"><input type="checkbox" data-flag="${f.id}"> ${esc(f.label)}</label>`).join("");
+      html += `<div class="card job-card" data-jobid="${j.id}">
+        <div class="job-top">
+          <div>
+            <div class="job-name">${esc(j.label)}</div>
+            <div class="job-desc">${esc(j.desc)}</div>
+          </div>
+          <button class="btn ${j.danger ? "danger" : "primary"} sm" onclick="launchFromCard('${j.id}', this, ${j.danger})">Run</button>
+        </div>
+        ${flags ? `<div class="job-flags">${flags}</div>` : ""}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `<div class="job-group-title">Recent jobs</div><div class="card scroll-x">
+    <table><thead><tr><th>#</th><th>Job</th><th>Status</th><th>Started</th><th>Ended</th><th>Code</th><th></th></tr></thead>
+    <tbody id="job-history"></tbody></table></div>`;
+
+  v.innerHTML = html;
+  renderHistory(running);
+}
+
+function renderHistory(list) {
+  const tb = $("#job-history");
+  if (!tb) return;
+  if (!list.length) { tb.innerHTML = `<tr><td colspan="7" class="empty">No jobs run this session</td></tr>`; return; }
+  tb.innerHTML = list.map(j => `<tr>
+    <td class="mono">${j.id}</td>
+    <td>${esc(j.label)}</td>
+    <td><span class="badge ${statusClass(j.status)}">${j.status}</span></td>
+    <td class="mono faint">${j.started_at}</td>
+    <td class="mono faint">${j.ended_at || "—"}</td>
+    <td class="mono num">${j.returncode == null ? "—" : j.returncode}</td>
+    <td><button class="btn ghost sm" onclick="openConsole(${j.id})">view</button></td>
+  </tr>`).join("");
+}
+const statusClass = (s) => s === "done" ? "green" : (s === "failed" ? "red" : (s === "stopped" ? "amber" : "running"));
+
+window.launchFromCard = function (id, btn, danger) {
+  if (danger && !confirm("This is a destructive / heavy action. Continue?")) return;
+  const card = btn.closest(".job-card");
+  const flags = $$('input[data-flag]', card).filter(i => i.checked).map(i => i.dataset.flag);
+  runJob(id, flags);
+};
+
+window.runJob = async function (id, flags = []) {
+  try {
+    const r = await api("/api/jobs/run", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, flags }),
+    });
+    toast(`Started: ${r.label}`);
+    openConsole(r.id);
+    if (current === "run") api("/api/jobs").then(renderHistory);
+  } catch (e) { toast("Failed to start job", "bad"); }
+};
+
+// ── Job console ──────────────────────────────────────────────────────────────
+let consoleJob = null, consolePoll = null;
+window.openConsole = function (jid) {
+  consoleJob = jid;
+  $("#console").classList.remove("hidden");
+  $("#console-body").textContent = "";
+  pollConsole(true);
+  if (consolePoll) clearInterval(consolePoll);
+  consolePoll = setInterval(() => pollConsole(false), 1000);
+};
+function closeConsole() {
+  $("#console").classList.add("hidden");
+  if (consolePoll) clearInterval(consolePoll);
+  consoleJob = null;
+}
+$("#console-close").addEventListener("click", closeConsole);
+$("#console-stop").addEventListener("click", async () => {
+  if (consoleJob == null) return;
+  await api(`/api/jobs/${consoleJob}/stop`, { method: "POST" });
+  toast("Stop requested", "bad");
+});
+
+let consoleSince = 0;
+async function pollConsole(reset) {
+  if (consoleJob == null) return;
+  if (reset) consoleSince = 0;
+  try {
+    const s = await api(`/api/jobs/${consoleJob}?since=${consoleSince}`);
+    $("#console-title").textContent = `#${s.id} · ${s.label}`;
+    const badge = $("#console-status");
+    badge.textContent = s.status; badge.className = `badge ${statusClass(s.status)}`;
+    if (s.lines.length) {
+      const body = $("#console-body");
+      const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 30;
+      body.textContent += s.lines.join("\n") + "\n";
+      consoleSince = s.total_lines;
+      if (atBottom) body.scrollTop = body.scrollHeight;
+    }
+    $("#console-stop").disabled = s.status !== "running";
+    if (s.status !== "running" && consolePoll) {
+      clearInterval(consolePoll); consolePoll = null;
+      if (current === "run") api("/api/jobs").then(renderHistory);
+      if (current === "dashboard") refreshPills();
+    }
+  } catch (e) { /* ignore transient */ }
+}
+
+// ── Signals ──────────────────────────────────────────────────────────────────
+async function loadSignals() {
+  const v = $("#view-signals");
+  v.innerHTML = `<div class="loading">Loading signals…</div>`;
+  renderSignals(await api("/api/signals"));
+}
+
+function renderSignals(d) {
+  const v = $("#view-signals");
+  if (!d.date) { v.innerHTML = `<div class="empty">No signals yet — run the technical pipeline.</div>`; return; }
+
+  const opts = (d.dates || []).map(x => `<option ${x === d.date ? "selected" : ""}>${x}</option>`).join("");
+  const wpct = (v) => v == null ? "—" : (v * 100).toFixed(0) + "%";
+  let html = `<div class="card" style="margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <label class="faint">Signal date</label>
+      <select id="sig-date" class="field" style="width:auto">${opts}</select>
+      <span class="muted">${d.ranked.length} ranked · ${d.ranked.filter(r => r.qualifies).length} clear ${(d.min_avg_return * 100).toFixed(2)}% net avg-return</span>
+      <span class="faint" style="font-size:12px">All figures net of estimated costs · "win rate" = past hit rate · "worst case" = Wilson lower bound</span>
+    </div>`;
+
+  if (!d.ranked.length) html += `<div class="empty">No signals fired on ${d.date}.</div>`;
+
+  for (const r of d.ranked) {
+    const setups = r.setups.map(st => `<div class="setup-row">
+        <span class="sname">${esc(st.friendly || st.name)} <span class="badge ${st.direction === 'buy' ? 'buy' : (st.direction === 'sell' ? 'sell' : '')}">${st.direction}</span></span>
+        <span class="mono faint">net ${pct(st.avg_return)} · win ${wpct(st.confidence)} (≥${wpct(st.wr_lower)}) · PF ${st.profit_factor != null ? Number(st.profit_factor).toFixed(2) : "∞"} · SL ${wpct(st.sl_rate)} · d${num(st.best_day)} (n=${num(st.sample_size)})</span>
+        <span class="sdesc">${esc(st.desc)}</span>
+      </div>`).join("");
+    html += `<div class="card signal-card ${r.qualifies ? "" : "dim"}">
+      <div class="signal-head">
+        <span class="sym">${esc(r.symbol)}</span>
+        <span class="badge ${r.dominant === 'BUY' ? 'buy' : 'sell'}">${r.dominant}</span>
+        ${r.qualifies ? "" : `<span class="badge amber">below threshold</span>`}
+        <div class="signal-metrics">
+          <div class="m"><div class="k">Score</div><div class="v mono">${r.score}</div></div>
+          <div class="m"><div class="k">Net avg</div><div class="v">${pct(r.avg_return)}</div></div>
+          <div class="m"><div class="k">Win rate</div><div class="v">${(r.confidence * 100).toFixed(0)}%</div></div>
+          <div class="m"><div class="k">Worst case</div><div class="v">${wpct(r.wr_lower)}</div></div>
+          <div class="m"><div class="k">Setups</div><div class="v mono">${r.n_setups}</div></div>
+        </div>
+      </div>
+      ${setups}
+    </div>`;
+  }
+  v.innerHTML = html;
+  $("#sig-date").addEventListener("change", async (e) => {
+    renderSignals(await api("/api/signals?date=" + encodeURIComponent(e.target.value)));
+  });
+}
+
+// ── News & scouts ────────────────────────────────────────────────────────────
+async function loadNews() {
+  const v = $("#view-news");
+  v.innerHTML = `<div class="loading">Loading picks…</div>`;
+  const [news, scout] = await Promise.all([api("/api/news"), api("/api/scout")]);
+
+  const card = (r, tagText) => `<div class="card" style="margin-bottom:12px">
+      <div class="signal-head">
+        <span class="sym">${esc((r.symbol || "").replace(/\.NS|\.BO/, ""))}</span>
+        ${tagText ? `<span class="badge amber">${esc(tagText)}</span>` : ""}
+        ${r.catalyst ? `<span class="tag">${esc(r.catalyst)}</span>` : ""}
+        ${r.whatsapp_sent ? `<span class="badge green">sent</span>` : `<span class="badge">unsent</span>`}
+        <div class="signal-metrics">
+          <div class="m"><div class="k">CMP</div><div class="v mono">${r.cmp != null ? "₹" + Number(r.cmp).toFixed(1) : "—"}</div></div>
+          <div class="m"><div class="k">1D</div><div class="v">${rawpct(r.change_1d_pct)}</div></div>
+          <div class="m"><div class="k">5D</div><div class="v">${rawpct(r.change_5d_pct)}</div></div>
+          <div class="m"><div class="k">20D</div><div class="v">${rawpct(r.change_20d_pct)}</div></div>
+        </div>
+      </div>
+      ${r.company_name ? `<div class="muted" style="margin-top:6px">${esc(r.company_name)} · ${esc(r.rec_date)}</div>` : ""}
+      ${r.reasoning ? `<div class="muted" style="margin-top:8px;font-style:italic">${esc(r.reasoning)}</div>` : ""}
+      <div style="margin-top:8px;line-height:1.55">${esc(r.analysis)}</div>
+    </div>`;
+
+  const scoutLabel = { hidden_gems: "HIDDEN GEM", small_cap_growth: "SMALLCAP GROWTH", smart_money: "SMART MONEY" };
+
+  let html = `<div class="grid two">
+    <div><h3 class="job-group-title">AI News Picks (${news.length})</h3>
+      ${news.length ? news.map(r => card(r, "")).join("") : `<div class="empty">No news picks yet.</div>`}</div>
+    <div><h3 class="job-group-title">Scout Picks (${scout.length})</h3>
+      ${scout.length ? scout.map(r => card(r, scoutLabel[r.scout_type] || r.scout_type)).join("") : `<div class="empty">No scout picks yet.</div>`}</div>
+  </div>`;
+  v.innerHTML = html;
+}
+
+// ── Setups ───────────────────────────────────────────────────────────────────
+async function loadSetups() {
+  const v = $("#view-setups");
+  v.innerHTML = `<div class="loading">Loading setups…</div>`;
+  const rows = await api("/api/setups");
+  if (!rows.length) { v.innerHTML = `<div class="empty">No setups loaded.</div>`; return; }
+  v.innerHTML = `<div class="muted" style="margin-bottom:10px;font-size:12.5px">Avg return is net of estimated transaction costs; weights derive from after-cost expectancy.</div>
+    <div class="card scroll-x"><table>
+    <thead><tr><th>Setup</th><th class="num">Net avg</th><th class="num">SL rate</th><th class="num">Best day</th>
+      <th class="num">Long w</th><th class="num">Short w</th><th>Params</th></tr></thead>
+    <tbody>${rows.map(s => `<tr>
+      <td><b>${esc(s.name)}</b><div class="faint" style="font-size:11.5px;max-width:340px">${esc(s.desc)}</div></td>
+      <td class="num">${pct(s.best_avg_return)}</td>
+      <td class="num mono">${s.best_sl_rate != null ? (s.best_sl_rate * 100).toFixed(0) + "%" : "—"}</td>
+      <td class="num mono">${num(s.best_days)}</td>
+      <td class="num mono">${s.long_weight != null ? s.long_weight.toFixed(2) : "—"}</td>
+      <td class="num mono">${s.short_weight != null ? s.short_weight.toFixed(2) : "—"}</td>
+      <td>${Object.entries(s.params || {}).map(([k, val]) => `<span class="tag">${esc(k)}=${esc(val)}</span>`).join("") || "<span class='faint'>default</span>"}</td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+
+// ── Stocks ───────────────────────────────────────────────────────────────────
+async function loadStocks() {
+  const v = $("#view-stocks");
+  v.innerHTML = `<div class="loading">Loading stocks…</div>`;
+  const rows = await api("/api/stocks");
+  v.innerHTML = `<div class="card" style="margin-bottom:14px"><input id="stk-filter" class="field" placeholder="Filter symbols…" style="max-width:280px"></div>
+    <div class="card scroll-x"><table>
+    <thead><tr><th>Symbol</th><th>Name</th><th class="num">Rows</th><th class="num">Last date</th><th></th></tr></thead>
+    <tbody id="stk-body">${rows.map(rowHtml).join("")}</tbody></table></div>
+    <div id="ohlcv-panel"></div>`;
+  function rowHtml(s) {
+    return `<tr data-sym="${esc(s.symbol)}"><td class="mono">${esc(s.symbol)}</td><td>${esc(s.name || "")}</td>
+      <td class="num mono">${num(s.rows)}</td><td class="num mono faint">${s.last_date || "—"}</td>
+      <td><button class="btn ghost sm" onclick="viewOhlcv('${esc(s.symbol)}')">chart</button></td></tr>`;
+  }
+  $("#stk-filter").addEventListener("input", (e) => {
+    const q = e.target.value.toUpperCase();
+    $$("#stk-body tr").forEach(tr => { tr.style.display = tr.dataset.sym.includes(q) ? "" : "none"; });
+  });
+}
+
+window.viewOhlcv = async function (sym) {
+  const p = $("#ohlcv-panel");
+  p.innerHTML = `<div class="loading">Loading ${esc(sym)}…</div>`;
+  const d = await api(`/api/ohlcv/${encodeURIComponent(sym)}?days=90`);
+  if (!d.rows.length) { p.innerHTML = `<div class="empty">No OHLCV stored for ${esc(sym)}.</div>`; return; }
+  p.innerHTML = `<div class="card" style="margin-top:16px">
+    <h3>${esc(sym)} — last ${d.rows.length} bars</h3>
+    ${sparkline(d.rows)}
+    <div class="scroll-x" style="margin-top:14px;max-height:300px;overflow:auto"><table>
+      <thead><tr><th>Date</th><th class="num">Open</th><th class="num">High</th><th class="num">Low</th><th class="num">Close</th><th class="num">Volume</th></tr></thead>
+      <tbody>${[...d.rows].reverse().map(r => `<tr><td class="mono faint">${r.date}</td>
+        <td class="num mono">${r.open.toFixed(1)}</td><td class="num mono">${r.high.toFixed(1)}</td>
+        <td class="num mono">${r.low.toFixed(1)}</td><td class="num mono">${r.close.toFixed(1)}</td>
+        <td class="num mono faint">${r.volume.toLocaleString()}</td></tr>`).join("")}</tbody></table></div>
+  </div>`;
+};
+
+function sparkline(rows) {
+  const W = 720, H = 120, pad = 6;
+  const cl = rows.map(r => r.close);
+  const min = Math.min(...cl), max = Math.max(...cl), span = (max - min) || 1;
+  const pts = cl.map((c, i) => {
+    const x = pad + (i / (cl.length - 1)) * (W - 2 * pad);
+    const y = pad + (1 - (c - min) / span) * (H - 2 * pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const up = cl[cl.length - 1] >= cl[0];
+  const color = up ? "#3fd07f" : "#ff6b6b";
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
+    <polyline fill="none" stroke="${color}" stroke-width="2" points="${pts}"/>
+  </svg>
+  <div class="muted mono" style="font-size:12px">min ${min.toFixed(1)} · max ${max.toFixed(1)} · last ${cl[cl.length - 1].toFixed(1)}</div>`;
+}
+
+// ── Config ───────────────────────────────────────────────────────────────────
+async function loadConfig() {
+  const v = $("#view-config");
+  v.innerHTML = `<div class="loading">Loading config…</div>`;
+  const cfg = await api("/api/config");
+  const fields = cfg.keys.map(k => `<div class="field">
+      <label>${esc(k)}</label>
+      <input data-key="${esc(k)}" value="${esc(cfg.values[k])}">
+    </div>`).join("");
+  v.innerHTML = `<div class="card">
+    <h3>.env settings <span class="faint mono" style="text-transform:none;letter-spacing:0">${esc(cfg.path)}</span></h3>
+    <div class="form-grid">${fields}</div>
+    <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+      <button class="btn primary" id="cfg-save">Save changes</button>
+      <span class="muted">Changes take effect next time a pipeline / the server restarts.</span>
+    </div>
+  </div>`;
+  $("#cfg-save").addEventListener("click", async () => {
+    const upd = {};
+    $$("#view-config input[data-key]").forEach(i => upd[i.dataset.key] = i.value);
+    const r = await api("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(upd) });
+    toast(`Saved ${r.updated.length} setting(s)`);
+  });
+}
+
+// ── Logs ─────────────────────────────────────────────────────────────────────
+async function loadLogs() {
+  const v = $("#view-logs");
+  v.innerHTML = `<div class="loading">Loading logs…</div>`;
+  const d = await api("/api/logs?lines=500");
+  const lines = d.lines.map(l => {
+    const low = l.toLowerCase();
+    const cls = (low.includes("error") || low.includes("failed")) ? "err" : (low.includes("warn") ? "warn" : "");
+    return `<div class="logline ${cls}">${esc(l)}</div>`;
+  }).join("");
+  v.innerHTML = `<div class="card" style="margin-bottom:12px"><span class="faint mono">${esc(d.path)}</span></div>
+    <div class="logbox" id="logbox">${lines || "<span class='faint'>empty</span>"}</div>`;
+  const box = $("#logbox"); box.scrollTop = box.scrollHeight;
+}
+
+// ── boot ─────────────────────────────────────────────────────────────────────
+refreshPills();
+setInterval(refreshPills, 8000);
+show("dashboard");
