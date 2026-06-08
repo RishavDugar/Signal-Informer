@@ -91,7 +91,7 @@ predefined jobs, never arbitrary commands.
 ```
 Signal Infomer/
 │
-├── Plan.md                      ← this file
+├── README.md                    ← this file
 ├── requirements.txt
 ├── .env                         ← single config file (real values + docs)
 ├── config.py                    ← reads .env, exposes typed settings
