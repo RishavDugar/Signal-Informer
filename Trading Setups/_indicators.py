@@ -65,7 +65,8 @@ def ema(series: pd.Series, period: int) -> pd.Series:
 
 def historical_vol(close: pd.Series, period: int) -> pd.Series:
     """Annualized historical volatility (std dev of log returns × sqrt(252))."""
-    log_ret = np.log(close / close.shift(1))
+    safe_close = close.where(close > 0)
+    log_ret = np.log(safe_close / safe_close.shift(1))
     return log_ret.rolling(period).std() * np.sqrt(252)
 
 
