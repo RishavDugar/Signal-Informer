@@ -132,3 +132,26 @@ class BollingerSqueezeSetup(BaseSetup):
         if meta.get("signal_type") == "buy":
             return float(meta["lower"])
         return float(meta["upper"])
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: recent bandwidth min at/below the longer
+        baseline min (squeeze existed), then close escapes a band."""
+        upper, middle, lower = bollinger_bands(df["close"], self.period, self.num_stddev)
+        bw = (upper - lower) / middle.replace(0, np.nan)
+        bw_prev   = bw.shift(1)
+        recent    = bw_prev.rolling(self.squeeze_lookback,
+                                    min_periods=self.squeeze_lookback).min()
+        baseline  = bw_prev.rolling(self.squeeze_lookback + self.period,
+                                    min_periods=self.squeeze_lookback + self.period).min()
+        had_squeeze = recent <= baseline + 1e-10
+        long_  = had_squeeze & (df["close"] > upper)
+        short_ = had_squeeze & (df["close"] < lower)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)
+
+    def vector_stops(self, df: pd.DataFrame) -> pd.Series:
+        """Stop = opposite band at signal time (book rule)."""
+        upper, _, lower = bollinger_bands(df["close"], self.period, self.num_stddev)
+        dirs = self.vector_signals(df)
+        return pd.Series(
+            np.where(dirs > 0, lower, np.where(dirs < 0, upper, np.nan)),
+            index=df.index)

@@ -49,6 +49,11 @@ def api_setups():
     return jsonify(queries.setups())
 
 
+@app.get("/api/hft")
+def api_hft():
+    return jsonify(queries.hft_results())
+
+
 @app.get("/api/outcomes")
 def api_outcomes():
     return jsonify(queries.outcomes_scorecard())

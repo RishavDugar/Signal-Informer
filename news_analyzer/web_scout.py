@@ -33,7 +33,7 @@ from email.utils import parsedate_to_datetime
 
 import requests
 
-from data.stocks_list import NSE_100
+from data.stocks_list import NSE_500
 from news_analyzer.ollama_client import generate
 from utils.logger import get_logger
 
@@ -47,7 +47,7 @@ _GN_BASE   = "https://news.google.com/rss/search?hl=en-IN&gl=IN&ceid=IN:en&q="
 
 _SYMBOL_MAP: dict[str, tuple[str, str]] = {
     sym.replace(".NS", "").replace(".BO", ""): (sym, name)
-    for sym, name, _ in NSE_100
+    for sym, name, _ in NSE_500
 }
 _CLEAN_SYMBOLS = sorted(_SYMBOL_MAP.keys())
 _SYMBOL_REF    = "\n".join(

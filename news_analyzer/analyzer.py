@@ -21,7 +21,7 @@ import json
 import re
 from typing import Any
 
-from data.stocks_list import NSE_100
+from data.stocks_list import NSE_500
 from news_analyzer.ollama_client import generate
 from utils.logger import get_logger
 
@@ -32,7 +32,7 @@ log = get_logger("news_analyzer")
 # Maps clean symbol (no .NS/.BO) → full yfinance symbol + display name
 _SYMBOL_MAP: dict[str, tuple[str, str]] = {
     sym.replace(".NS", "").replace(".BO", ""): (sym, name)
-    for sym, name, _ in NSE_100
+    for sym, name, _ in NSE_500
 }
 _CLEAN_SYMBOLS = sorted(_SYMBOL_MAP.keys())
 

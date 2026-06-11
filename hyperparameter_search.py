@@ -73,19 +73,25 @@ _CPU_COUNT = os.cpu_count() or 4
 MIN_OBS = 30
 
 
-def _combined_score(avg_return: float, sl_rate: float) -> float:
+def _combined_score(avg_return: float, sl_rate: float,
+                    ret_lower: float | None = None) -> float:
     """
     Combined hyperparameter selection score.
 
-    Rewards high avg return while penalising frequent stop-outs.
-    For winning strategies: effective return = avg_return × (1 − sl_rate × 0.5)
-      e.g. avg=+2%, sl=70% → 2% × 0.65 = 1.30%
-           avg=+2%, sl=10% → 2% × 0.95 = 1.90%   ← preferred
-    Losing strategies score as-is (excluded by MIN_AVG_RETURN filter anyway).
+    Selection metric: the LOWER CONFIDENCE BOUND on the mean net return when
+    available (ret_lower), falling back to the raw average. Picking the combo
+    with the best point-estimate average systematically selects lucky noise
+    (the more combos tried, the worse the bias); the lower bound penalises
+    high-variance/low-n combos and is far harder to game by chance.
+
+    A stop-out penalty is applied on top: frequent stop-outs mean the entry is
+    poorly placed even when the average survives.
+      effective = metric × (1 − sl_rate × 0.5)   for winning combos
     """
-    if avg_return <= 0.0:
-        return avg_return
-    return avg_return * (1.0 - sl_rate * 0.5)
+    metric = ret_lower if ret_lower is not None else avg_return
+    if metric <= 0.0:
+        return metric
+    return metric * (1.0 - sl_rate * 0.5)
 
 # ── Parameter grids ────────────────────────────────────────────────────────────
 # Each entry: {param_name: [values_to_try]}.
@@ -558,7 +564,9 @@ def _validate_results(
             v_sl   = vstats.get("sl_rate", 0.0)
             res["validated_avg_return"] = v_avg
             res["validated_sl_rate"]    = v_sl
-            res["validated_combined"]   = _combined_score(v_avg, v_sl)
+            res["validated_ret_lower"]  = vstats.get("best_ret_lower", 0.0)
+            res["validated_combined"]   = _combined_score(
+                v_avg, v_sl, vstats.get("best_ret_lower"))
             res["validated_days"]       = vstats.get("best_days", 1)
             res["validated_n"]          = vstats.get("tested", 0)
             res["validated_by_day"]     = vstats.get("by_day", {})
@@ -589,6 +597,18 @@ def run_search(
     )
     stock_dfs_search = _load_stock_data(history_days)
     setup_classes    = _load_setup_classes()
+
+    # Merge per-class grids: VectorSetup subclasses declare their search space
+    # as a class attribute `param_grid` instead of an entry in PARAM_GRIDS.
+    # sl_pct is appended automatically so stop distance is always tuned.
+    grids = dict(grids)
+    for cls_name, cls in setup_classes.items():
+        if cls_name not in grids:
+            cg = getattr(cls, "param_grid", None)
+            if cg is not None:
+                g = dict(cg)
+                g.setdefault("sl_pct", _SL_PCT_QUICK if quick else _SL_PCT_GRID)
+                grids[cls_name] = g
 
     names_to_search = (
         [target_setup] if target_setup else sorted(grids.keys())
@@ -648,7 +668,7 @@ def run_search(
             stats   = fut.result()
             avg_ret = stats.get("best_avg_return", 0.0)
             sl_rate = stats.get("sl_rate", 0.0)
-            score   = _combined_score(avg_ret, sl_rate)
+            score   = _combined_score(avg_ret, sl_rate, stats.get("best_ret_lower"))
             n       = stats.get("tested", 0)
             done   += 1
             if n >= MIN_OBS:
@@ -752,7 +772,9 @@ def _validate_peaks(
             v_sl   = vstats.get("sl_rate", 0.0)
             peak["validated_avg_return"] = v_avg
             peak["validated_sl_rate"]    = v_sl
-            peak["validated_combined"]   = _combined_score(v_avg, v_sl)
+            peak["validated_ret_lower"]  = vstats.get("best_ret_lower", 0.0)
+            peak["validated_combined"]   = _combined_score(
+                v_avg, v_sl, vstats.get("best_ret_lower"))
             peak["validated_days"]       = vstats.get("best_days", 1)
             peak["validated_n"]          = vstats.get("tested", 0)
             peak["validated_by_day"]     = vstats.get("by_day", {})
@@ -854,7 +876,7 @@ def run_random_search(
             stats   = fut.result()
             avg_ret = stats.get("best_avg_return", 0.0)
             sl_rate = stats.get("sl_rate", 0.0)
-            score   = _combined_score(avg_ret, sl_rate)
+            score   = _combined_score(avg_ret, sl_rate, stats.get("best_ret_lower"))
             n       = stats.get("tested", 0)
             done   += 1
             if n >= MIN_OBS:

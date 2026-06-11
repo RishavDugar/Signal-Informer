@@ -76,3 +76,16 @@ class TwoPeriodROCSetup(BaseSetup):
                 "direction_flip": changed,
             },
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: direction (close vs prior pivot) flips → ±1."""
+        close = df["close"]
+        roc2  = close.diff(2)
+        pivot = roc2 + close.shift(1)
+        prev_pivot = pivot.shift(1)
+        valid = prev_pivot.notna() & close.notna()
+        d     = np.where(close > prev_pivot, 1, -1)
+        d_ser = pd.Series(np.where(valid, d, 0), index=df.index)
+        prev  = d_ser.shift(1).fillna(0)
+        flip  = (d_ser != 0) & (prev != 0) & (d_ser != prev)
+        return pd.Series(np.where(flip, d_ser, 0), index=df.index)

@@ -2,16 +2,23 @@
 
 ## Overview
 
-Daily automated trading signal generator for NSE 100 stocks plus AI-powered fundamental/news picks.
+Daily automated trading signal generator for NSE 500 stocks plus AI-powered fundamental/news picks.
 
 Every weekday at **7 AM IST** the news pipeline runs (Ollama LLM, internet search).  
 Every weekday at **8 AM IST** the technical pipeline runs:
 1. Downloads the previous day's OHLCV data for all stocks
 2. Validates, sanitises, and stores it in a local SQLite database
-3. Runs 18 technical setups against all stocks
-4. Ranks stocks by **weighted conviction** (same-direction signal count × backtested **net-of-cost** avg return)
+3. Runs **76 technical setups** (vectorised — see [Strategy Library](#strategy-library)) against all stocks
+4. Ranks stocks by **weighted conviction** — same-direction signals are combined with diminishing weight
+   (1, ½, ¼ …) so correlated setups don't over-stack, and each setup's weight is driven by its
+   **lower-confidence-bound net return** (`ret_lower`), not a raw average
 5. Screens on **two configurable gates** — minimum net avg return *and* minimum win rate — and sends an investor-readable WhatsApp alert (or a "no setups today" note if nothing clears)
 6. Records every sent pick into an **outcome tracker** that later measures the realised return vs. what the backtest promised, and WhatsApps a weekly **scorecard**
+
+A separate **intraday/HFT backtester** ([hft_backtester.py](hft_backtester.py)) runs the same 76
+setups on 1/5/10/15-minute bars, long **and** short, always flat by session close — see
+[HFT / Intraday Backtester](#hft--intraday-backtester) and [docs/STRATEGY_RESEARCH.md](docs/STRATEGY_RESEARCH.md)
+for the full research write-up (confidence-math audit, all 76 setups, daily + intraday results).
 
 Messages are delivered by a **headless WhatsApp bridge** (works with the screen off / device locked — see [WhatsApp delivery](#whatsapp-delivery-headless-bridge)), and both pipelines run as native Windows scheduled tasks that wake the laptop from Modern Standby.
 
@@ -42,6 +49,12 @@ python initialize.py
 python hyperparameter_search.py
 #    Random search — wider ranges, finds multiple local maxima
 python hyperparameter_search.py --random --samples 200 --peaks 5
+#    Either mode only writes db/optimal_params.json — re-run the backtester
+#    to refresh db/strategy_weights.json (conviction weights/ret_lower) from it:
+python backtester.py
+
+# 4b. (Optional) Intraday/HFT backtest — 1/5/10/15min, long+short, EOD square-off
+python hft_backtester.py --timeframes 1min,5min,10min,15min
 
 # 5. Register Windows Task Scheduler job (daily 7am news + 8am signals)
 python setup_windows_task.py
@@ -53,7 +66,7 @@ python pipeline.py
 python tests/verify_setups.py
 
 # 8. Verify backtester avg-return + direction-split model (optional)
-python tests/simulate_backtester.py   # 283 assertions (incl. cost-netting, Wilson, profit factor)
+python tests/simulate_backtester.py   # 283 assertions (incl. cost-netting, Wilson, profit factor, ret_lower)
 ```
 
 ---
@@ -76,11 +89,12 @@ duplicated or forked.
 | View | What it does |
 |---|---|
 | **Dashboard** | DB health + size, row counts, last ingestion run, calibration freshness (weights / optimal params), schedule, Ollama status, quick-run buttons |
-| **Run jobs** | One-click launch of every script: technical & news pipelines, backtester (`--quick`), grid/random hyperparameter search, initialize, tests, backup, integrity check, news/scout DB clear, Windows-task register/status/remove — with a live streaming console and a session job history |
+| **Run jobs** | One-click launch of every script: technical & news pipelines, backtester (`--quick`), grid/random hyperparameter search, **HFT/intraday backtest** (per-timeframe toggle + free-text `--years`/`--symbols` box), initialize, tests, backup, integrity check, news/scout DB clear, Windows-task register/status/remove — with a live streaming console and a session job history |
 | **Signals** | Latest (or any past) signal date, conviction-ranked per stock (reusing `notifications.whatsapp.rank_by_conviction`), per-setup avg-return / confidence / SL-rate, threshold highlighting |
 | **News & Scouts** | AI news picks + all three scout lenses with CMP, 1D/5D/20D changes, catalyst, thesis, sent status |
-| **Setups** | Every loaded setup with its optimal params, backtested avg return, SL rate, best day, and directional weights |
-| **Stocks** | NSE-100 registry with stored-row counts; click any symbol for a close-price sparkline + recent OHLCV table |
+| **Setups** | All 76 loaded setups with their optimal params, backtested net avg return, **lower-confidence-bound return** (`ret_lower`), t-stat, sample size (`n`), SL rate, best day, and directional weights — sorted by lower bound |
+| **HFT / Intraday** | Same 76 setups on 1/5/10/15-min bars (tab per timeframe): net avg, lower bound, t-stat, long/short trade counts, win rate, profit factor, avg hold time, SL rate, and a pass/fail screen badge — read from `db/hft_results.json` |
+| **Stocks** | NSE-500 registry with stored-row counts; click any symbol for an interactive TradingView candlestick + volume chart (3M/6M/1Y/Max range toggle) and a recent OHLCV table |
 | **Config** | View/edit the whitelisted `.env` keys (preserves comments/order); changes apply on next pipeline/server restart |
 | **Logs** | Tail of `logs/signal_infomer.log` with error/warning highlighting |
 
@@ -106,16 +120,23 @@ Signal Infomer/
 ├── config.py                    ← reads .env, exposes typed settings
 │
 ├── core/
-│   └── base_setup.py            ← abstract BaseSetup + SignalResult + sl_pct meta-param
+│   ├── base_setup.py             ← abstract BaseSetup + SignalResult + sl_pct meta-param
+│   └── vector_setup.py           ← VectorSetup(BaseSetup): vectorised vector_signals()/vector_stops(),
+│                                     auto-derives the classic per-bar signal() interface
 │
 ├── data/
 │   ├── db.py                    ← SQLite WAL + all CRUD + integrity check + news_recommendations table
-│   ├── stocks_list.py           ← NSE 100 symbol registry (101 stocks)
+│   ├── stocks_list.py           ← NSE 500 symbol registry (NIFTY 500 constituents, ~500 stocks)
 │   ├── collector.py             ← yfinance parallel downloader + retry
-│   └── sanitizer.py             ← OHLCV validation + corporate action detection
+│   ├── sanitizer.py             ← OHLCV validation + corporate action detection
+│   └── hft/                     ← intraday parquet store (hive-partitioned)
+│       └── timeframe={1min,5min,10min,15min}/symbol=X/year=Y/*.parquet
 │
 ├── Trading Setups/              ← drop any *.py here; auto-discovered at runtime
-│   ├── _indicators.py           ← shared: RSI, ADX, Stochastic, EMA, HV helpers
+│   ├── _indicators.py           ← shared indicators: RSI, ADX, Stochastic, EMA, HV, MACD, Bollinger,
+│   │                                Donchian, Keltner, CCI, Williams %R, MFI, OBV, A/D, CMF, Force Index,
+│   │                                EOM, StochRSI, TSI, TRIX, CMO, DPO, PPO, Aroon, Vortex, Supertrend,
+│   │                                Ultimate Oscillator, IBS, z-score, crossover helpers
 │   ├── rsi_setup.py             ← RSI >70 / <30
 │   ├── turtle_soup.py           ← Ch 4 — false breakout of 20-day extreme
 │   ├── turtle_soup_plus_one.py  ← Ch 5 — day-after Turtle Soup
@@ -133,7 +154,13 @@ Signal Infomer/
 │   ├── bollinger_squeeze.py     ← Bollinger Band squeeze breakout
 │   ├── ema_trend_pullback.py    ← EMA trend + pullback entry
 │   ├── n_down_reversal.py       ← N consecutive down days reversal
-│   └── volume_climax.py         ← volume spike + price reversal
+│   ├── volume_climax.py         ← volume spike + price reversal
+│   ├── setups_mean_reversion.py ← 14 oversold/overbought snapback setups (RSI2_EXTREME, CAPITULATION_REVERSAL, ...)
+│   ├── setups_momentum.py       ← 12 trend/breakout-continuation setups (DONCHIAN_BREAKOUT, SUPERTREND_FLIP, ...)
+│   ├── setups_volatility.py     ← 8 compression→expansion setups (NR7_BREAKOUT, GAP_AND_GO, TTM_SQUEEZE, ...)
+│   ├── setups_volume.py         ← 8 volume-confirmed setups (POCKET_PIVOT, OBV_DIVERGENCE, ...)
+│   ├── setups_patterns.py       ← 8 candlestick pattern setups (ENGULFING_EXTREME, MORNING_STAR, ...)
+│   └── setups_oscillators.py    ← 8 secondary-oscillator setups (STOCH_RSI_CROSS, ELDER_IMPULSE, ...)
 │
 ├── news_analyzer/               ← AI-powered fundamental/news picker
 │   ├── __init__.py
@@ -160,26 +187,34 @@ Signal Infomer/
 │   └── backup.py                ← WAL checkpoint + backup + integrity check
 │
 ├── tests/
-│   ├── verify_setups.py         ← synthetic-data tests (all strategies, both directions)
-│   └── simulate_backtester.py  ← 283-assertion model verification (cost-netting, Wilson, profit factor)
+│   ├── verify_setups.py         ← synthetic-data tests (all 76 strategies, both directions)
+│   ├── verify_vector_parity.py  ← compares legacy signal() vs vector_signals() bar-by-bar on real data
+│   └── simulate_backtester.py  ← 283-assertion model verification (cost-netting, Wilson, profit factor, ret_lower)
 │
 ├── db/
 │   ├── market_data.db           ← SQLite database (auto-created)
-│   ├── strategy_weights.json    ← backtested avg returns per setup (written by backtester.py)
+│   ├── strategy_weights.json    ← backtested avg returns + ret_lower/t_stat per setup (written by backtester.py)
 │   ├── optimal_params.json      ← best params + sl_pct per setup (written by hyperparameter_search.py)
+│   ├── hft_results.json         ← intraday backtest results per timeframe (written by hft_backtester.py)
 │   └── backups/                 ← rolling 7-day DB backups
+│
+├── docs/
+│   └── STRATEGY_RESEARCH.md     ← full research write-up: confidence-math audit, 76-setup catalogue,
+│                                    daily + intraday results, methodology and caveats
 │
 ├── logs/
 │   ├── signal_infomer.log       ← rotating 5 × 5 MB application log
 │   ├── task_output.log          ← stdout/stderr from the 08:00 technical task
 │   └── news_task_output.log     ← stdout/stderr from the 07:00 news task
 │
-├── backtester.py                ← avg-return engine + sl_pct support (ProcessPool parallel)
-├── hyperparameter_search.py     ← grid + random search; optimises signal params + SL distance
+├── backtester.py                ← avg-return + ret_lower/t_stat engine, sl_pct support (ProcessPool parallel)
+├── hyperparameter_search.py     ← grid + random search; optimises signal params + SL distance via ret_lower
+├── hft_backtester.py            ← intraday (1/5/10/15min) long+short backtester, EOD square-off
 ├── pipeline.py                  ← daily orchestrator: collect → analyse → notify
 ├── scheduler.py                 ← APScheduler: 7am news + 8am technical pipeline
 ├── initialize.py                ← bootstrap: wipes previous data, downloads history, runs backtester
 ├── setup_windows_task.py        ← registers two Windows tasks (07:00 news + 08:00 technical)
+├── .venv/                       ← project virtual environment (pandas/numpy/pyarrow pinned for parquet support)
 │
 ├── run_ui.py                    ← launches the dark-theme web dashboard (Flask)
 └── webui/                       ← browser control panel (see "Web Dashboard")
@@ -188,6 +223,7 @@ Signal Infomer/
     ├── jobs.py                  ← background subprocess job manager (fixed whitelist)
     ├── templates/index.html     ← single-page shell
     └── static/                  ← style.css (dark theme) + app.js (vanilla JS)
+                                    + vendor/ (TradingView Lightweight Charts, bundled for offline use)
 ```
 
 ---
@@ -220,10 +256,15 @@ MIN_CONFIDENCE=0.0       # 2) min conviction-weighted win rate (0.0 = off; e.g. 
 
 # ── Backtester economics ──────────────────────────────────────────────────────
 TRANSACTION_COST=0.0030  # round-trip cost netted from every trade (30 bps blended)
-WR_CONFIDENCE=0.90       # confidence level for the Wilson "worst-case" win rate
+WR_CONFIDENCE=0.90       # confidence level for ret_lower / Wilson "worst-case" win rate
 BACKTEST_WINDOW_DAYS=1100
 MAX_HOLD_DAYS=10
-BEST_DAY_THRESHOLD=0.005 # prefer earlier exit if avg return within this of the peak
+BEST_DAY_THRESHOLD=0.005 # prefer earlier exit if ret_lower within this of the peak
+MIN_OBS_FOR_BEST=20      # min sample size for a holding day to be eligible as "best"
+
+# ── HFT / intraday backtester (hft_backtester.py) ─────────────────────────────
+HFT_TRANSACTION_COST=0.0010  # round-trip cost, intraday (10 bps)
+HFT_MIN_AVG_RETURN=0.0005    # min net avg return to pass the intraday screen (5 bps; relaxed vs daily 50 bps)
 
 # ── Pick performance scorecard ────────────────────────────────────────────────
 SCORECARD_DAYS=30        # trailing window summarised
@@ -309,21 +350,41 @@ Example for a setup with 73% SL rate:
 | d1  | 25% win rate            | −2.8% avg return   |
 | d4  | **90% win rate** ← misleading | **−0.95% avg** ← true |
 
-### Weight formula
+### Weight formula — driven by the lower-confidence-bound return
+
+Conviction weight is **not** based on the raw average return. It's based on
+`ret_lower` — the `WR_CONFIDENCE` (default 90%) **lower confidence bound** on
+the mean net return:
 
 ```
-weight = clip(1.0 + smoothed_return × 20, 0.10, 2.00)
-smoothed_return = (avg_return × n) / (n + 10)   # Bayesian shrinkage toward 0%
+ret_lower = avg_return − z × (ret_std / sqrt(n))      # one-sided, z ≈ 1.2816 at 90%
+weight    = clip(1.0 + ret_lower × 20, 0.10, 2.00)
 ```
 
-If `avg_return < MIN_AVG_RETURN` (default 0.5%), weight is clamped to 0.10 (minimum conviction).
+Why: the raw average return is a **point estimate** — with enough setups and
+enough exit-day/exit-style combinations tried, some will look great purely by
+chance (selection bias). `ret_lower` answers "what return am I confident this
+setup beats `WR_CONFIDENCE`% of the time, given how much data backs it?" — a
+high-variance or low-`n` setup gets pulled toward zero even if its average
+looks good. `best_avg_return`, `best_exit`, and `best_days` (the holding
+period) are themselves now **selected** by maximising `ret_lower` across the
+10-day × 2-exit grid, not the raw average — see `_summarise()` /
+`_compute_weight()` in [backtester.py](backtester.py).
 
-| Avg return | Weight |
+If `avg_return < MIN_AVG_RETURN` (default 0.5%), weight is clamped to 0.10 (minimum conviction)
+regardless of `ret_lower`. `MIN_OBS_FOR_BEST` (default 20, env-overridable) is the minimum
+sample size considered when selecting the best holding day.
+
+| `ret_lower` | Weight |
 |---|---|
-| < 0.5% (threshold) | 0.10 (minimum) |
-| 0% (break-even) | 1.00 |
+| ≤ −0.05 (or `avg_return` < threshold) | 0.10 (minimum) |
+| 0% | 1.00 |
 | +2.5% | ~1.50 |
-| +5% | 2.00 (maximum) |
+| ≥ +5% | 2.00 (maximum) |
+
+Each setup's `strategy_weights.json` entry also reports `ret_lower`, `ret_std`,
+`t_stat`, and `sample_size` (= `n`) so the dashboard's Setups tab can show the
+evidence behind every weight, not just the headline number.
 
 ### CLI
 
@@ -351,18 +412,27 @@ Finds the optimal parameters for each setup, including the **stoploss distance**
 
 ### Combined score
 
-Selection is based on a combined score that rewards high avg return and penalises frequent stop-outs:
+Selection is based on a combined score that rewards a statistically-defensible
+edge (`ret_lower`, the same lower-confidence-bound used for conviction
+weighting — see [Weight formula](#weight-formula--driven-by-the-lower-confidence-bound-return))
+and penalises frequent stop-outs:
 
 ```
-combined_score = avg_return × (1 − sl_rate × 0.5)
+metric         = ret_lower if available else avg_return
+combined_score = metric × (1 − sl_rate × 0.5)     # only when metric > 0
 ```
 
-Examples:
-- avg=+2%, SL=73% → score = 2% × 0.635 = **+1.27%** (high SL penalised)
-- avg=+2%, SL=10% → score = 2% × 0.950 = **+1.90%** ← preferred
-- avg=+1.5%, SL=10% → score = 1.5% × 0.950 = **+1.43%**
+Picking the combo with the best **point-estimate average** would systematically
+select lucky noise — the more parameter combinations tried, the worse that bias
+gets. `ret_lower` penalises high-variance / low-`n` combos, which is far harder
+to game by chance.
 
-Losing strategies (avg ≤ 0) score as-is and are excluded by `MIN_AVG_RETURN`.
+Examples (using `ret_lower` as the metric):
+- ret_lower=+2%, SL=73% → score = 2% × 0.635 = **+1.27%** (high SL penalised)
+- ret_lower=+2%, SL=10% → score = 2% × 0.950 = **+1.90%** ← preferred
+- ret_lower=+1.5%, SL=10% → score = 1.5% × 0.950 = **+1.43%**
+
+Losing combos (`metric` ≤ 0) score as-is and are excluded by `MIN_AVG_RETURN`.
 
 ### Two-phase design
 
@@ -402,13 +472,90 @@ MOMENTUM_PINBALL               -0.52%   -0.95%  -0.95%   73%   d4     210       
 `V.Avg` = validated avg return per trade.  
 `SL%` = stoploss hit rate.
 
+### Grid vs. random search — and does random search update the live weights?
+
+| | **Grid search** (default) | **Random search** (`--random`) |
+|---|---|---|
+| Coverage | Exhaustive over a fixed, hand-picked grid (e.g. `period: [7,9,14,21]`) | Random samples across a *wider* continuous/discrete range |
+| Finds | The best point **within the grid you defined** | Local maxima the grid might not contain at all — and can find *multiple* distinct peaks (`--peaks N`) |
+| Cost | Combinatorial — grows fast with each extra parameter | Fixed cost — `--samples N` regardless of how many parameters |
+| Validation | Best combo re-run at full precision | Each kept peak re-run at full precision |
+| When to use | First pass on a new setup, or a small parameter space | Wider exploration, or when grid search converges to a grid edge (suggesting the true optimum is outside the grid) |
+
+**Both modes write to the same place: `db/optimal_params.json`** (via
+`save_optimal_params()`), merging into the existing file so setups you didn't
+re-run keep their old params. **Neither mode touches `db/strategy_weights.json`
+directly.**
+
+That means: running a hyperparameter search (grid or random) updates the
+*parameters* a setup will use next time it's loaded — but the **conviction
+weights, `ret_lower`, win rates, etc. shown in the dashboard and used for
+WhatsApp alerts come from `strategy_weights.json`, which is only refreshed by
+running `backtester.py`**. The recommended order is always: search → backtester
+→ (optionally) pipeline. `setup_loader.py` reads `optimal_params.json` at
+startup, so any script that loads setups (backtester, hft_backtester, pipeline)
+automatically picks up new params on its next run.
+
 ### Recommended workflow
 
 ```bash
 python hyperparameter_search.py              # 1. Full grid scan (includes sl_pct)
 python hyperparameter_search.py --random --samples 200 --peaks 5   # 2. Random peaks
-python backtester.py                         # 3. Confirm avg returns with saved params
+python backtester.py                         # 3. Refresh strategy_weights.json with new params
 ```
+
+---
+
+## HFT / Intraday Backtester
+
+[hft_backtester.py](hft_backtester.py) runs the same 76 setups on intraday bars
+(1/5/10/15-minute), with **execution rules different from the daily engine**:
+
+| Rule | Daily (`backtester.py`) | Intraday (`hft_backtester.py`) |
+|---|---|---|
+| Direction | Long (short largely unprofitable after costs) | **Long and short**, both kept |
+| Holding period | Up to `MAX_HOLD_DAYS` (10) sessions | **Always flat by session close** — never held overnight |
+| Entry | D1 open (next session) | Next bar's open after the signal bar, same session only |
+| Round-trip cost | `TRANSACTION_COST` = 30 bps | `HFT_TRANSACTION_COST` = 10 bps |
+| Min avg return screen | `MIN_AVG_RETURN` = 50 bps | `HFT_MIN_AVG_RETURN` = 5 bps (relaxed — intraday edges are smaller) |
+| Pass screen | `avg_return ≥ MIN_AVG_RETURN` | `avg_return ≥ HFT_MIN_AVG_RETURN` **and** `ret_lower > 0` |
+
+**Data**: `data/hft/timeframe={1min,5min,10min,15min}/symbol=X/year=Y` (hive-partitioned
+parquet, 536 NSE symbols, 2015-2026, ~11 GB). Two execution-realism guards are
+applied per trade: a **circuit/limit-day guard** (skip if the signal bar moved
+>10% from the prior close, or has zero range — both signs of a locked
+circuit), and a **bar-vs-day lookback caveat** (a setup's lookback parameters,
+e.g. "12% drop over 3 days", become much shorter real-time windows on
+intraday bars — see [docs/STRATEGY_RESEARCH.md](docs/STRATEGY_RESEARCH.md) §4).
+
+### CLI
+
+```bash
+python hft_backtester.py                                       # 15min, full dataset, all setups
+python hft_backtester.py --timeframes 1min,5min,10min,15min    # all timeframes
+python hft_backtester.py --timeframes 1min --years 2024,2025,2026
+python hft_backtester.py --timeframes 15min --symbols 250      # cap symbol count
+python hft_backtester.py --setup GAP_DOWN_REVERSAL --timeframes 5min
+python hft_backtester.py --workers 8
+```
+
+| Flag | Default | Effect |
+|---|---|---|
+| `--timeframes` | `15min` | Comma-separated list of `1min,5min,10min,15min` |
+| `--years` | all available (2015-2026) | Comma-separated list of years to load |
+| `--symbols N` | all 536 | Cap the number of symbols (useful for quick checks) |
+| `--workers N` | CPU count | Cap ProcessPoolExecutor to N workers |
+| `--setup NAME` | all 76 | Run a single setup only |
+
+Writes `db/hft_results.json` (per timeframe: `avg_return`, `ret_lower`,
+`ret_std`, `t_stat`, `win_rate`, `wr_lower`, `profit_factor`, `n`/`n_long`/`n_short`,
+`avg_hold_bars`, `sl_rate`, `passes_screen`). Also runnable from the dashboard's
+**Run jobs** tab (per-timeframe toggle + free-text box for `--years`/`--symbols`).
+
+**Headline finding**: `GAP_DOWN_REVERSAL` (fade a ≥3% overnight gap-down in an
+uptrend, enter minutes after the open, flat by close) is the standout intraday
+edge — +0.3% to +1.0% per trade depending on timeframe, stronger the closer to
+the open. Full results: [docs/STRATEGY_RESEARCH.md](docs/STRATEGY_RESEARCH.md) §4.
 
 ---
 
@@ -426,7 +573,7 @@ Runs before the technical pipeline. Fetches internet news, uses a local Ollama L
 - Pull: `ollama pull gemma4:12b-it-qat`
 - Auto-selection (`ollama_client._score_model`) prefers gemma > qwen > llama > mistral, scored by family + parameter size, with a bonus for QAT variants (lower VRAM at near-fp quality) — so a better-scoring model pulled later is picked up automatically without code changes
 - **Why gemma4 over qwen3** (head-to-head on the live Pass-1/Pass-2 prompts, 2026-06-08): gemma4 produced cleaner structured output (5/5 picks parsed vs qwen3's 4/5 — qwen3 emitted the unparseable symbol `L&T` while gemma4 correctly normalized it to `LT`), more grounded reasoning (every pick traced to a specific headline vs qwen3 including one generic/weak "sector tailwind" pick), and *lower* VRAM despite having 50% more parameters. Trade-off: gemma4 is ~2.5–3x slower per call (~55s vs ~24s for Pass 1, ~64s vs ~18s for Pass 2). Accepted because this is a once-daily scheduled batch job — pick quality matters more than the extra ~10–15 min total runtime.
-- **Pass 1** (`think=False`): identify NSE 100 symbols from news digest — structured `PICK N: SYMBOL | ...` format. Thinking is disabled for structured-output tasks; this was discovered to be load-bearing on `qwen3:8b`, which returned an empty `response` (all output routed to the internal `thinking` field) when thinking was on — keeping it off is the safe default across models
+- **Pass 1** (`think=False`): identify NSE 500 symbols from news digest — structured `PICK N: SYMBOL | ...` format. Thinking is disabled for structured-output tasks; this was discovered to be load-bearing on `qwen3:8b`, which returned an empty `response` (all output routed to the internal `thinking` field) when thinking was on — keeping it off is the safe default across models
 - **Pass 2** (`think=True`): generate 3-sentence investment thesis per stock — free-form narrative; extended chain-of-thought enabled for better reasoning quality
 - **Scout Passes** (`think=False` / `think=True`): three separate searches beyond mainstream news (see below)
 - **Auto-start**: if `ollama serve` is not running, the pipeline launches it and waits up to 30s for readiness
@@ -438,15 +585,15 @@ After the main news picks, three additional Ollama passes run — each with its 
 
 | Lens | Label | Tag | Sources | Prompt focus | Universe |
 |---|---|---|---|---|---|
-| **Hidden Gems** | `SCOUT PICKS — Hidden Gems` | `HIDDEN GEM` | Reddit (`r/IndiaInvestments`, `r/IndianStockMarket` weekly top + new, via RSS) + 10 Google News queries | Contrarian — stocks NOT in mainstream headlines: promoter accumulation, turnarounds, sector rotation, deep value | NSE_100 only (`restrict_to_universe=True`) |
+| **Hidden Gems** | `SCOUT PICKS — Hidden Gems` | `HIDDEN GEM` | Reddit (`r/IndiaInvestments`, `r/IndianStockMarket` weekly top + new, via RSS) + 10 Google News queries | Contrarian — stocks NOT in mainstream headlines: promoter accumulation, turnarounds, sector rotation, deep value | NSE_500 only (`restrict_to_universe=True`) |
 | **Small-Cap Growth** | `SMALL-CAP PICKS — Growth Potential` | `SMALLCAP GROWTH` | 8 Google News queries (revenue/margin growth, multibagger coverage, breakout volume, capacity expansion) | Growth — genuine small caps (~₹2,000–20,000cr mcap), explicitly excludes Nifty-100 large caps (RELIANCE, TCS, HDFCBANK, INFY…); LLM names any real NSE-listed small cap from its own knowledge, not just the reference list | **Open** — any genuinely NSE-listed small cap (`restrict_to_universe=False`) |
-| **Smart Money** | `SMART MONEY PICKS — Investor & Broker Signals` | `SMART MONEY` | 8 Google News queries naming famous investors (Vijay Kedia, Radhakishan Damani/RK Damani, Ashish Kacholia, Dolly Khanna, Mukul Agrawal…) and broking houses (Motilal Oswal, Jefferies, ICICI Securities, Nomura…) | Conviction signals — fresh stake increases, BUY/Outperform ratings + target upgrades, FII/DII bulk & block deals; prompt requires the LLM to *name* the specific investor/broker | NSE_100 only (`restrict_to_universe=True`) |
+| **Smart Money** | `SMART MONEY PICKS — Investor & Broker Signals` | `SMART MONEY` | 8 Google News queries naming famous investors (Vijay Kedia, Radhakishan Damani/RK Damani, Ashish Kacholia, Dolly Khanna, Mukul Agrawal…) and broking houses (Motilal Oswal, Jefferies, ICICI Securities, Nomura…) | Conviction signals — fresh stake increases, BUY/Outperform ratings + target upgrades, FII/DII bulk & block deals; prompt requires the LLM to *name* the specific investor/broker | NSE_500 only (`restrict_to_universe=True`) |
 
 **Output:** each lens sends its own WhatsApp message (3 in total, after the main news picks message), capped at 3 picks each, fully enriched with price + technical indicators (see below). All news-analyzer messages (main picks + all 3 scouts) broadcast to every number in `WHATSAPP_PHONES`.
 
 > **Analysis text is no longer chopped mid-sentence.** `formatter.ANALYSIS_LIMIT` was raised from 220 → 750 chars — the old limit cut Pass-2's 3-sentence theses (often ~500-650 chars) off partway through, producing fragments like *"Some reasons. Some investors did this thing,..."*. 750 comfortably fits a full thesis (the prompts cap each sentence at ~28-30 words ≈ 550-650 chars total) while `format_messages()`/`format_scout_messages()` still bucket picks across multiple WhatsApp parts to respect the 3,800-char `MAX_CHARS` send limit, and pathologically long model output is still safely bounded with an ellipsis.
 
-> **Small-Cap Growth is intentionally NOT limited to the Nifty 100** — `ScoutConfig.restrict_to_universe=False` lets its Pass-1 prompt ask the LLM to name any genuinely NSE-listed small cap from its own knowledge (real small caps mostly live outside the Nifty 100). `_parse_picks` accepts these "off-list" tickers directly — sanity-checked against a ticker-shape regex and requiring a company name — and assembles the full symbol as `TICKER.NS`, trusting the LLM's naming rather than fuzzy-matching against the NSE_100 reference. Because these symbols have no OHLCV history in the local DB, technicals for them come from an **on-demand fetch** instead (see below) — fetched data is used only for that message and is never persisted.
+> **Small-Cap Growth is intentionally NOT limited to the Nifty 100** — `ScoutConfig.restrict_to_universe=False` lets its Pass-1 prompt ask the LLM to name any genuinely NSE-listed small cap from its own knowledge (real small caps mostly live outside the Nifty 100). `_parse_picks` accepts these "off-list" tickers directly — sanity-checked against a ticker-shape regex and requiring a company name — and assembles the full symbol as `TICKER.NS`, trusting the LLM's naming rather than fuzzy-matching against the NSE_500 reference. Because these symbols have no OHLCV history in the local DB, technicals for them come from an **on-demand fetch** instead (see below) — fetched data is used only for that message and is never persisted.
 
 ### Avoiding repeat picks in the search itself
 
@@ -465,7 +612,7 @@ Every pick — main news picks **and** all three scout lenses — is enriched vi
 | Volume ratio | `Vol 2.3x avg (surge)` | today's volume ÷ trailing 20-day average; flagged "(surge)" at ≥2x |
 | 20-SMA trend | `Above 20-SMA (+4.2%)` | price vs 20-day simple moving average, with % distance |
 
-**Data source — DB first, on-demand fetch as fallback:** `_enrich_technicals` first tries `get_ohlcv()` against the local OHLCV DB (covers the NSE_100 universe with zero network cost). For symbols with no/insufficient local history — i.e. off-list Small-Cap Growth picks — it falls back to `_fetch_recent_ohlcv()`, which pulls ~60 days directly from yfinance using the same download/clean pattern as `data/collector.py._fetch_ticker` (flatten MultiIndex columns, lowercase, tz-strip, drop NaN rows). **That fetched data is held in memory only for the indicator calculation and is never written to the DB** — per design, the local OHLCV table stays scoped to the tracked NSE_100 universe.
+**Data source — DB first, on-demand fetch as fallback:** `_enrich_technicals` first tries `get_ohlcv()` against the local OHLCV DB (covers the NSE_500 universe with zero network cost). For symbols with no/insufficient local history — i.e. off-list Small-Cap Growth picks — it falls back to `_fetch_recent_ohlcv()`, which pulls ~60 days directly from yfinance using the same download/clean pattern as `data/collector.py._fetch_ticker` (flatten MultiIndex columns, lowercase, tz-strip, drop NaN rows). **That fetched data is held in memory only for the indicator calculation and is never written to the DB** — per design, the local OHLCV table stays scoped to the tracked NSE_500 universe.
 
 Both lookups — and the whole enrichment — are wrapped in one try/except that simply leaves the technical fields absent on any failure (unknown symbol, delisted ticker, network error, insufficient history). **The WhatsApp message still sends without the technical-indicator lines** — `_price_line`/`_technical_line` in `formatter.py` already omit empty fields gracefully, so a fetch failure never blocks a send.
 
@@ -622,9 +769,15 @@ _18 closed · 4 still open · net of costs_
 
 ---
 
-## Implemented Trading Setups
+## Strategy Library
 
-All setups tunable via hyperparameter search including `sl_pct` (stoploss distance as % of entry price).
+**76 setups** total, all tunable via hyperparameter search including `sl_pct`
+(stoploss distance as % of entry price). All but 1 implement a vectorised
+`vector_signals(df) -> Series` (the `VectorSetup` pattern, see
+`core/vector_setup.py`) — the whole 76 × ~500-stock backtest runs in ~40s,
+which is what makes the 1-minute intraday backtest tractable.
+
+### Original 18 (one file each, `Trading Setups/`)
 
 | Setup | Source | Description | Signal fires when |
 |---|---|---|---|
@@ -646,6 +799,23 @@ All setups tunable via hyperparameter search including `sl_pct` (stoploss distan
 | `EMA_TREND_PULLBACK` | — | EMA trend + pullback | Price pulls back to fast EMA in uptrend |
 | `N_DOWN_REVERSAL` | — | N consecutive down days | N bearish closes in uptrending stock |
 | `VOLUME_CLIMAX` | — | Volume spike reversal | Abnormal volume + price reversal candle |
+
+### + 58 new setups (6 themed files, `Trading Setups/setups_*.py`)
+
+| File | # | Theme | Examples |
+|---|---|---|---|
+| `setups_mean_reversion.py` | 14 | Oversold/overbought snapbacks | `RSI2_EXTREME`, `DOUBLE_SEVENS`, `IBS_REVERSAL`, `CAPITULATION_REVERSAL`, `GAP_DOWN_REVERSAL`, `BOLLINGER_TAG` |
+| `setups_momentum.py` | 12 | Trend / breakout continuation | `DONCHIAN_BREAKOUT`, `HIGH_52W_BREAKOUT`, `GOLDEN_CROSS_PULLBACK`, `MACD_ZERO_TURN`, `SUPERTREND_FLIP` |
+| `setups_volatility.py` | 8 | Range compression → expansion | `NR7_BREAKOUT`, `TTM_SQUEEZE`, `GAP_AND_GO`, `BB_WIDTH_SQUEEZE` |
+| `setups_volume.py` | 8 | Volume-confirmed moves | `OBV_DIVERGENCE`, `POCKET_PIVOT`, `HIGH_VOLUME_THRUST`, `CMF_CROSS` |
+| `setups_patterns.py` | 8 | Candlestick reversal patterns | `ENGULFING_EXTREME`, `MORNING_STAR`, `THREE_SOLDIERS`, `KEY_REVERSAL` |
+| `setups_oscillators.py` | 8 | Secondary oscillator cross/extreme | `STOCH_RSI_CROSS`, `ULTIMATE_OSC`, `TRIX_CROSS`, `ELDER_IMPULSE` |
+
+**Net of costs (30bps daily / 10bps intraday), only 3 setups currently clear
+the investor screen** — `GAP_AND_GO`, `RSI2_EXTREME`, `CAPITULATION_REVERSAL` on
+daily bars, plus `GAP_DOWN_REVERSAL` intraday (overnight-gap fade). The other
+73 either have no edge after costs or fail the lower-bound screen. Full
+per-setup numbers, methodology, and caveats: [docs/STRATEGY_RESEARCH.md](docs/STRATEGY_RESEARCH.md).
 
 ---
 
@@ -674,7 +844,7 @@ All setups tunable via hyperparameter search including `sl_pct` (stoploss distan
 ```bash
 python initialize.py
 # Wipes existing market data, downloads BACKTEST_WINDOW_DAYS of OHLCV history
-# for all NSE 100 stocks, then runs the backtester.
+# for all NSE 500 stocks, then runs the backtester.
 # No arguments. Takes ~15-25 min on first run.
 ```
 
@@ -734,7 +904,7 @@ Writes results to `db/optimal_params.json`.
 ### `pipeline.py` — Technical signal pipeline (manual run)
 
 ```bash
-python pipeline.py                                  # run for all NSE 100 stocks
+python pipeline.py                                  # run for all NSE 500 stocks
 python pipeline.py --symbols RELIANCE.NS TCS.NS     # run for specific symbols only
 ```
 

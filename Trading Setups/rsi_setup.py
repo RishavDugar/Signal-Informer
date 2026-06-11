@@ -95,3 +95,10 @@ class RSISetup(BaseSetup):
                 "threshold_low": self.oversold,
             },
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent of signal(): +1 oversold cross, -1 overbought cross."""
+        r = self._rsi(df["close"])
+        long_  = (r <= self.oversold)   & (r.shift(1) > self.oversold)
+        short_ = (r >= self.overbought) & (r.shift(1) < self.overbought)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

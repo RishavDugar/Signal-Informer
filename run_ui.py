@@ -29,7 +29,7 @@ if str(ROOT) not in sys.path:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Signal Infomer web dashboard")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=5000)
+    parser.add_argument("--port", type=int, default=5500)
     parser.add_argument("--no-browser", action="store_true", help="don't open a browser tab")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()

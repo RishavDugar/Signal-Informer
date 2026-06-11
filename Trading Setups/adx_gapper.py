@@ -106,3 +106,14 @@ class ADXGapperSetup(BaseSetup):
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"adx": round(adx_val, 2),
                                       "plus_di": round(pdi, 2), "minus_di": round(mdi, 2)})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: gap against a strong DI-confirmed trend."""
+        import numpy as np
+        adx_s, pdi, mdi = compute_adx(df["high"], df["low"], df["close"],
+                                      adx_period=self.adx_period,
+                                      di_period=self.di_period)
+        strong = adx_s > self.adx_threshold
+        long_  = strong & (pdi > mdi) & (df["open"] < df["low"].shift(1))
+        short_ = strong & (mdi > pdi) & (df["open"] > df["high"].shift(1))
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

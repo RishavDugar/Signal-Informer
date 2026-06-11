@@ -29,6 +29,7 @@ log = get_logger("webui")
 ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = ROOT / "db" / "strategy_weights.json"
 PARAMS_PATH = ROOT / "db" / "optimal_params.json"
+HFT_RESULTS_PATH = ROOT / "db" / "hft_results.json"
 LOG_PATH = ROOT / "logs" / "signal_infomer.log"
 ENV_PATH = ROOT / ".env"
 
@@ -287,11 +288,17 @@ def setups() -> list[dict]:
             params_all = {}
 
     weights = {}
+    weight_dirs = {}
     try:
         from backtester import load_directional_weights
-        weights = load_directional_weights() or {}
+        weight_dirs = load_directional_weights() or {}
     except Exception:
         pass
+    if WEIGHTS_PATH.exists():
+        try:
+            weights = json.loads(WEIGHTS_PATH.read_text(encoding="utf-8")).get("setups", {})
+        except Exception:
+            weights = {}
 
     from notifications.whatsapp import _CATALOGUE
 
@@ -307,6 +314,7 @@ def setups() -> list[dict]:
         name = getattr(inst, "name", "?")
         p = params_all.get(name, {})
         w = weights.get(name, {})
+        wd = weight_dirs.get(name, {})
         out.append({
             "name": name,
             "sl_pct": getattr(inst, "sl_pct", None),
@@ -314,12 +322,49 @@ def setups() -> list[dict]:
             "best_avg_return": p.get("best_avg_return"),
             "best_sl_rate": p.get("best_sl_rate"),
             "best_days": p.get("best_days"),
-            "long_weight": (w.get("long") if isinstance(w, dict) else None),
-            "short_weight": (w.get("short") if isinstance(w, dict) else None),
+            "ret_lower": w.get("ret_lower"),
+            "t_stat": w.get("t_stat"),
+            "wr_lower": w.get("wr_lower"),
+            "profit_factor": w.get("profit_factor"),
+            "sample_size": w.get("sample_size"),
+            "long_weight": wd.get("long"),
+            "short_weight": wd.get("short"),
             "desc": _CATALOGUE.get(name, ("", "", ""))[0],
         })
-    out.sort(key=lambda x: (x["best_avg_return"] or -999), reverse=True)
+    out.sort(key=lambda x: (x["ret_lower"] if x["ret_lower"] is not None else -999), reverse=True)
     return out
+
+
+# ── HFT / intraday results ──────────────────────────────────────────────────────
+
+def hft_results() -> dict:
+    """Return intraday backtest results from db/hft_results.json, sorted by
+    ret_lower (lower-bound net return) within each timeframe."""
+    if not HFT_RESULTS_PATH.exists():
+        return {"exists": False, "timeframes": {}}
+    try:
+        data = json.loads(HFT_RESULTS_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"exists": True, "error": str(exc), "timeframes": {}}
+
+    from notifications.whatsapp import _plain_name
+
+    timeframes: dict[str, list[dict]] = {}
+    for tf, setups_dict in data.get("timeframes", {}).items():
+        rows = []
+        for name, r in setups_dict.items():
+            rows.append({"name": name, "friendly": _plain_name(name), **r})
+        rows.sort(key=lambda x: (x.get("ret_lower") if x.get("ret_lower") is not None else -999), reverse=True)
+        timeframes[tf] = rows
+
+    return {
+        "exists": True,
+        "generated_at": data.get("generated_at"),
+        "cost": data.get("cost"),
+        "min_avg_ret": data.get("min_avg_ret"),
+        "meta": data.get("meta", {}),
+        "timeframes": timeframes,
+    }
 
 
 # ── Stocks + OHLCV ─────────────────────────────────────────────────────────────

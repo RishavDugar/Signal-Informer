@@ -58,6 +58,8 @@ import os
 import pickle
 import sys
 import time
+
+import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -80,7 +82,11 @@ _CPU_COUNT        = os.cpu_count() or 4
 
 PRIOR_N           = 10      # Bayesian pseudo-observations
 PRIOR_WR          = 0.50    # Prior win rate — neutral (50 %)
-MIN_OBS_FOR_BEST  = 5       # minimum observations to consider a day valid
+# Minimum observations for a holding day to compete as "best day".
+# Was 5 — picking a holding period from 5 trades is curve-fitting, not
+# evidence. 20 keeps the day-selection honest while still letting
+# moderately rare setups qualify.
+MIN_OBS_FOR_BEST  = int(os.getenv("MIN_OBS_FOR_BEST", "20"))
 # MAX_HOLD_DAYS and BEST_DAY_THRESHOLD imported from config
 
 # z-scores for common one-sided confidence levels — used by the Wilson
@@ -110,6 +116,33 @@ def _wilson_lower_bound(wins: int, n: int, z: float = _WR_Z) -> float:
     return max(0.0, (centre - margin) / denom)
 
 
+def _mean_lower_bound(ret_sum: float, ret_sq_sum: float, n: int,
+                      z: float = _WR_Z) -> tuple[float, float, float]:
+    """
+    One-sided lower confidence bound on the MEAN net return, plus the std-dev
+    and t-statistic: returns (ret_lower, ret_std, t_stat).
+
+    Why this matters economically: an investor trades the EXPECTANCY, and the
+    win rate alone says nothing about whether the average profit is real or
+    noise. avg = +1% over 30 trades with a 12% per-trade std has a t-stat of
+    ~0.45 — indistinguishable from luck — while the same +1% with a 2% std
+    (t ≈ 2.7) is tradeable evidence. ret_lower = avg − z·(std/√n) is the
+    expectancy we are WR_CONFIDENCE-confident the setup actually beats; it
+    automatically punishes small samples and high dispersion, which also
+    shrinks the optimism from selecting the best holding day in-sample.
+    n < 2 → no variance estimate → (0.0, 0.0, 0.0).
+    """
+    if n < 2:
+        return 0.0, 0.0, 0.0
+    mean = ret_sum / n
+    var  = max(0.0, (ret_sq_sum - n * mean * mean) / (n - 1))
+    std  = var ** 0.5
+    if std == 0.0:
+        return mean, 0.0, 0.0
+    se = std / n ** 0.5
+    return mean - z * se, std, mean / se
+
+
 # ── Per-day accumulator ───────────────────────────────────────────────────────
 # One dict per holding-day per exit bucket (open / close). Beyond the raw return
 # sum and win count we also track win_sum / loss_sum / loss_n so the summariser
@@ -117,18 +150,19 @@ def _wilson_lower_bound(wins: int, n: int, z: float = _WR_Z) -> float:
 # win rate alone hides.
 
 _DAY_KEYS = (
-    "open_ret_sum",  "open_n",  "open_wins",  "open_win_sum",  "open_loss_sum",  "open_loss_n",
-    "close_ret_sum", "close_n", "close_wins", "close_win_sum", "close_loss_sum", "close_loss_n",
+    "open_ret_sum",  "open_ret_sq",  "open_n",  "open_wins",  "open_win_sum",  "open_loss_sum",  "open_loss_n",
+    "close_ret_sum", "close_ret_sq", "close_n", "close_wins", "close_win_sum", "close_loss_sum", "close_loss_n",
 )
 
 
 def _empty_day() -> dict:
-    return {k: (0.0 if k.endswith("sum") else 0) for k in _DAY_KEYS}
+    return {k: (0.0 if k.endswith(("sum", "sq")) else 0) for k in _DAY_KEYS}
 
 
 def _book(bucket: dict, prefix: str, ret: float) -> None:
     """Record one trade's net return into the open_/close_ fields of `bucket`."""
     bucket[f"{prefix}_ret_sum"] += ret
+    bucket[f"{prefix}_ret_sq"]  += ret * ret
     bucket[f"{prefix}_n"]       += 1
     if ret > 0:
         bucket[f"{prefix}_wins"]     += 1
@@ -140,24 +174,36 @@ def _book(bucket: dict, prefix: str, ret: float) -> None:
 
 # ── Weight formula ────────────────────────────────────────────────────────────
 
-def _compute_weight(avg_return: float, n: int) -> float:
+def _compute_weight(avg_return: float, n: int, ret_lower: float | None = None) -> float:
     """
-    Bayesian-smoothed weight in [0.10, 2.00].
+    Conviction weight in [0.10, 2.00], anchored at 1.00 = neutral.
 
-    smoothed_ret = (avg_return × n) / (n + PRIOR_N)  — shrinks toward 0% with small n
-    weight       = clip(1.0 + smoothed_ret × 20, 0.10, 2.00)
+    Economic rationale: conviction should scale with the EVIDENCE of positive
+    net expectancy, not the point estimate. The point-estimate avg return is
+    biased upward (best holding day + best exit are selected on the same data)
+    and says nothing about dispersion. So the weight is driven by ret_lower —
+    the one-sided lower confidence bound on the mean net return — which already
+    embeds the small-sample penalty (z·std/√n), so no extra Bayesian shrink is
+    applied on top (that would double-penalise).
 
-    n=0            → 1.00  (no data → neutral weight)
-    avg_return=0%  → 1.00  (break-even → neutral)
-    avg_return=+5% → ~2.00 (strong positive edge)
-    avg_return=-5% → ~0.10 (losing strategy)
+        weight = clip(1.0 + ret_lower × 20, 0.10, 2.00)
+
+    n=0                 → 1.00  (no data → neutral)
+    ret_lower = 0%      → 1.00  (cannot rule out zero edge → neutral)
+    ret_lower = +5%     → 2.00  (strong, statistically solid edge)
+    ret_lower negative  → < 1.00 even when avg is positive (weak evidence)
+    avg < MIN_AVG_RETURN→ 0.10  (fails the investor's minimum-return screen)
+
+    ret_lower=None preserves the legacy behaviour (Bayesian-smoothed avg) for
+    old stats dicts that lack variance data.
     """
     if n == 0:
         return 1.0
     if avg_return < MIN_AVG_RETURN:
         return 0.10   # below the minimum return threshold — negligible conviction
-    smoothed = (avg_return * n) / (n + PRIOR_N)
-    base     = 1.0 + smoothed * 20.0
+    if ret_lower is None:
+        ret_lower = (avg_return * n) / (n + PRIOR_N)
+    base = 1.0 + ret_lower * 20.0
     return round(max(0.10, min(2.00, base)), 3)
 
 
@@ -191,26 +237,66 @@ def _process_one_stock(
     n_long = n_short = n_long_sl = n_short_sl = 0
     n = len(df)
 
-    for i in range(setup.min_periods, n - MAX_HOLD_DAYS, stride):
-        sub_df = df.iloc[:i + 1]
+    # ── Collect signal events: (bar_idx, direction, native_sl_price) ─────────
+    # Fast path: setups exposing vector_signals() compute the whole signal
+    # series in one vectorised pass (stride is ignored — every bar is tested,
+    # which both speeds things up ~100x and increases sample size).
+    # Slow path: legacy per-bar signal() calls on a growing window.
+    events: list[tuple[int, str, float | None]] = []
+    vec_fn = getattr(setup, "vector_signals", None)
+    if vec_fn is not None:
         try:
-            result = setup.signal(sub_df, symbol)
+            dirs = np.asarray(vec_fn(df), dtype=float)
         except Exception:
-            continue
+            dirs = np.zeros(n)
+        sl_arr = None
+        stops_fn = getattr(setup, "vector_stops", None)
+        if stops_fn is not None:
+            try:
+                stops_res = stops_fn(df)
+                # vector_stops may legitimately return None (= use default SL);
+                # np.asarray(None) would yield a 0-d NaN array, so guard first.
+                if stops_res is not None:
+                    sl_arr = np.asarray(stops_res, dtype=float)
+                    if sl_arr.ndim != 1 or len(sl_arr) != n:
+                        sl_arr = None
+            except Exception:
+                sl_arr = None
+        lows  = df["low"].to_numpy(dtype=float)
+        highs = df["high"].to_numpy(dtype=float)
+        for i in np.nonzero(dirs != 0)[0]:
+            if i < setup.min_periods or i >= n - MAX_HOLD_DAYS:
+                continue
+            direction = "sell" if dirs[i] < 0 else "buy"
+            if sl_arr is not None:
+                sl_val = sl_arr[i]
+                sl = None if np.isnan(sl_val) else float(sl_val)
+            else:
+                # Mirrors BaseSetup.get_stoploss default: signal-bar low/high
+                sl = float(lows[i]) if direction == "buy" else float(highs[i])
+            events.append((int(i), direction, sl))
+    else:
+        for i in range(setup.min_periods, n - MAX_HOLD_DAYS, stride):
+            sub_df = df.iloc[:i + 1]
+            try:
+                result = setup.signal(sub_df, symbol)
+            except Exception:
+                continue
+            if not result.signal:
+                continue
+            direction = _direction_of(result.to_dict())
+            try:
+                sl_price = setup.get_stoploss(result, sub_df)
+            except Exception:
+                sl_price = None
+            events.append((i, direction, sl_price))
 
-        if not result.signal:
-            continue
-
-        direction   = _direction_of(result.to_dict())
+    # ── Book every signal event ───────────────────────────────────────────────
+    for i, direction, sl_price in events:
         entry_idx   = i + 1                              # D1
         entry_price = float(df["open"].iloc[entry_idx])  # D1 open is the entry
         if entry_price == 0:
             continue
-
-        try:
-            sl_price = setup.get_stoploss(result, sub_df)
-        except Exception:
-            sl_price = None
 
         # Percentage-based SL override: replaces native SL when sl_pct is set.
         # sl_pct=2.0 → stop 2% below entry for longs, 2% above for shorts.
@@ -308,6 +394,15 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
       wr_lower    = Wilson lower bound on the win rate at WR_CONFIDENCE — the
                     win rate we are confident the setup BEATS. Honest headline
                     reliability number: penalises small n and selection bias.
+      ret_lower   = one-sided lower confidence bound on the mean net return —
+                    the expectancy we are confident the setup beats. This is
+                    what conviction weights are computed from, and what the
+                    best-exit / best-day selection optimises (selecting on the
+                    lower bound instead of the point estimate shrinks the
+                    multiple-comparison optimism of trying 10 days × 2 exits).
+      ret_std / t_stat = per-trade return dispersion and the t-statistic of
+                    the mean — t < ~1.3 means the edge is not distinguishable
+                    from noise at 90% confidence.
       avg_win/avg_loss/profit_factor = magnitude info a win rate hides. A high
                     win rate with a profit_factor < 1 is still a losing setup.
       best_exit   = 'close' for d=1 (only option); 'open' or 'close' for d≥2.
@@ -317,28 +412,42 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
         bd = by_day[d]
         o_sum = bd["open_ret_sum"];  o_n = bd["open_n"];  o_w = bd["open_wins"]
         c_sum = bd["close_ret_sum"]; c_n = bd["close_n"]; c_w = bd["close_wins"]
+        o_sq  = bd.get("open_ret_sq",  0.0)
+        c_sq  = bd.get("close_ret_sq", 0.0)
 
         avg_o = (o_sum / o_n) if o_n > 0 else None
         avg_c = (c_sum / c_n) if c_n > 0 else None
         wr_o  = (o_w / o_n)   if o_n > 0 else None
         wr_c  = (c_w / c_n)   if c_n > 0 else None
 
-        # Best exit: whichever average net return is higher.
+        lo_o = _mean_lower_bound(o_sum, o_sq, o_n)[0] if o_n > 1 else None
+        lo_c = _mean_lower_bound(c_sum, c_sq, c_n)[0] if c_n > 1 else None
+
+        # Best exit: whichever LOWER-BOUND net return is higher (conservative,
+        # variance-aware choice; falls back to avg when variance is unknown).
         # For d=1 only close is populated (open_n=0 always).
-        if avg_o is not None and avg_c is not None and avg_o > avg_c:
+        key_o = lo_o if lo_o is not None else avg_o
+        key_c = lo_c if lo_c is not None else avg_c
+        if key_o is not None and key_c is not None and key_o > key_c:
             best_avg, best_wr, best_n, best_w, best_exit = avg_o, wr_o, o_n, o_w, "open"
-        elif avg_c is not None:
+            best_sum, best_sq = o_sum, o_sq
+        elif key_c is not None:
             best_avg, best_wr, best_n, best_w, best_exit = avg_c, wr_c, c_n, c_w, "close"
-        elif avg_o is not None:
+            best_sum, best_sq = c_sum, c_sq
+        elif key_o is not None:
             best_avg, best_wr, best_n, best_w, best_exit = avg_o, wr_o, o_n, o_w, "open"
+            best_sum, best_sq = o_sum, o_sq
         else:
             best_avg, best_wr, best_n, best_w, best_exit = 0.0, PRIOR_WR, 0, 0, "close"
+            best_sum, best_sq = 0.0, 0.0
 
         # Bayesian confidence: smoothed win rate pulled toward 50 % with small n
         bw     = best_wr if best_wr is not None else PRIOR_WR
         bconf  = (bw * best_n + PRIOR_WR * PRIOR_N) / (best_n + PRIOR_N)
         # Wilson lower bound on the raw (unsmoothed) win rate of the best exit
         wr_lo  = _wilson_lower_bound(best_w, best_n)
+        # Lower bound / dispersion / t-stat on the mean net return of best exit
+        ret_lo, ret_std, t_stat = _mean_lower_bound(best_sum, best_sq, best_n)
 
         # Magnitude stats for the best exit (.get keeps old hand-built dicts safe)
         win_sum  = bd.get(f"{best_exit}_win_sum",  0.0)
@@ -358,6 +467,9 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
             "win_rate"        : round(bw,    4),
             "confidence"      : round(bconf, 4),
             "wr_lower"        : round(wr_lo, 4),
+            "ret_lower"       : round(ret_lo,  4),
+            "ret_std"         : round(ret_std, 4),
+            "t_stat"          : round(t_stat,  2),
             "avg_win"         : round(avg_win,  4),
             "avg_loss"        : round(avg_loss, 4),
             "profit_factor"   : round(prof_fac, 3) if prof_fac != float("inf") else None,
@@ -373,9 +485,14 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
         if day_stats[str(d)]["tested"] >= MIN_OBS_FOR_BEST
     }
     if valid:
-        peak_avg = max(s["avg_return"] for s in valid.values())
-        best_d   = min(
-            (d for d in valid if peak_avg - valid[d]["avg_return"] <= BEST_DAY_THRESHOLD),
+        # Select the holding day on the LOWER-BOUND expectancy, not the point
+        # estimate — choosing the max of 10 in-sample averages systematically
+        # overstates the edge; the lower bound self-corrects for noise.
+        # Earlier day still preferred when within BEST_DAY_THRESHOLD of the
+        # peak (shorter holds free up capital sooner).
+        peak_lo = max(s["ret_lower"] for s in valid.values())
+        best_d  = min(
+            (d for d in valid if peak_lo - valid[d]["ret_lower"] <= BEST_DAY_THRESHOLD),
             key=lambda d: d,
         )
         bs = valid[best_d]
@@ -388,7 +505,7 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
     best_conf = bs["confidence"]
     best_wr   = bs["win_rate"]
 
-    weight  = _compute_weight(best_avg, best_n)
+    weight  = _compute_weight(best_avg, best_n, bs.get("ret_lower"))
     sl_rate = round(total_sl_hits / total_signals, 4) if total_signals > 0 else 0.0
     return {
         "total_signals"   : total_signals,
@@ -400,6 +517,10 @@ def _summarise(by_day: dict, total_signals: int, total_sl_hits: int = 0) -> dict
         "best_win_rate"   : round(best_wr,   4),
         "best_confidence" : round(best_conf, 4),
         "best_wr_lower"   : bs.get("wr_lower", 0.0),
+        "best_ret_lower"  : bs.get("ret_lower", 0.0),
+        "ret_lower"       : bs.get("ret_lower", 0.0),
+        "ret_std"         : bs.get("ret_std", 0.0),
+        "t_stat"          : bs.get("t_stat", 0.0),
         "avg_win"         : bs.get("avg_win",  0.0),
         "avg_loss"        : bs.get("avg_loss", 0.0),
         "profit_factor"   : bs.get("profit_factor"),
@@ -426,8 +547,10 @@ def _merge_direction_stats(long_stats: dict, short_stats: dict) -> dict:
 
     Full per-direction data is available under the 'long' and 'short' keys.
     """
-    lw = _compute_weight(long_stats["best_avg_return"],  long_stats["tested"])
-    sw = _compute_weight(short_stats["best_avg_return"], short_stats["tested"])
+    lw = _compute_weight(long_stats["best_avg_return"],  long_stats["tested"],
+                         long_stats.get("best_ret_lower"))
+    sw = _compute_weight(short_stats["best_avg_return"], short_stats["tested"],
+                         short_stats.get("best_ret_lower"))
     # A direction with zero observed signals carries no conviction — _compute_weight
     # returns the neutral 1.0 for n=0, which would otherwise let an empty book
     # inflate the overall weight above a losing one. Only let directions that
@@ -457,6 +580,10 @@ def _merge_direction_stats(long_stats: dict, short_stats: dict) -> dict:
         "best_confidence": best["best_confidence"],
         "best_wr_lower"  : best.get("best_wr_lower", 0.0),
         "wr_lower"       : best.get("wr_lower", 0.0),
+        "best_ret_lower" : best.get("best_ret_lower", 0.0),
+        "ret_lower"      : best.get("ret_lower", 0.0),
+        "ret_std"        : best.get("ret_std", 0.0),
+        "t_stat"         : best.get("t_stat", 0.0),
         "avg_win"        : best.get("avg_win",  0.0),
         "avg_loss"       : best.get("avg_loss", 0.0),
         "profit_factor"  : best.get("profit_factor"),
@@ -734,6 +861,10 @@ def save_weights(results: dict) -> None:
                 # Honest, after-cost reliability + magnitude metrics
                 "wr_lower"        : s.get("wr_lower", 0.0),
                 "best_wr_lower"   : s.get("best_wr_lower", 0.0),
+                "best_ret_lower"  : s.get("best_ret_lower", 0.0),
+                "ret_lower"       : s.get("ret_lower", 0.0),
+                "ret_std"         : s.get("ret_std", 0.0),
+                "t_stat"          : s.get("t_stat", 0.0),
                 "avg_win"         : s.get("avg_win",  0.0),
                 "avg_loss"        : s.get("avg_loss", 0.0),
                 "profit_factor"   : s.get("profit_factor"),

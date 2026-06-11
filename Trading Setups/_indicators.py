@@ -123,3 +123,228 @@ def bollinger_bands(
     middle = close.rolling(period, min_periods=period).mean()
     std    = close.rolling(period, min_periods=period).std()
     return middle + num_stddev * std, middle, middle - num_stddev * std
+
+
+# ── Extended vectorised indicator library (used by the VectorSetup catalogue) ──
+
+def roc(close: pd.Series, period: int) -> pd.Series:
+    """Rate of change as a fraction (0.05 = +5%)."""
+    return close / close.shift(period) - 1.0
+
+
+def donchian(high: pd.Series, low: pd.Series, period: int) -> tuple[pd.Series, pd.Series]:
+    """(upper, lower) channel of the PRIOR `period` bars (shifted — no look-ahead
+    on the current bar's own extreme)."""
+    upper = high.shift(1).rolling(period, min_periods=period).max()
+    lower = low.shift(1).rolling(period, min_periods=period).min()
+    return upper, lower
+
+
+def keltner(high: pd.Series, low: pd.Series, close: pd.Series,
+            ema_period: int = 20, atr_period: int = 14,
+            mult: float = 2.0) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Keltner channels: (upper, middle, lower)."""
+    mid = ema(close, ema_period)
+    rng = atr(high, low, close, atr_period)
+    return mid + mult * rng, mid, mid - mult * rng
+
+
+def cci(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 20) -> pd.Series:
+    tp  = (high + low + close) / 3.0
+    ma  = tp.rolling(period, min_periods=period).mean()
+    md  = (tp - ma).abs().rolling(period, min_periods=period).mean()
+    return (tp - ma) / (0.015 * md.replace(0, np.nan))
+
+
+def williams_r(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    hh = high.rolling(period, min_periods=period).max()
+    ll = low.rolling(period, min_periods=period).min()
+    return -100 * (hh - close) / (hh - ll).replace(0, np.nan)
+
+
+def mfi(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series,
+        period: int = 14) -> pd.Series:
+    tp   = (high + low + close) / 3.0
+    rmf  = tp * volume
+    up   = rmf.where(tp > tp.shift(1), 0.0)
+    down = rmf.where(tp < tp.shift(1), 0.0)
+    pos  = up.rolling(period, min_periods=period).sum()
+    neg  = down.rolling(period, min_periods=period).sum()
+    return 100 - 100 / (1 + pos / neg.replace(0, np.nan))
+
+
+def obv(close: pd.Series, volume: pd.Series) -> pd.Series:
+    sign = np.sign(close.diff()).fillna(0.0)
+    return (sign * volume).cumsum()
+
+
+def ad_line(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series) -> pd.Series:
+    rng = (high - low).replace(0, np.nan)
+    clv = ((close - low) - (high - close)) / rng
+    return (clv.fillna(0.0) * volume).cumsum()
+
+
+def cmf(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series,
+        period: int = 20) -> pd.Series:
+    rng = (high - low).replace(0, np.nan)
+    clv = ((close - low) - (high - close)) / rng
+    mfv = clv.fillna(0.0) * volume
+    return (mfv.rolling(period, min_periods=period).sum()
+            / volume.rolling(period, min_periods=period).sum().replace(0, np.nan))
+
+
+def force_index(close: pd.Series, volume: pd.Series, period: int = 2) -> pd.Series:
+    fi = close.diff() * volume
+    return fi.ewm(span=period, min_periods=period).mean()
+
+
+def ease_of_movement(high: pd.Series, low: pd.Series, volume: pd.Series,
+                     period: int = 14) -> pd.Series:
+    mid_move = ((high + low) / 2).diff()
+    box      = (volume / 1e6) / (high - low).replace(0, np.nan)
+    return (mid_move / box).rolling(period, min_periods=period).mean()
+
+
+def stoch_rsi(close: pd.Series, rsi_period: int = 14, stoch_period: int = 14,
+              k_smooth: int = 3, d_smooth: int = 3) -> tuple[pd.Series, pd.Series]:
+    """StochRSI %K and %D in 0-100."""
+    r  = rsi(close, rsi_period)
+    lo = r.rolling(stoch_period, min_periods=stoch_period).min()
+    hi = r.rolling(stoch_period, min_periods=stoch_period).max()
+    k  = 100 * (r - lo) / (hi - lo).replace(0, np.nan)
+    k  = k.rolling(k_smooth, min_periods=k_smooth).mean()
+    d  = k.rolling(d_smooth, min_periods=d_smooth).mean()
+    return k, d
+
+
+def tsi(close: pd.Series, long_p: int = 25, short_p: int = 13,
+        signal_p: int = 13) -> tuple[pd.Series, pd.Series]:
+    """True Strength Index and its signal line."""
+    m   = close.diff()
+    num = m.ewm(span=long_p, min_periods=long_p).mean().ewm(span=short_p, min_periods=short_p).mean()
+    den = m.abs().ewm(span=long_p, min_periods=long_p).mean().ewm(span=short_p, min_periods=short_p).mean()
+    t   = 100 * num / den.replace(0, np.nan)
+    return t, t.ewm(span=signal_p, min_periods=signal_p).mean()
+
+
+def trix(close: pd.Series, period: int = 15, signal_p: int = 9) -> tuple[pd.Series, pd.Series]:
+    e1 = close.ewm(span=period, min_periods=period).mean()
+    e2 = e1.ewm(span=period, min_periods=period).mean()
+    e3 = e2.ewm(span=period, min_periods=period).mean()
+    t  = 100 * e3.pct_change()
+    return t, t.ewm(span=signal_p, min_periods=signal_p).mean()
+
+
+def cmo(close: pd.Series, period: int = 14) -> pd.Series:
+    """Chande Momentum Oscillator in [-100, 100]."""
+    delta = close.diff()
+    up    = delta.clip(lower=0).rolling(period, min_periods=period).sum()
+    down  = (-delta).clip(lower=0).rolling(period, min_periods=period).sum()
+    return 100 * (up - down) / (up + down).replace(0, np.nan)
+
+
+def dpo(close: pd.Series, period: int = 20) -> pd.Series:
+    """Detrended price oscillator (causal variant: close minus shifted SMA —
+    avoids the classic centred look-ahead)."""
+    return close - close.rolling(period, min_periods=period).mean().shift(period // 2 + 1)
+
+
+def ppo(close: pd.Series, fast: int = 12, slow: int = 26,
+        signal_p: int = 9) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Percentage price oscillator: (ppo, signal, hist)."""
+    f = close.ewm(span=fast, min_periods=fast).mean()
+    s = close.ewm(span=slow, min_periods=slow).mean()
+    p = 100 * (f - s) / s
+    sig = p.ewm(span=signal_p, min_periods=signal_p).mean()
+    return p, sig, p - sig
+
+
+def aroon(high: pd.Series, low: pd.Series, period: int = 25) -> tuple[pd.Series, pd.Series]:
+    """(aroon_up, aroon_down) in 0-100."""
+    up = high.rolling(period + 1, min_periods=period + 1).apply(
+        lambda x: 100 * float(np.argmax(x)) / period, raw=True)
+    dn = low.rolling(period + 1, min_periods=period + 1).apply(
+        lambda x: 100 * float(np.argmin(x)) / period, raw=True)
+    return up, dn
+
+
+def vortex(high: pd.Series, low: pd.Series, close: pd.Series,
+           period: int = 14) -> tuple[pd.Series, pd.Series]:
+    """(VI+, VI-)."""
+    tr = pd.concat([
+        high - low,
+        (high - close.shift(1)).abs(),
+        (low - close.shift(1)).abs(),
+    ], axis=1).max(axis=1)
+    vmp = (high - low.shift(1)).abs()
+    vmm = (low - high.shift(1)).abs()
+    trs = tr.rolling(period, min_periods=period).sum().replace(0, np.nan)
+    return (vmp.rolling(period, min_periods=period).sum() / trs,
+            vmm.rolling(period, min_periods=period).sum() / trs)
+
+
+def supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
+               period: int = 10, mult: float = 3.0) -> pd.Series:
+    """Supertrend direction: +1 bullish / -1 bearish per bar (0 until warm)."""
+    a   = atr(high, low, close, period)
+    mid = (high + low) / 2
+    ub  = (mid + mult * a).to_numpy(dtype=float)
+    lb  = (mid - mult * a).to_numpy(dtype=float)
+    c   = close.to_numpy(dtype=float)
+    n   = len(c)
+    direction = np.zeros(n, dtype=np.int8)
+    f_ub = np.full(n, np.nan)
+    f_lb = np.full(n, np.nan)
+    started = False
+    for i in range(n):
+        if np.isnan(ub[i]) or np.isnan(lb[i]):
+            continue
+        if not started:
+            f_ub[i] = ub[i]; f_lb[i] = lb[i]
+            direction[i] = 1 if c[i] > (ub[i] + lb[i]) / 2 else -1
+            started = True
+            continue
+        f_ub[i] = ub[i] if (ub[i] < f_ub[i-1] or c[i-1] > f_ub[i-1]) else f_ub[i-1]
+        f_lb[i] = lb[i] if (lb[i] > f_lb[i-1] or c[i-1] < f_lb[i-1]) else f_lb[i-1]
+        if direction[i-1] == 1:
+            direction[i] = -1 if c[i] < f_lb[i] else 1
+        else:
+            direction[i] = 1 if c[i] > f_ub[i] else -1
+    return pd.Series(direction, index=close.index)
+
+
+def ultimate_oscillator(high: pd.Series, low: pd.Series, close: pd.Series,
+                        p1: int = 7, p2: int = 14, p3: int = 28) -> pd.Series:
+    prev_close = close.shift(1)
+    bp = close - pd.concat([low, prev_close], axis=1).min(axis=1)
+    tr = (pd.concat([high, prev_close], axis=1).max(axis=1)
+          - pd.concat([low, prev_close], axis=1).min(axis=1)).replace(0, np.nan)
+    a1 = bp.rolling(p1, min_periods=p1).sum() / tr.rolling(p1, min_periods=p1).sum()
+    a2 = bp.rolling(p2, min_periods=p2).sum() / tr.rolling(p2, min_periods=p2).sum()
+    a3 = bp.rolling(p3, min_periods=p3).sum() / tr.rolling(p3, min_periods=p3).sum()
+    return 100 * (4 * a1 + 2 * a2 + a3) / 7
+
+
+def ibs(open_: pd.Series, high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
+    """Internal bar strength: (close - low) / (high - low) in [0, 1]."""
+    return (close - low) / (high - low).replace(0, np.nan)
+
+
+def zscore(close: pd.Series, period: int = 20) -> pd.Series:
+    m = close.rolling(period, min_periods=period).mean()
+    s = close.rolling(period, min_periods=period).std()
+    return (close - m) / s.replace(0, np.nan)
+
+
+def crossed_above(a: pd.Series, b) -> pd.Series:
+    """True on bars where a crosses from below to at/above b (scalar or Series)."""
+    if not isinstance(b, pd.Series):
+        b = pd.Series(b, index=a.index)
+    return (a >= b) & (a.shift(1) < b.shift(1))
+
+
+def crossed_below(a: pd.Series, b) -> pd.Series:
+    """True on bars where a crosses from above to at/below b (scalar or Series)."""
+    if not isinstance(b, pd.Series):
+        b = pd.Series(b, index=a.index)
+    return (a <= b) & (a.shift(1) > b.shift(1))

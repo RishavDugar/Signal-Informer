@@ -131,3 +131,17 @@ class VolumeClimaxSetup(BaseSetup):
 
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata=base_meta)
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: volume spike + wide range + close at an
+        extreme of the bar."""
+        h, l, c, v = df["high"], df["low"], df["close"], df["volume"]
+        vol_avg = v.shift(1).rolling(self.vol_period, min_periods=self.vol_period).mean()
+        vol_ok  = v >= self.vol_multiplier * vol_avg.replace(0, np.nan)
+        a       = compute_atr(h, l, c, self.atr_period)
+        rng     = h - l
+        wide    = rng >= self.atr_multiplier * a.replace(0, np.nan)
+        pos     = (c - l) / rng.replace(0, np.nan)
+        long_   = vol_ok & wide & (pos <= self.close_threshold)
+        short_  = vol_ok & wide & (pos >= 1 - self.close_threshold)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

@@ -120,3 +120,36 @@ class MacdDivergenceSetup(BaseSetup):
             signal=False, symbol=symbol, setup_name=self.name, date=date,
             metadata={"macd_hist": round(cur_hist, 4), "close": round(cur_close, 2)},
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: price extreme beyond the prior-window extreme
+        while the MACD histogram refuses to confirm (compared at the bar of the
+        prior swing extreme — argmin/argmax of close in the shifted window)."""
+        lb = self.lookback
+        close = df["close"]
+        _, _, hist = compute_macd(close, self.fast_period,
+                                  self.slow_period, self.signal_period)
+
+        win_min = close.shift(1).rolling(lb, min_periods=lb).min()
+        win_max = close.shift(1).rolling(lb, min_periods=lb).max()
+        amin = close.shift(1).rolling(lb, min_periods=lb).apply(np.argmin, raw=True)
+        amax = close.shift(1).rolling(lb, min_periods=lb).apply(np.argmax, raw=True)
+
+        n = len(df)
+        hist_np = hist.to_numpy(dtype=float)
+        idx     = np.arange(n, dtype=float)
+        # absolute index of the prior swing extreme: (i - lb) + offset
+        pos_min = idx - lb + amin.to_numpy(dtype=float)
+        pos_max = idx - lb + amax.to_numpy(dtype=float)
+        h_at_min = np.full(n, np.nan)
+        h_at_max = np.full(n, np.nan)
+        ok_min = ~np.isnan(pos_min)
+        ok_max = ~np.isnan(pos_max)
+        h_at_min[ok_min] = hist_np[pos_min[ok_min].astype(int)]
+        h_at_max[ok_max] = hist_np[pos_max[ok_max].astype(int)]
+
+        turning_up   = (hist < 0) & (hist > hist.shift(1))
+        turning_down = (hist > 0) & (hist < hist.shift(1))
+        long_  = turning_up   & (close < win_min) & (hist > pd.Series(h_at_min, index=df.index))
+        short_ = turning_down & (close > win_max) & (hist < pd.Series(h_at_max, index=df.index))
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

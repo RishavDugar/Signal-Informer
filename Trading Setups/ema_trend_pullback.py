@@ -129,3 +129,29 @@ class EmaTrendPullbackSetup(BaseSetup):
                 "close"       : round(cur_close, 2),
             },
         )
+
+    @staticmethod
+    def _run_length(flags: pd.Series) -> pd.Series:
+        """Consecutive-True run length ending at each bar."""
+        f = flags.fillna(False).astype(int)
+        grp = (f == 0).cumsum()
+        return f.groupby(grp).cumsum()
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: brief dip below fast EMA (1..lookback bars)
+        inside a slow-EMA trend, then a reclaim cross."""
+        import numpy as np
+        c      = df["close"]
+        fast_s = compute_ema(c, self.fast_ema)
+        slow_s = compute_ema(c, self.slow_ema)
+
+        below = c <= fast_s
+        above = c >= fast_s
+        dip_len    = self._run_length(below).shift(1)
+        bounce_len = self._run_length(above).shift(1)
+
+        long_ = ((c > slow_s) & (c > fast_s) & below.shift(1).fillna(False)
+                 & (dip_len >= 1) & (dip_len <= self.lookback))
+        short_ = ((c < slow_s) & (c < fast_s) & above.shift(1).fillna(False)
+                  & (bounce_len >= 1) & (bounce_len <= self.lookback))
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

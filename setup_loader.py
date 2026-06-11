@@ -28,6 +28,12 @@ log = get_logger(__name__)
 _SETUP_DIR          = Path(__file__).parent / "Trading Setups"
 _OPTIMAL_PARAMS_PATH = Path(__file__).parent / "db" / "optimal_params.json"
 
+# Discovery is expensive (re-execs every setup module) and noisy in the logs, so
+# memoize per process keyed by the params flag. The long-running web UI polls
+# /api/status every few seconds — without this it would re-scan + re-log on every
+# poll. Callers treat the returned setups as read-only (see backtester/pipeline).
+_CACHE: dict[bool, list[BaseSetup]] = {}
+
 
 def _load_optimal_params() -> dict[str, dict]:
     """
@@ -55,6 +61,9 @@ def load_setups(use_optimal_params: bool = True) -> list[BaseSetup]:
     calibrated synthetic data is not broken by a previous hyperparameter run).
     Returns a list of setup instances.
     """
+    if use_optimal_params in _CACHE:
+        return list(_CACHE[use_optimal_params])
+
     instances: list[BaseSetup] = []
     seen_names: set[str] = set()
     optimal_params = _load_optimal_params() if use_optimal_params else {}
@@ -117,4 +126,5 @@ def load_setups(use_optimal_params: bool = True) -> list[BaseSetup]:
                     )
 
     log.info(f"setup_loader: {len(instances)} setup(s) loaded")
-    return instances
+    _CACHE[use_optimal_params] = instances
+    return list(instances)

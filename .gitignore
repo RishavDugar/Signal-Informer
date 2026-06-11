@@ -14,6 +14,15 @@ logs/
 db/*.db
 db/backups/
 
+# Generated intraday backtest results (large, regenerated locally)
+db/hft_results.json
+
+# Intraday parquet data store (large, copied locally)
+data/hft/
+
+# Python virtual environment
+.venv/
+
 # WhatsApp bridge: Node deps + live session/auth data
 notifications/whatsapp_bridge/node_modules/
 notifications/whatsapp_bridge/.wwebjs_auth/

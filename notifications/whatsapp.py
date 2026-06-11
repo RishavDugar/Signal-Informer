@@ -15,6 +15,7 @@ Message format (send_batch_signal_alert):
 """
 
 import math
+import re
 import subprocess
 import time
 from typing import Optional
@@ -149,6 +150,123 @@ _PLAIN: dict[str, tuple[str, str]] = {
         "Several down days in a row have over-extended price — a bounce is statistically due."),
     "VOLUME_CLIMAX":          ("Volume Climax Reversal",
         "A spike of panic/euphoria volume often marks the end of a move and a turn."),
+    # ── Vectorised catalogue (2026) ───────────────────────────────────────────
+    "RSI2_EXTREME":           ("Deep Oversold Snapback",
+        "Very short-term momentum hit a rare extreme inside an intact trend — sharp snapbacks follow."),
+    "DOUBLE_SEVENS":          ("Dip-in-Uptrend Buy",
+        "A multi-day closing low inside a long-term uptrend — a statistically favoured dip-buy."),
+    "IBS_REVERSAL":           ("Close-at-Low Bounce",
+        "The day closed pinned to its low; such closes tend to bounce the next session."),
+    "ZSCORE_REVERSION":       ("Statistical Stretch",
+        "Price is multiple standard deviations from its average — rubber-band reversion setup."),
+    "BOLLINGER_TAG":          ("Band-Tag Reversion",
+        "Price closed outside its volatility band — it usually snaps back toward the middle."),
+    "GAP_DOWN_REVERSAL":      ("Panic Gap Buy",
+        "A gap down inside a healthy uptrend — fear gaps in strong stocks tend to fill."),
+    "CAPITULATION_REVERSAL":  ("Capitulation Bounce",
+        "A waterfall decline on climactic volume — forced sellers are done, a bounce is due."),
+    "RSI_DIVERGENCE":         ("Momentum Divergence at Lows",
+        "Price made a new low but momentum didn't — sellers are losing force."),
+    "STOCH_HOOK":             ("Oversold Hook Turn",
+        "Momentum was deeply oversold and just hooked back up — the first sign of a turn."),
+    "WICK_REJECTION":         ("Rejection Wick Reversal",
+        "A long rejection wick at the lows shows demand absorbed the selling."),
+    "STREAK_FADE":            ("Losing-Streak Bounce",
+        "An unusually long run of down days — streaks this long are statistically stretched."),
+    "MFI_EXTREME":            ("Money-Flow Extreme",
+        "Volume-weighted momentum hit a panic extreme — flows tend to normalise."),
+    "WILLIAMS_R_EXTREME":     ("Washed-Out Bounce",
+        "Closes have been pinned to the bottom of the range — a washed-out bounce setup."),
+    "CCI_REVERSAL":           ("Overextension Turn",
+        "Price is far outside its typical band and just turned — exhaustion fade."),
+    "DONCHIAN_BREAKOUT":      ("Channel Breakout",
+        "Price broke out of its multi-week range — momentum tends to carry further."),
+    "HIGH_52W_BREAKOUT":      ("52-Week-High Breakout",
+        "A fresh yearly high after consolidating near it — institutional momentum signal."),
+    "GOLDEN_CROSS_PULLBACK":  ("Trend Re-Entry Dip",
+        "A pullback inside a golden-cross uptrend just ended — a lower-risk trend entry."),
+    "MACD_ZERO_TURN":         ("Early Momentum Turn",
+        "Momentum turned up from depressed levels — early-stage trend change signal."),
+    "ROC_THRUST":             ("Momentum Thrust",
+        "An abnormal burst of momentum on volume — initiative buying, not noise."),
+    "ADX_DI_CROSS":           ("New Trend Ignition",
+        "Directional pressure flipped with real trend strength behind it."),
+    "AROON_CROSS":            ("Fresh-Highs Regime",
+        "New highs are recent and new lows are stale — a young trend is forming."),
+    "SUPERTREND_FLIP":        ("Trend Flip",
+        "The volatility-adjusted trend line flipped sides — regime change signal."),
+    "KELTNER_BREAKOUT":       ("Volatility Channel Break",
+        "Price escaped its volatility channel — a genuine directional push."),
+    "HH_HL_STRUCTURE":        ("Stair-Step Trend",
+        "Consistent higher highs and higher lows — classic trend continuation."),
+    "TSI_CROSS":              ("Smoothed Momentum Cross",
+        "Double-smoothed momentum crossed up from negative — low-noise turn signal."),
+    "VORTEX_CROSS":           ("Rotation Shift",
+        "The balance of upward vs downward bar-to-bar movement flipped positive."),
+    "NR7_BREAKOUT":           ("Coiled-Spring Break",
+        "The tightest range in a week broke — compressed energy releasing."),
+    "TTM_SQUEEZE":            ("Squeeze Release",
+        "Volatility was squeezed to an extreme and just released with direction."),
+    "ATR_COMPRESSION_BREAK":  ("Quiet-Tape Breakout",
+        "Day ranges collapsed to a fraction of normal, then broke out — expansion follows contraction."),
+    "VOLATILITY_BREAKOUT":    ("Abnormal Range Day",
+        "Price moved more than its typical daily envelope — statistically a continuation day."),
+    "INSIDE_BAR_BREAKOUT":    ("Inside-Bar Break",
+        "A one-day coil inside the prior bar broke — short, clean breakout trigger."),
+    "RANGE_EXPANSION":        ("Conviction Bar Follow-Through",
+        "A huge range day closing at its extreme — institutions drove it; follow-through favoured."),
+    "GAP_AND_GO":             ("Held Gap Momentum",
+        "The stock gapped and HELD the gap all day — initiative money stayed in control."),
+    "BB_WIDTH_SQUEEZE":       ("Multi-Month Squeeze Break",
+        "Volatility compressed to a multi-month low, then price escaped the band."),
+    "OBV_DIVERGENCE":         ("Hidden Accumulation",
+        "Price made new lows but cumulative volume flow didn't — someone is buying the dip."),
+    "POCKET_PIVOT":           ("Stealth Buying Surge",
+        "An up day on more volume than any recent down day — institutional footprints."),
+    "VOLUME_DRYUP":           ("Supply Exhaustion",
+        "Volume dried up at the lows then the first up-close — sellers are simply done."),
+    "CMF_CROSS":              ("Money-Flow Turn",
+        "Sustained buying pressure (closes near highs on volume) just turned positive."),
+    "FORCE_INDEX_PULLBACK":   ("Trend Dip (Volume-Confirmed)",
+        "A volume-weighted dip inside an uptrend — pullback fuel for the next leg."),
+    "AD_DIVERGENCE":          ("Quiet Accumulation",
+        "Accumulation/distribution diverged from price at the extreme — smart-money tell."),
+    "HIGH_VOLUME_THRUST":     ("Heavy-Volume Thrust",
+        "A push through yesterday's high on multiples of normal volume."),
+    "EOM_CROSS":              ("Path of Least Resistance",
+        "Price is advancing easily on light volume — little supply overhead."),
+    "ENGULFING_EXTREME":      ("Engulfing Reversal",
+        "A full engulfing bar right at the extreme — one side just took control."),
+    "MORNING_STAR":           ("Three-Bar Reversal",
+        "Sharp drop, a pause, then a strong recovery close — textbook reversal sequence."),
+    "THREE_SOLDIERS":         ("Three Strong Closes",
+        "Three powerful up closes off a low — conviction buying after a washout."),
+    "PIERCING_LINE":          ("Failed Breakdown Recovery",
+        "Opened below yesterday's low but recovered deep into the prior bar — failed breakdown."),
+    "KEY_REVERSAL":           ("Key Reversal Bar",
+        "Hit a fresh low intraday then closed up — a one-bar failed breakdown."),
+    "DOJI_EXTREME":           ("Stalemate at the Extreme",
+        "A stand-off bar exactly where one side should have dominated, then confirmation."),
+    "MARUBOZU_CONT":          ("Full-Conviction Bar",
+        "One side controlled the entire session on volume — continuation favoured."),
+    "OOPS_REVERSAL":          ("Overnight Panic Absorbed",
+        "Gapped below yesterday's low, then recovered — the overnight panic was bought."),
+    "STOCH_RSI_CROSS":        ("Fast Momentum Cross",
+        "A sensitive momentum trigger crossed up from a deep extreme."),
+    "ULTIMATE_OSC":           ("Multi-Window Momentum Turn",
+        "Buying pressure measured across three windows is turning from an extreme."),
+    "CMO_EXTREME":            ("Hard-to-Reach Extreme Turn",
+        "A momentum gauge that rarely reaches extremes just did — and turned."),
+    "DPO_REVERSION":          ("Cycle Stretch Fade",
+        "Price is stretched against its own cycle with the trend removed."),
+    "TRIX_CROSS":             ("Triple-Smoothed Turn",
+        "Heavily filtered momentum crossed its trigger — noise-free turn signal."),
+    "PPO_MOMENTUM":           ("Momentum Regime Shift",
+        "Percentage momentum flipped positive inside a positive regime."),
+    "ELDER_IMPULSE":          ("Impulse Alignment",
+        "Trend slope and momentum aligned in the same direction this bar."),
+    "RSI_BB_CONFLUENCE":      ("Double Oversold Confluence",
+        "Two independent oversold measures agreed on the same bar — stronger than either alone."),
 }
 
 
@@ -502,6 +620,20 @@ def _get_w(weights: dict, name: str, direction: str) -> float:
     return float(w)
 
 
+def _diminishing_sum(ws: list[float]) -> float:
+    """
+    Sum weights with geometric discounting: strongest setup counts fully, the
+    2nd at 50%, the 3rd at 25%, ...
+
+    Why: setups firing on the same stock the same day are CORRELATED — five
+    oversold-flavoured strategies all triggered by the same price drop are not
+    five independent pieces of evidence. A plain sum lets a crowd of mediocre
+    correlated signals outrank one statistically solid one; geometric
+    discounting keeps confirmation valuable but sub-additive.
+    """
+    return sum(w * (0.5 ** i) for i, w in enumerate(sorted(ws, reverse=True)))
+
+
 def rank_by_conviction(signals: list[dict], top_n: int = 10) -> list[tuple]:
     """
     Group signals by symbol, score by WEIGHTED same-direction conviction,
@@ -510,9 +642,13 @@ def rank_by_conviction(signals: list[dict], top_n: int = 10) -> list[tuple]:
     Scoring formula per stock
     -------------------------
     weights  = from backtester.json (default 1.0 if not yet run)
-    buy_w    = sum of weights for buy-direction signals
-    sell_w   = sum of weights for sell-direction signals
-    neutral_w= sum of weights × 0.5 for directionally ambiguous signals
+    buy_w    = diminishing sum of weights for buy-direction signals
+    sell_w   = diminishing sum of weights for sell-direction signals
+    neutral_w= diminishing sum × 0.5 for directionally ambiguous signals
+
+    Same-direction weights are combined with _diminishing_sum (1, 1/2, 1/4...)
+    rather than a plain sum, so a crowd of correlated signals cannot
+    out-shout one strong, statistically validated setup.
 
     dominant = 'BUY'  if buy_w  >= sell_w
                'SELL' if sell_w >  buy_w
@@ -531,12 +667,12 @@ def rank_by_conviction(signals: list[dict], top_n: int = 10) -> list[tuple]:
 
     ranked = []
     for symbol, sigs in by_sym.items():
-        buy_w  = sum(_get_w(weights, s["setup_name"], "buy")
-                     for s in sigs if _direction_of(s) == "buy")
-        sell_w = sum(_get_w(weights, s["setup_name"], "sell")
-                     for s in sigs if _direction_of(s) == "sell")
-        neut_w = sum(_get_w(weights, s["setup_name"], "neutral") * 0.5
-                     for s in sigs if _direction_of(s) == "neutral")
+        buy_w  = _diminishing_sum([_get_w(weights, s["setup_name"], "buy")
+                                   for s in sigs if _direction_of(s) == "buy"])
+        sell_w = _diminishing_sum([_get_w(weights, s["setup_name"], "sell")
+                                   for s in sigs if _direction_of(s) == "sell"])
+        neut_w = 0.5 * _diminishing_sum([_get_w(weights, s["setup_name"], "neutral")
+                                         for s in sigs if _direction_of(s) == "neutral"])
 
         dominant = "BUY" if buy_w >= sell_w else "SELL"
         score    = (max(buy_w, sell_w)
@@ -813,26 +949,34 @@ def _autostart_bridge() -> bool:
                   "scan the QR before relying on autostart")
         return False
 
-    log.info("whatsapp: bridge not ready — launching it headless...")
-    try:
-        flags = 0
-        if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):  # Windows: fully detach
-            flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "DETACHED_PROCESS", 0)
-        log_path = WHATSAPP_BRIDGE_DIR / "bridge.log"
-        with open(log_path, "a", encoding="utf-8") as logf:
-            subprocess.Popen(
-                ["node", "bridge.js"],
-                cwd=str(WHATSAPP_BRIDGE_DIR),
-                stdout=logf, stderr=logf, stdin=subprocess.DEVNULL,
-                creationflags=flags,
-            )
-        _bridge_started = True
-    except FileNotFoundError:
-        log.error("whatsapp: `node` not found on PATH — install Node.js to use the bridge")
-        return False
-    except Exception as exc:
-        log.error(f"whatsapp: failed to launch bridge — {exc}")
-        return False
+    # If the bridge is up but mid-reinit (ready=false, state=reconnecting/starting),
+    # don't launch a second process — just fall through to the poll loop below.
+    live_state = _bridge_state(timeout=3)
+    if live_state in ("reconnecting", "starting", "authenticated", "disconnected"):
+        log.info(f"whatsapp: bridge is up but mid-reinit (state={live_state}) — waiting for it to recover")
+        _bridge_started = True  # suppress another launch attempt
+
+    if not _bridge_started:
+        log.info("whatsapp: bridge not ready — launching it headless...")
+        try:
+            flags = 0
+            if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):  # Windows: fully detach
+                flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "DETACHED_PROCESS", 0)
+            log_path = WHATSAPP_BRIDGE_DIR / "bridge.log"
+            with open(log_path, "a", encoding="utf-8") as logf:
+                subprocess.Popen(
+                    ["node", "bridge.js"],
+                    cwd=str(WHATSAPP_BRIDGE_DIR),
+                    stdout=logf, stderr=logf, stdin=subprocess.DEVNULL,
+                    creationflags=flags,
+                )
+            _bridge_started = True
+        except FileNotFoundError:
+            log.error("whatsapp: `node` not found on PATH — install Node.js to use the bridge")
+            return False
+        except Exception as exc:
+            log.error(f"whatsapp: failed to launch bridge — {exc}")
+            return False
 
     # Poll until the WhatsApp client authenticates (Chromium boot + session load).
     deadline = time.time() + WHATSAPP_BRIDGE_READY_TIMEOUT
@@ -869,6 +1013,16 @@ def _send_via_bridge(target: str, message: str) -> bool:
         detail = r.json().get("error", "")
     except Exception:
         detail = r.text[:200]
+    # Puppeteer "detached Frame" / "context destroyed" means WhatsApp Web reloaded
+    # and all frame references are stale.  Hit /reconnect so the bridge self-heals
+    # before the retry loop in send_whatsapp tries again.
+    if re.search(r"detached|context.*destroyed|target.*closed", detail, re.I):
+        log.warning("whatsapp: stale Puppeteer frame detected — triggering bridge reconnect")
+        try:
+            requests.post(f"{WHATSAPP_BRIDGE_URL}/reconnect",
+                          headers=_bridge_headers(), timeout=5)
+        except Exception:
+            pass
     raise RuntimeError(f"bridge send failed (HTTP {r.status_code}): {detail}")
 
 

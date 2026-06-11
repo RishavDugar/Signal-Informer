@@ -121,3 +121,16 @@ class NDownReversalSetup(BaseSetup):
                 "sma_val"    : round(cur_sma, 2),
             },
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: EXACTLY n consecutive lower (higher) closes
+        with the trend filter — run length == n stops re-fires on longer runs."""
+        c    = df["close"]
+        s    = compute_sma(c, self.trend_period)
+        down = (c < c.shift(1)).fillna(False).astype(int)
+        up   = (c > c.shift(1)).fillna(False).astype(int)
+        down_run = down.groupby((down == 0).cumsum()).cumsum()
+        up_run   = up.groupby((up == 0).cumsum()).cumsum()
+        long_  = (down_run == self.n_down) & (c > s)
+        short_ = (up_run   == self.n_down) & (c < s)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

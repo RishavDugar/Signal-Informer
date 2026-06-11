@@ -89,3 +89,23 @@ class EightyTwentySetup(BaseSetup):
     def get_stoploss(self, result, df) -> float | None:
         """Stop = prior day's low (buy) or high (sell) — the entry trigger level."""
         return float(result.metadata.get("entry_level", df["low"].iloc[-1]))
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: prior bar opened in top t%/closed in bottom t% → +1."""
+        import numpy as np
+        rng = (df["high"] - df["low"])
+        open_pct  = ((df["open"]  - df["low"]) / rng.replace(0, float("nan"))).shift(1)
+        close_pct = ((df["close"] - df["low"]) / rng.replace(0, float("nan"))).shift(1)
+        t = self.threshold
+        long_  = (open_pct >= 1 - t) & (close_pct <= t)
+        short_ = (open_pct <= t)     & (close_pct >= 1 - t)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)
+
+    def vector_stops(self, df: pd.DataFrame) -> pd.Series:
+        """Stop = prior bar's low (long) / high (short) — entry trigger level."""
+        import numpy as np
+        dirs = self.vector_signals(df)
+        return pd.Series(
+            np.where(dirs > 0, df["low"].shift(1),
+                     np.where(dirs < 0, df["high"].shift(1), np.nan)),
+            index=df.index)

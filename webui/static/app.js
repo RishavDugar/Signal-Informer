@@ -29,6 +29,7 @@ const VIEWS = {
   signals: { title: "Signals", load: loadSignals },
   news: { title: "News & Scout picks", load: loadNews },
   setups: { title: "Setups", load: loadSetups },
+  hft: { title: "HFT / Intraday", load: loadHft },
   stocks: { title: "Stocks", load: loadStocks },
   config: { title: "Configuration", load: loadConfig },
   logs: { title: "Logs", load: loadLogs },
@@ -193,6 +194,9 @@ async function loadRun() {
     for (const j of jobs) {
       const flags = j.flags.map(f =>
         `<label class="chk"><input type="checkbox" data-flag="${f.id}"> ${esc(f.label)}</label>`).join("");
+      const extra = j.extra_placeholder
+        ? `<input class="field extra-args" type="text" placeholder="${esc(j.extra_placeholder)}" style="margin-top:8px;width:100%">`
+        : "";
       html += `<div class="card job-card" data-jobid="${j.id}">
         <div class="job-top">
           <div>
@@ -202,6 +206,7 @@ async function loadRun() {
           <button class="btn ${j.danger ? "danger" : "primary"} sm" onclick="launchFromCard('${j.id}', this, ${j.danger})">Run</button>
         </div>
         ${flags ? `<div class="job-flags">${flags}</div>` : ""}
+        ${extra}
       </div>`;
     }
     html += `</div>`;
@@ -235,14 +240,16 @@ window.launchFromCard = function (id, btn, danger) {
   if (danger && !confirm("This is a destructive / heavy action. Continue?")) return;
   const card = btn.closest(".job-card");
   const flags = $$('input[data-flag]', card).filter(i => i.checked).map(i => i.dataset.flag);
-  runJob(id, flags);
+  const extraInput = $(".extra-args", card);
+  const extra = extraInput && extraInput.value.trim() ? extraInput.value.trim().split(/\s+/) : [];
+  runJob(id, flags, extra);
 };
 
-window.runJob = async function (id, flags = []) {
+window.runJob = async function (id, flags = [], extra = []) {
   try {
     const r = await api("/api/jobs/run", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, flags }),
+      body: JSON.stringify({ id, flags, extra }),
     });
     toast(`Started: ${r.label}`);
     openConsole(r.id);
@@ -388,18 +395,89 @@ async function loadSetups() {
   v.innerHTML = `<div class="loading">Loading setups…</div>`;
   const rows = await api("/api/setups");
   if (!rows.length) { v.innerHTML = `<div class="empty">No setups loaded.</div>`; return; }
-  v.innerHTML = `<div class="muted" style="margin-bottom:10px;font-size:12.5px">Avg return is net of estimated transaction costs; weights derive from after-cost expectancy.</div>
+  v.innerHTML = `<div class="muted" style="margin-bottom:10px;font-size:12.5px">
+      Avg return is net of estimated transaction costs. <b>Lower bound</b> is the
+      90% lower-confidence-bound net return (<code>ret_lower</code>) — this, not
+      the raw average, drives the conviction weight (<code>1 + ret_lower×20</code>,
+      clipped 0.10–2.00). <b>t-stat</b> and <b>n</b> show how much evidence backs
+      that bound. Sorted by lower bound, best first. See HFT / Intraday for the
+      1–15 minute intraday versions of these strategies.</div>
     <div class="card scroll-x"><table>
-    <thead><tr><th>Setup</th><th class="num">Net avg</th><th class="num">SL rate</th><th class="num">Best day</th>
+    <thead><tr><th>Setup</th><th class="num">Net avg</th><th class="num">Lower bound</th>
+      <th class="num">t-stat</th><th class="num">n</th><th class="num">SL rate</th><th class="num">Best day</th>
       <th class="num">Long w</th><th class="num">Short w</th><th>Params</th></tr></thead>
     <tbody>${rows.map(s => `<tr>
       <td><b>${esc(s.name)}</b><div class="faint" style="font-size:11.5px;max-width:340px">${esc(s.desc)}</div></td>
       <td class="num">${pct(s.best_avg_return)}</td>
+      <td class="num">${pct(s.ret_lower)}</td>
+      <td class="num mono">${s.t_stat != null ? s.t_stat.toFixed(2) : "—"}</td>
+      <td class="num mono">${num(s.sample_size)}</td>
       <td class="num mono">${s.best_sl_rate != null ? (s.best_sl_rate * 100).toFixed(0) + "%" : "—"}</td>
       <td class="num mono">${num(s.best_days)}</td>
       <td class="num mono">${s.long_weight != null ? s.long_weight.toFixed(2) : "—"}</td>
       <td class="num mono">${s.short_weight != null ? s.short_weight.toFixed(2) : "—"}</td>
       <td>${Object.entries(s.params || {}).map(([k, val]) => `<span class="tag">${esc(k)}=${esc(val)}</span>`).join("") || "<span class='faint'>default</span>"}</td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+
+// ── HFT / Intraday ───────────────────────────────────────────────────────────
+const HFT_TF_ORDER = ["1min", "5min", "10min", "15min"];
+let _hftTf = null;
+
+async function loadHft() {
+  const v = $("#view-hft");
+  v.innerHTML = `<div class="loading">Loading intraday results…</div>`;
+  const d = await api("/api/hft");
+  if (!d.exists) {
+    v.innerHTML = `<div class="empty">No db/hft_results.json yet — run the
+      "HFT / intraday backtest" job from Run jobs.</div>`;
+    return;
+  }
+  const tfs = HFT_TF_ORDER.filter(tf => d.timeframes[tf]);
+  if (!tfs.length) { v.innerHTML = `<div class="empty">No timeframes in hft_results.json.</div>`; return; }
+  if (!_hftTf || !tfs.includes(_hftTf)) _hftTf = tfs[0];
+
+  const meta = d.meta || {};
+  const head = `<div class="muted" style="margin-bottom:10px;font-size:12.5px">
+      Intraday engine: entry next bar after signal, <b>always flat by session
+      close</b> (long &amp; short), ${((d.cost ?? 0) * 100).toFixed(2)}% round-trip
+      cost, screen at avg ≥ ${((d.min_avg_ret ?? 0) * 100).toFixed(2)}% &amp;
+      lower bound &gt; 0. <b>Lower bound</b> (<code>ret_lower</code>) drives the
+      "passes screen" verdict, same as the daily Setups table. Generated
+      ${esc(d.generated_at || "—")}${meta.years ? ` · years ${esc((meta.years || []).join(", "))}` : ""}.</div>
+    <div class="tabs" style="margin-bottom:12px">
+      ${tfs.map(tf => `<button class="btn ghost sm hft-tab ${tf === _hftTf ? "active" : ""}" data-tf="${tf}">${tf}</button>`).join("")}
+    </div>
+    <div id="hft-table"></div>`;
+  v.innerHTML = head;
+
+  $$(".hft-tab", v).forEach(b => b.addEventListener("click", () => {
+    _hftTf = b.dataset.tf;
+    $$(".hft-tab", v).forEach(x => x.classList.toggle("active", x === b));
+    renderHftTable(d.timeframes[_hftTf]);
+  }));
+  renderHftTable(d.timeframes[_hftTf]);
+}
+
+function renderHftTable(rows) {
+  const c = $("#hft-table");
+  if (!rows || !rows.length) { c.innerHTML = `<div class="empty">No setups for this timeframe.</div>`; return; }
+  c.innerHTML = `<div class="card scroll-x"><table>
+    <thead><tr><th>Setup</th><th class="num">Net avg</th><th class="num">Lower bound</th>
+      <th class="num">t-stat</th><th class="num">n (L/S)</th><th class="num">Win rate</th>
+      <th class="num">Profit factor</th><th class="num">Avg hold (bars)</th>
+      <th class="num">SL rate</th><th>Screen</th></tr></thead>
+    <tbody>${rows.map(s => `<tr>
+      <td><b>${esc(s.name)}</b><div class="faint" style="font-size:11.5px">${esc(s.friendly || "")}</div></td>
+      <td class="num">${pct(s.avg_return)}</td>
+      <td class="num">${pct(s.ret_lower)}</td>
+      <td class="num mono">${s.t_stat != null ? s.t_stat.toFixed(2) : "—"}</td>
+      <td class="num mono">${num(s.n)} <span class="faint">(${num(s.n_long)}/${num(s.n_short)})</span></td>
+      <td class="num mono">${s.win_rate != null ? (s.win_rate * 100).toFixed(1) + "%" : "—"}</td>
+      <td class="num mono">${s.profit_factor != null ? s.profit_factor.toFixed(2) : "—"}</td>
+      <td class="num mono">${num(s.avg_hold_bars)}</td>
+      <td class="num mono">${s.sl_rate != null ? (s.sl_rate * 100).toFixed(1) + "%" : "—"}</td>
+      <td>${s.passes_screen ? `<span class="tag pos">pass</span>` : `<span class="tag faint">—</span>`}</td>
     </tr>`).join("")}</tbody></table></div>`;
 }
 
@@ -411,8 +489,7 @@ async function loadStocks() {
   v.innerHTML = `<div class="card" style="margin-bottom:14px"><input id="stk-filter" class="field" placeholder="Filter symbols…" style="max-width:280px"></div>
     <div class="card scroll-x"><table>
     <thead><tr><th>Symbol</th><th>Name</th><th class="num">Rows</th><th class="num">Last date</th><th></th></tr></thead>
-    <tbody id="stk-body">${rows.map(rowHtml).join("")}</tbody></table></div>
-    <div id="ohlcv-panel"></div>`;
+    <tbody id="stk-body">${rows.map(rowHtml).join("")}</tbody></table></div>`;
   function rowHtml(s) {
     return `<tr data-sym="${esc(s.symbol)}"><td class="mono">${esc(s.symbol)}</td><td>${esc(s.name || "")}</td>
       <td class="num mono">${num(s.rows)}</td><td class="num mono faint">${s.last_date || "—"}</td>
@@ -424,39 +501,112 @@ async function loadStocks() {
   });
 }
 
-window.viewOhlcv = async function (sym) {
+// TradingView Lightweight Charts instance for the OHLCV panel (kept so we can
+// dispose it before re-rendering — createChart leaves a ResizeObserver otherwise).
+let _tvChart = null;
+const CHART_RANGES = [[90, "3M"], [180, "6M"], [365, "1Y"], [1100, "Max"]];
+
+window.viewOhlcv = async function (sym, days = 180) {
   const p = $("#ohlcv-panel");
+  openChartModal();
   p.innerHTML = `<div class="loading">Loading ${esc(sym)}…</div>`;
-  const d = await api(`/api/ohlcv/${encodeURIComponent(sym)}?days=90`);
+  let d;
+  try {
+    d = await api(`/api/ohlcv/${encodeURIComponent(sym)}?days=${days}`);
+  } catch (e) {
+    p.innerHTML = `<div class="empty">Failed to load ${esc(sym)}.</div>`; return;
+  }
   if (!d.rows.length) { p.innerHTML = `<div class="empty">No OHLCV stored for ${esc(sym)}.</div>`; return; }
+
+  const rangeBtns = CHART_RANGES.map(([n, lbl]) =>
+    `<button class="btn ghost sm ${n === days ? "active" : ""}" onclick="viewOhlcv('${esc(sym)}', ${n})">${lbl}</button>`
+  ).join("");
+
+  const first = d.rows[0].close, last = d.rows[d.rows.length - 1].close;
+  const chg = first ? (last - first) / first : 0;
+
   p.innerHTML = `<div class="card" style="margin-top:16px">
-    <h3>${esc(sym)} — last ${d.rows.length} bars</h3>
-    ${sparkline(d.rows)}
-    <div class="scroll-x" style="margin-top:14px;max-height:300px;overflow:auto"><table>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+      <h3 style="margin:0">${esc(sym)}</h3>
+      <span class="mono" style="font-size:17px;font-weight:680">₹${last.toFixed(2)}</span>
+      <span style="font-size:14px">${pct(chg, 2)}</span>
+      <span class="faint" style="font-size:12px">${d.rows.length} bars · ${d.rows[0].date} → ${d.rows[d.rows.length - 1].date}</span>
+      <div style="margin-left:auto;display:flex;gap:6px">${rangeBtns}</div>
+    </div>
+    <div id="tv-chart" style="position:relative;width:100%;height:440px"></div>
+    <div class="scroll-x" style="margin-top:16px;max-height:280px;overflow:auto"><table>
       <thead><tr><th>Date</th><th class="num">Open</th><th class="num">High</th><th class="num">Low</th><th class="num">Close</th><th class="num">Volume</th></tr></thead>
       <tbody>${[...d.rows].reverse().map(r => `<tr><td class="mono faint">${r.date}</td>
         <td class="num mono">${r.open.toFixed(1)}</td><td class="num mono">${r.high.toFixed(1)}</td>
         <td class="num mono">${r.low.toFixed(1)}</td><td class="num mono">${r.close.toFixed(1)}</td>
         <td class="num mono faint">${r.volume.toLocaleString()}</td></tr>`).join("")}</tbody></table></div>
   </div>`;
+
+  renderTradingChart($("#tv-chart"), d.rows);
 };
 
-function sparkline(rows) {
-  const W = 720, H = 120, pad = 6;
-  const cl = rows.map(r => r.close);
-  const min = Math.min(...cl), max = Math.max(...cl), span = (max - min) || 1;
-  const pts = cl.map((c, i) => {
-    const x = pad + (i / (cl.length - 1)) * (W - 2 * pad);
-    const y = pad + (1 - (c - min) / span) * (H - 2 * pad);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
-  const up = cl[cl.length - 1] >= cl[0];
-  const color = up ? "#3fd07f" : "#ff6b6b";
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
-    <polyline fill="none" stroke="${color}" stroke-width="2" points="${pts}"/>
-  </svg>
-  <div class="muted mono" style="font-size:12px">min ${min.toFixed(1)} · max ${max.toFixed(1)} · last ${cl[cl.length - 1].toFixed(1)}</div>`;
+// Candlestick + volume chart via TradingView Lightweight Charts, themed to match
+// the dashboard. Falls back gracefully if the vendored library didn't load.
+function renderTradingChart(container, rows) {
+  if (_tvChart) { try { _tvChart.remove(); } catch (e) { /* already gone */ } _tvChart = null; }
+  if (!window.LightweightCharts) {
+    container.innerHTML = `<div class="empty">Chart library failed to load — check webui/static/vendor/.</div>`;
+    return;
+  }
+
+  const css = getComputedStyle(document.documentElement);
+  const v = (n, fb) => (css.getPropertyValue(n).trim() || fb);
+  const green = v("--green", "#3fd07f"), red = v("--red", "#ff6b6b");
+
+  const chart = LightweightCharts.createChart(container, {
+    autoSize: true,
+    layout: {
+      background: { type: "solid", color: "transparent" },
+      textColor: v("--muted", "#7d8aa0"),
+      fontFamily: "ui-monospace, 'JetBrains Mono', Consolas, monospace",
+    },
+    grid: {
+      vertLines: { color: v("--panel-2", "#1a2230") },
+      horzLines: { color: v("--panel-2", "#1a2230") },
+    },
+    rightPriceScale: { borderColor: v("--border", "#232c3b") },
+    timeScale: { borderColor: v("--border", "#232c3b"), timeVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+  _tvChart = chart;
+
+  const candle = chart.addCandlestickSeries({
+    upColor: green, downColor: red, borderVisible: false,
+    wickUpColor: green, wickDownColor: red,
+  });
+  candle.setData(rows.map(r => ({
+    time: r.date, open: r.open, high: r.high, low: r.low, close: r.close,
+  })));
+
+  const vol = chart.addHistogramSeries({
+    priceFormat: { type: "volume" }, priceScaleId: "",
+  });
+  vol.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+  vol.setData(rows.map(r => ({
+    time: r.date, value: r.volume,
+    color: r.close >= r.open ? "rgba(63,208,127,.35)" : "rgba(255,107,107,.35)",
+  })));
+
+  chart.timeScale().fitContent();
 }
+
+// Chart popup show/hide. Disposing the chart on close frees its ResizeObserver.
+function openChartModal() { $("#chart-modal").classList.remove("hidden"); }
+function closeChartModal() {
+  $("#chart-modal").classList.add("hidden");
+  if (_tvChart) { try { _tvChart.remove(); } catch (e) { /* gone */ } _tvChart = null; }
+  $("#ohlcv-panel").innerHTML = "";
+}
+$("#chart-close").addEventListener("click", closeChartModal);
+$("#chart-modal").addEventListener("click", (e) => { if (e.target.id === "chart-modal") closeChartModal(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("#chart-modal").classList.contains("hidden")) closeChartModal();
+});
 
 // ── Config ───────────────────────────────────────────────────────────────────
 async function loadConfig() {

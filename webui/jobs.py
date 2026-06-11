@@ -64,7 +64,9 @@ JOBS: dict[str, dict] = {
         "label": "Hyperparameter search (grid)",
         "group": "Calibration",
         "base": ["hyperparameter_search.py"],
-        "desc": "Exhaustive grid search incl. stop-loss distance.",
+        "desc": "Exhaustive search of a fixed parameter grid (incl. stop-loss). "
+                "Writes db/optimal_params.json — run the Backtester afterwards "
+                "to refresh weights from the new params.",
         "flags": {
             "quick": {"label": "Quick grid", "args": ["--quick"]},
             "force": {"label": "Force re-run all", "args": ["--force-rerun"]},
@@ -74,7 +76,10 @@ JOBS: dict[str, dict] = {
         "label": "Hyperparameter search (random)",
         "group": "Calibration",
         "base": ["hyperparameter_search.py", "--random", "--samples", "200", "--peaks", "5"],
-        "desc": "Wide random search, 200 samples / 5 peaks per setup.",
+        "desc": "Random sampling over a wider range to find local maxima a fixed "
+                "grid can miss; each peak is re-validated at full precision. Also "
+                "writes db/optimal_params.json — run the Backtester afterwards "
+                "to refresh weights from the new params.",
     },
     "initialize": {
         "label": "Initialize / full reset",
@@ -82,6 +87,25 @@ JOBS: dict[str, dict] = {
         "base": ["initialize.py"],
         "desc": "WIPES data, re-downloads full history, runs backtester (~15-25 min).",
         "danger": True,
+    },
+    "hft_backtest": {
+        "label": "HFT / intraday backtest",
+        "group": "Calibration",
+        "base": ["hft_backtester.py"],
+        "desc": "Run all setups across 1/5/10/15-min bars (long+short, "
+                "EOD square-off, 10bps cost). Pick one timeframe option below "
+                "(default: 15min only); leave years blank for the full "
+                "2015-2026 dataset, or use the extra-args box for "
+                "--years 2024,2025,2026 and/or --symbols 250. "
+                "Writes db/hft_results.json.",
+        "flags": {
+            "all": {"label": "All timeframes (1/5/10/15min)", "args": ["--timeframes", "1min,5min,10min,15min"]},
+            "1min": {"label": "1min only", "args": ["--timeframes", "1min"]},
+            "5min": {"label": "5min only", "args": ["--timeframes", "5min"]},
+            "10min": {"label": "10min only", "args": ["--timeframes", "10min"]},
+            "15min": {"label": "15min only", "args": ["--timeframes", "15min"]},
+        },
+        "extra_placeholder": "--years 2024,2025,2026 --symbols 250",
     },
     "verify_setups": {
         "label": "Verify setups",
@@ -150,6 +174,7 @@ def job_catalog() -> list[dict]:
                 {"id": fid, "label": f["label"]}
                 for fid, f in spec.get("flags", {}).items()
             ],
+            "extra_placeholder": spec.get("extra_placeholder"),
         })
     return out
 

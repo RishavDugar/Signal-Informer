@@ -79,3 +79,12 @@ class IDNr4Setup(BaseSetup):
                 "range_4bar_rank": rank,
             },
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: ID/NR4 coil (direction-neutral → +1, treated
+        as the long/breakout book in the backtester, matching _direction_of)."""
+        import numpy as np
+        id_s  = is_inside_day(df["high"], df["low"])
+        nr4_s = is_nr4(df["high"], df["low"])
+        fired = (id_s & nr4_s) if self.require_both else (id_s | nr4_s)
+        return pd.Series(np.where(fired, 1, 0), index=df.index)

@@ -95,3 +95,15 @@ class TheAntiSetup(BaseSetup):
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"pct_k": round(k0, 2), "pct_d": round(d0, 2),
                                       "d_slope": round(d_slope, 3)})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: %K hook in the direction of the %D slope."""
+        import numpy as np
+        k, d = stochastic(df["high"], df["low"], df["close"],
+                          self.k_period, self.d_period)
+        d_slope   = d - d.shift(1)
+        hook_up   = (k > k.shift(1)) & (k.shift(1) < k.shift(2))
+        hook_down = (k < k.shift(1)) & (k.shift(1) > k.shift(2))
+        long_  = (d_slope > 0) & hook_up
+        short_ = (d_slope < 0) & hook_down
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

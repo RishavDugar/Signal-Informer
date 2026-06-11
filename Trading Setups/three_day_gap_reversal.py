@@ -110,3 +110,13 @@ class ThreeDayGapReversalSetup(BaseSetup):
 
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"reason": "no qualifying unfilled gap in last 3 bars"})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: yesterday was an unfilled gap bar (gap not
+        filled on the gap day itself); fires on the following bar."""
+        import numpy as np
+        o, h, l = df["open"], df["high"], df["low"]
+        # gap yesterday, unfilled on the gap day AND still unfilled today
+        long_  = (o.shift(1) < l.shift(2)) & (h.shift(1) < l.shift(2)) & (h < l.shift(2))
+        short_ = (o.shift(1) > h.shift(2)) & (l.shift(1) > h.shift(2)) & (l > h.shift(2))
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

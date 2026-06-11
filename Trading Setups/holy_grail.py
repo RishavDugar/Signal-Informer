@@ -115,3 +115,16 @@ class HolyGrailSetup(BaseSetup):
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"adx": round(adx_val, 2), "ema20": round(ema_val, 2),
                                       "adx_slope": round(adx_val - adx_prev, 3)})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: strong rising ADX + EMA touch in trend direction."""
+        import numpy as np
+        adx_s, pdi, mdi = compute_adx(df["high"], df["low"], df["close"],
+                                      adx_period=self.adx_period)
+        e = compute_ema(df["close"], self.ema_period)
+        adx_strong = adx_s > self.adx_threshold
+        adx_rising = adx_s > adx_s.shift(self.adx_period)
+        ok = adx_strong & adx_rising
+        long_  = ok & (df["low"]  <= e) & (pdi > mdi)
+        short_ = ok & (df["high"] >= e) & (mdi > pdi)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

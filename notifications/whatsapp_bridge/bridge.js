@@ -11,14 +11,27 @@
  * It exposes a tiny localhost HTTP API the Python side calls:
  *   GET  /status        -> { ready: bool, state: string }
  *   POST /send          -> { phone, message }  ->  { ok, id } | { ok:false, error }
+ *   POST /reconnect     -> {}  ->  { ok, state }
  *
  * Session is persisted by LocalAuth (./.wwebjs_auth), so you scan the QR code
  * exactly once; subsequent (even headless / detached) starts re-use the session.
  *
+ * Reconnection strategy (layered):
+ *   1. disconnected event  — fires on clean WA logout / network drop
+ *   2. page close / crash  — fires when Chromium's page is killed
+ *   3. /send error guard   — catches "detached Frame" / "context destroyed"
+ *      that WA Web triggers silently when it hot-swaps its JS bundle
+ *   4. health-check ping   — getState() probe every 60 s; catches any case
+ *      the above three miss (e.g. WA Web reload with no thrown error)
+ *
+ * All four paths funnel through a single reconnect() function that is
+ * guarded against concurrent calls.
+ *
  * Env:
- *   BRIDGE_PORT   (default 8765)   — localhost port to listen on
- *   BRIDGE_TOKEN  (optional)       — if set, callers must send header X-Token
- *   HEADLESS      (default "true") — set "false" once to debug with a visible browser
+ *   BRIDGE_PORT          (default 8765)   — localhost port to listen on
+ *   BRIDGE_TOKEN         (optional)       — if set, callers must send header X-Token
+ *   HEADLESS             (default "true") — set "false" once to debug with visible browser
+ *   HEALTH_CHECK_INTERVAL_MS (default 60000) — how often to probe the connection
  */
 
 const { Client, LocalAuth } = require("whatsapp-web.js");
@@ -26,12 +39,41 @@ const qrcode = require("qrcode-terminal");
 const express = require("express");
 const path = require("path");
 
-const PORT = parseInt(process.env.BRIDGE_PORT || "8765", 10);
-const TOKEN = process.env.BRIDGE_TOKEN || "";
-const HEADLESS = (process.env.HEADLESS || "true").toLowerCase() !== "false";
+const PORT                  = parseInt(process.env.BRIDGE_PORT || "8765", 10);
+const TOKEN                 = process.env.BRIDGE_TOKEN || "";
+const HEADLESS              = (process.env.HEADLESS || "true").toLowerCase() !== "false";
+const HEALTH_INTERVAL_MS    = parseInt(process.env.HEALTH_CHECK_INTERVAL_MS || "60000", 10);
 
-let ready = false;
-let lastState = "starting";
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let ready        = false;
+let lastState    = "starting";
+let reconnecting = false;   // guard: only one reconnect cycle at a time
+
+// ── Reconnect helper ──────────────────────────────────────────────────────────
+
+async function reconnect(reason) {
+  if (reconnecting) {
+    console.log(`[bridge] reconnect() called (${reason}) but already in progress — skipping`);
+    return;
+  }
+  reconnecting = true;
+  ready        = false;
+  lastState    = "reconnecting";
+  console.warn(`[bridge] reconnecting — reason: ${reason}`);
+
+  // Destroy the old browser cleanly before launching a new one so we don't
+  // accumulate orphaned Chromium processes over time.
+  try { await client.destroy(); } catch (_) {}
+
+  client.initialize().catch((e) => {
+    console.error("[bridge] reinit error:", e);
+    reconnecting = false;   // allow a future retry
+  });
+  // reconnecting is cleared by the "ready" event handler below.
+}
+
+// ── WhatsApp client ───────────────────────────────────────────────────────────
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: path.join(__dirname, ".wwebjs_auth") }),
@@ -51,16 +93,66 @@ client.on("qr", (qr) => {
   console.log("\n[bridge] Scan this QR with WhatsApp > Linked Devices (one time):\n");
   qrcode.generate(qr, { small: true });
 });
-client.on("authenticated", () => { lastState = "authenticated"; console.log("[bridge] authenticated"); });
-client.on("auth_failure", (m) => { ready = false; lastState = "auth_failure"; console.error("[bridge] auth failure:", m); });
-client.on("ready", () => { ready = true; lastState = "ready"; console.log("[bridge] READY — sending enabled"); });
-client.on("disconnected", (reason) => {
-  ready = false; lastState = "disconnected";
-  console.warn("[bridge] disconnected:", reason, "— reinitialising");
-  client.initialize().catch((e) => console.error("[bridge] reinit error:", e));
+
+client.on("authenticated", () => {
+  lastState = "authenticated";
+  console.log("[bridge] authenticated");
 });
 
-client.initialize().catch((e) => { lastState = "init_error"; console.error("[bridge] init error:", e); });
+client.on("auth_failure", (m) => {
+  ready     = false;
+  lastState = "auth_failure";
+  console.error("[bridge] auth failure:", m);
+});
+
+client.on("ready", () => {
+  ready        = true;
+  lastState    = "ready";
+  reconnecting = false;
+  console.log("[bridge] READY — sending enabled");
+
+  // Layer 2: hook page-level events now that pupPage is available.
+  const page = client.pupPage;
+  if (page) {
+    page.once("close",  () => reconnect("page close"));
+    page.once("crash",  () => reconnect("page crash"));
+    // WhatsApp Web sometimes navigates away (bundle update / session refresh).
+    // A navigation means all existing frame handles are about to go stale.
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame()) {
+        reconnect("main frame navigated");
+      }
+    });
+  }
+});
+
+// Layer 1: clean disconnect / network drop.
+client.on("disconnected", (reason) => {
+  console.warn("[bridge] disconnected:", reason);
+  reconnect("disconnected event: " + reason);
+});
+
+client.initialize().catch((e) => {
+  lastState = "init_error";
+  console.error("[bridge] init error:", e);
+});
+
+// ── Health-check (Layer 4) ────────────────────────────────────────────────────
+// Probe the live WhatsApp Web page via getState() on every tick.
+// getState() runs JS inside the page, so a detached frame or dead context
+// throws before we ever try to send — giving us an early-warning trigger.
+
+setInterval(async () => {
+  if (!ready || reconnecting) return;
+  try {
+    const state = await client.getState();
+    if (!state) throw new Error("getState returned null");
+  } catch (e) {
+    reconnect("health-check failed: " + (e && e.message || e));
+  }
+}, HEALTH_INTERVAL_MS);
+
+// ── HTTP API ──────────────────────────────────────────────────────────────────
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -75,6 +167,12 @@ app.use((req, res, next) => {
 
 app.get("/status", (req, res) => res.json({ ready, state: lastState }));
 
+// Explicit reconnect — Python calls this after detecting stale-frame errors.
+app.post("/reconnect", (req, res) => {
+  reconnect("/reconnect endpoint called");
+  res.json({ ok: true, state: lastState });
+});
+
 app.post("/send", async (req, res) => {
   const { phone, message } = req.body || {};
   if (!phone || !message) {
@@ -84,8 +182,7 @@ app.post("/send", async (req, res) => {
     return res.status(503).json({ ok: false, error: `client not ready (state=${lastState})` });
   }
   try {
-    const digits = String(phone).replace(/[^\d]/g, "");
-    // Resolve the canonical chat id; null => the number isn't on WhatsApp.
+    const digits   = String(phone).replace(/[^\d]/g, "");
     const numberId = await client.getNumberId(digits);
     if (!numberId) {
       return res.status(404).json({ ok: false, error: `not a WhatsApp number: ${phone}` });
@@ -93,7 +190,13 @@ app.post("/send", async (req, res) => {
     const sent = await client.sendMessage(numberId._serialized, message);
     return res.json({ ok: true, id: sent.id._serialized });
   } catch (e) {
-    return res.status(500).json({ ok: false, error: String((e && e.message) || e) });
+    const msg = String((e && e.message) || e);
+    // Layer 3: "detached Frame" / "Execution context was destroyed" / "Target closed"
+    // are thrown when WhatsApp Web hot-swaps its JS bundle mid-session.
+    if (/detached|context.*destroyed|target.*closed/i.test(msg)) {
+      reconnect("stale Puppeteer frame on /send: " + msg);
+    }
+    return res.status(500).json({ ok: false, error: msg });
   }
 });
 
@@ -101,7 +204,8 @@ app.listen(PORT, "127.0.0.1", () => {
   console.log(`[bridge] HTTP listening on http://127.0.0.1:${PORT}  (headless=${HEADLESS})`);
 });
 
-// Graceful shutdown so the Chromium child doesn't linger.
+// ── Graceful shutdown ─────────────────────────────────────────────────────────
+
 for (const sig of ["SIGINT", "SIGTERM"]) {
   process.on(sig, async () => {
     console.log(`[bridge] ${sig} — shutting down`);

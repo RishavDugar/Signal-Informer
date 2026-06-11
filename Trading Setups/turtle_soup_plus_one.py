@@ -99,3 +99,30 @@ class TurtleSoupPlusOneSetup(BaseSetup):
         return SignalResult(signal=False, symbol=symbol,
                             setup_name=self.name, date=date,
                             metadata={"reason": "no day-2 setup"})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent. Day-1 = previous bar; window = `lookback`
+        bars before day-1. days_gap = lookback − argmin/argmax offset."""
+        import numpy as np
+        lb = self.lookback
+        low, high, close = df["low"], df["high"], df["close"]
+
+        # Window of lb bars ending 2 bars ago (i.e. before day-1)
+        win_min = low.shift(2).rolling(lb, min_periods=lb).min()
+        win_max = high.shift(2).rolling(lb, min_periods=lb).max()
+        argmin_off = low.shift(2).rolling(lb, min_periods=lb).apply(np.argmin, raw=True)
+        argmax_off = high.shift(2).rolling(lb, min_periods=lb).apply(np.argmax, raw=True)
+
+        day1_low   = low.shift(1)
+        day1_high  = high.shift(1)
+        day1_close = close.shift(1)
+
+        # day-1 position minus prior-extreme position = lb − offset
+        gap_low  = lb - argmin_off
+        gap_high = lb - argmax_off
+
+        long_ = ((day1_low <= win_min) & (day1_close <= win_min)
+                 & (gap_low >= self.min_sessions))
+        short_ = ((day1_high >= win_max) & (day1_close >= win_max)
+                  & (gap_high >= self.min_sessions) & ~long_)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

@@ -66,3 +66,12 @@ class MomentumPinballSetup(BaseSetup):
 
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"lbr_rsi": round(val, 2)})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: LBR/RSI <= oversold → +1, >= overbought → -1."""
+        import numpy as np
+        roc1 = df["close"].diff()
+        lbr  = rsi(roc1.dropna(), self.rsi_period).reindex(df.index)
+        long_  = lbr <= self.oversold
+        short_ = lbr >= self.overbought
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

@@ -96,3 +96,27 @@ class TurtleSoupSetup(BaseSetup):
         return SignalResult(signal=False, symbol=symbol,
                             setup_name=self.name, date=date,
                             metadata={"reason": "no qualifying 20-day extreme"})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent. days_since_prev = lookback − argmin/argmax
+        offset within the prior window (argmin = first occurrence, matching
+        idxmin in the per-bar path). Buy side wins when both fire (matches the
+        `or` short-circuit in signal())."""
+        import numpy as np
+        lb = self.lookback
+        low, high = df["low"], df["high"]
+
+        prior_min = low.shift(1).rolling(lb, min_periods=lb).min()
+        prior_max = high.shift(1).rolling(lb, min_periods=lb).max()
+        new_low   = low  < prior_min
+        new_high  = high > prior_max
+
+        # offset of the prior extreme inside the shifted window (0 = oldest bar)
+        argmin_off = low.shift(1).rolling(lb, min_periods=lb).apply(np.argmin, raw=True)
+        argmax_off = high.shift(1).rolling(lb, min_periods=lb).apply(np.argmax, raw=True)
+        days_since_low  = lb - argmin_off
+        days_since_high = lb - argmax_off
+
+        long_  = new_low  & (days_since_low  >= self.min_sessions)
+        short_ = new_high & (days_since_high >= self.min_sessions) & ~long_
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)

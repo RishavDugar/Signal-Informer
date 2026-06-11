@@ -23,6 +23,7 @@
       <button class="nav-item" data-view="signals"><span>↯</span> Signals</button>
       <button class="nav-item" data-view="news"><span>✶</span> News &amp; Scouts</button>
       <button class="nav-item" data-view="setups"><span>⚙</span> Setups</button>
+      <button class="nav-item" data-view="hft"><span>⚡</span> HFT / Intraday</button>
       <button class="nav-item" data-view="stocks"><span>≣</span> Stocks</button>
       <button class="nav-item" data-view="config"><span>⛯</span> Config</button>
       <button class="nav-item" data-view="logs"><span>❯</span> Logs</button>
@@ -48,10 +49,19 @@
     <section id="view-signals" class="view hidden"></section>
     <section id="view-news" class="view hidden"></section>
     <section id="view-setups" class="view hidden"></section>
+    <section id="view-hft" class="view hidden"></section>
     <section id="view-stocks" class="view hidden"></section>
     <section id="view-config" class="view hidden"></section>
     <section id="view-logs" class="view hidden"></section>
   </main>
+
+  <!-- Chart popup (OHLCV candlestick + volume) -->
+  <div id="chart-modal" class="modal hidden">
+    <div class="modal-card">
+      <button id="chart-close" class="btn ghost sm modal-x" title="Close (Esc)">✕</button>
+      <div id="ohlcv-panel"></div>
+    </div>
+  </div>
 
   <!-- Job console drawer -->
   <div id="console" class="console hidden">
@@ -68,6 +78,7 @@
 </div>
 
 <div id="toast" class="toast hidden"></div>
+<script src="{{ url_for('static', filename='vendor/lightweight-charts.standalone.production.js') }}"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

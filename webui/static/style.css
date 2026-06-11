@@ -113,6 +113,7 @@ nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .btn.ghost { background: transparent; }
 .btn.danger { background: var(--red-bg); border-color: #5a2230; color: #ffb0b0; }
 .btn.sm { padding: 5px 10px; font-size: 12px; }
+.btn.active { border-color: var(--accent); color: #fff; background: var(--panel-2); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── Badges ──────────────────────────────────────────────── */
@@ -186,6 +187,24 @@ tbody tr:hover { background: var(--panel); }
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; color: #b9c4d6;
   white-space: pre-wrap; word-break: break-word;
 }
+
+/* ── Chart popup (modal) ─────────────────────────────────── */
+.modal {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(3, 5, 9, .72); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 48px 20px 40px; overflow: auto;
+}
+.modal-card {
+  position: relative; width: min(1040px, 95vw);
+  animation: modal-in .14s ease-out;
+}
+.modal-card > #ohlcv-panel > .card { margin-top: 0 !important; }
+.modal-x {
+  position: absolute; top: -36px; right: 0; z-index: 2;
+  background: var(--panel-2); border: 1px solid var(--border-2);
+}
+@keyframes modal-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 
 /* ── Forms ───────────────────────────────────────────────── */
 .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }

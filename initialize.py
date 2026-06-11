@@ -31,7 +31,7 @@ from pathlib import Path
 
 from config import DB_PATH, BACKUP_DIR, HISTORY_DAYS
 from data import db, collector, sanitizer
-from data.stocks_list import NSE_100
+from data.stocks_list import NSE_500
 from utils.backup import create_backup
 from utils.logger import get_logger
 
@@ -104,13 +104,13 @@ def main() -> None:
     print("  [OK] Database OK")
 
     # ── 2. Register stocks ────────────────────────────────────────────────────
-    print(f"\n[2/6] Registering {len(NSE_100)} NSE 100 stocks...")
-    for symbol, name, exchange in NSE_100:
+    print(f"\n[2/6] Registering {len(NSE_500)} NSE 500 stocks...")
+    for symbol, name, exchange in NSE_500:
         db.upsert_stock(symbol, exchange=exchange, name=name)
-    print(f"  [OK] {len(NSE_100)} stocks registered")
+    print(f"  [OK] {len(NSE_500)} stocks registered")
 
     # ── 3. Download history ───────────────────────────────────────────────────
-    symbols = [sym for sym, _, _ in NSE_100]
+    symbols = [sym for sym, _, _ in NSE_500]
     today   = date.today()
     start   = today - timedelta(days=HISTORY_DAYS)
 

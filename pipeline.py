@@ -24,7 +24,7 @@ from datetime import date
 
 from config import MAX_WORKERS, NOTIFY_ON_INGESTION_FAILURE, NOTIFY_ON_SIGNAL
 from data import db, collector, sanitizer
-from data.stocks_list import NSE_100
+from data.stocks_list import NSE_500
 from notifications.whatsapp import (
     send_ingestion_failure_alert, send_batch_signal_alert,
     send_analysis_started_alert,
@@ -42,8 +42,8 @@ _LOOKBACK = 200
 # ── Step helpers ──────────────────────────────────────────────────────────────
 
 def _ensure_stocks_registered() -> None:
-    """Upsert every symbol in NSE_100 into the stocks table."""
-    for symbol, name, exchange in NSE_100:
+    """Upsert every symbol in the NSE_500 universe into the stocks table."""
+    for symbol, name, exchange in NSE_500:
         db.upsert_stock(symbol, exchange=exchange, name=name)
 
 
@@ -174,7 +174,7 @@ def _run_all_setups(
 
 # ── Main entry point ──────────────────────────────────────────────────────────
 
-def run_pipeline(symbols: list[str] | None = None) -> None:
+def run_pipeline(symbols: list[str] | None = None) -> bool | None:
     """
     Execute the full daily pipeline.
     `symbols` defaults to all active NSE 100 stocks registered in the DB.
@@ -263,8 +263,9 @@ def run_pipeline(symbols: list[str] | None = None) -> None:
 
     # ── 12. WhatsApp alert (picks, or a 'no setups today' note if none clear) ─
     # Called even with zero fired signals so a quiet day still sends a heads-up.
+    notify_ok = True
     if NOTIFY_ON_SIGNAL:
-        send_batch_signal_alert(fired_signals, today)
+        notify_ok = send_batch_signal_alert(fired_signals, today)
 
     # ── 13. Weekly pick-performance scorecard (sent on SCORECARD_WEEKDAY) ─────
     try:
@@ -274,6 +275,7 @@ def run_pipeline(symbols: list[str] | None = None) -> None:
         log.warning(f"pipeline: weekly scorecard skipped — {exc}")
 
     log.info(f"pipeline: DONE  run_date={today}")
+    return notify_ok
 
 
 # ── CLI helper ────────────────────────────────────────────────────────────────
@@ -290,4 +292,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     db.init_db()
-    run_pipeline(symbols=args.symbols or None)
+    ok = run_pipeline(symbols=args.symbols or None)
+    if ok is False:
+        sys.exit(1)

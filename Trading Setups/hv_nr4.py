@@ -87,3 +87,13 @@ class HVNr4Setup(BaseSetup):
                 "range_size"   : round(float(df["high"].iloc[-1] - df["low"].iloc[-1]), 2),
             },
         )
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: HV compression + ID/NR4 coil (neutral → +1)."""
+        import numpy as np
+        hv_s   = historical_vol(df["close"], self.short_period)
+        hv_l   = historical_vol(df["close"], self.long_period)
+        ratio  = hv_s / hv_l.replace(0, float("nan"))
+        coil   = is_inside_day(df["high"], df["low"]) | is_nr4(df["high"], df["low"])
+        fired  = (ratio < self.hv_ratio_threshold) & coil
+        return pd.Series(np.where(fired, 1, 0), index=df.index)

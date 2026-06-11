@@ -93,3 +93,13 @@ class WhiplashSetup(BaseSetup):
 
         return SignalResult(signal=False, symbol=symbol, setup_name=self.name, date=date,
                             metadata={"close_pct": round(close_pct, 3)})
+
+    def vector_signals(self, df: pd.DataFrame) -> pd.Series:
+        """Vectorised equivalent: gap beyond prior extreme reversed into the
+        opposing half of today's range."""
+        import numpy as np
+        o, h, l, c = df["open"], df["high"], df["low"], df["close"]
+        mid = (h + l) / 2
+        long_  = (o < l.shift(1)) & (c > o) & (c > mid)
+        short_ = (o > h.shift(1)) & (c < o) & (c < mid)
+        return pd.Series(np.where(long_, 1, np.where(short_, -1, 0)), index=df.index)
