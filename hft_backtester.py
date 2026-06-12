@@ -32,6 +32,7 @@ Usage:
 
 from __future__ import annotations
 
+import gc
 import json
 import os
 import sys
@@ -280,6 +281,8 @@ def _hft_worker_symbol(symbol: str) -> dict[str, tuple[list[tuple], int]]:
             continue
         if trades:
             out[setup.name] = (trades, n_sl)
+    del df
+    gc.collect()
     return out
 
 
@@ -309,6 +312,7 @@ def run_hft_backtest(timeframe: str,
         max_workers=max_workers,
         initializer=_hft_worker_init,
         initargs=(timeframe, years, use_optimal),
+        max_tasks_per_child=15,
     ) as pool:
         futures = {pool.submit(_hft_worker_symbol, s): s for s in symbols}
         for fut in as_completed(futures):
