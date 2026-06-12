@@ -67,6 +67,17 @@ MIN_TRADES           = 30      # below this a (setup, timeframe) row is noise
 # oscillator whipsawing every other 5min bar). Skip it for this symbol rather
 # than generating millions of near-meaningless trades.
 MAX_SIGNAL_RATE      = 0.05
+# These daily-timeframe "colour change" / crossover setups whipsaw on
+# 20-60% of 1min/5min bars (verified on 5min: ELDER_IMPULSE 60%,
+# TWO_PERIOD_ROC 51%, ID_NR4 33%, THE_ANTI 28%, STOCH_HOOK 24%). At that
+# density they aren't actionable intraday setups and generate tens of
+# millions of trade tuples per run, exhausting memory. Exclude them
+# entirely from the fastest timeframes rather than relying solely on the
+# per-symbol MAX_SIGNAL_RATE skip.
+HFT_EXCLUDED_SETUPS = {
+    "1min":  {"ELDER_IMPULSE", "TWO_PERIOD_ROC", "ID_NR4", "THE_ANTI", "STOCH_HOOK"},
+    "5min":  {"ELDER_IMPULSE", "TWO_PERIOD_ROC", "ID_NR4", "THE_ANTI", "STOCH_HOOK"},
+}
 
 _Z_BY_CONF = {0.80: 0.8416, 0.85: 1.0364, 0.90: 1.2816, 0.95: 1.6449, 0.975: 1.9600}
 _Z = _Z_BY_CONF.get(round(WR_CONFIDENCE, 3), 1.2816)
@@ -118,28 +129,31 @@ def load_symbol(timeframe: str, symbol: str,
 # ── Core engine ───────────────────────────────────────────────────────────────
 
 def _trades_for_symbol(setup, df: pd.DataFrame,
-                       cost: float) -> tuple[list[tuple], int]:
+                       cost: float) -> tuple[list[tuple], int, float | None]:
     """
     Generate intraday trades for one (setup, symbol).
-    Returns (trades, n_sl_hits); each trade = (net_ret, direction, hold_bars).
+    Returns (trades, n_sl_hits, skip_rate); each trade = (net_ret, direction,
+    hold_bars). skip_rate is the signal rate (fraction of bars) if this
+    (setup, symbol) was skipped for firing too often, else None.
 
     Entry  : next bar open after the signal bar (same session only).
     Exit   : sl_pct stop intrabar if armed, else the session's last bar close.
     """
     n = len(df)
     if n < setup.min_periods + 2:
-        return [], 0
+        return [], 0, None
 
     try:
         dirs = np.asarray(setup.vector_signals(df), dtype=float)
     except Exception:
-        return [], 0
+        return [], 0, None
 
     sig_idx = np.nonzero(dirs != 0)[0]
     if len(sig_idx) == 0:
-        return [], 0
-    if len(sig_idx) > MAX_SIGNAL_RATE * n:
-        return [], 0
+        return [], 0, None
+    sig_rate = len(sig_idx) / n
+    if sig_rate > MAX_SIGNAL_RATE:
+        return [], 0, sig_rate
 
     opens   = df["open"].to_numpy(dtype=float)
     highs   = df["high"].to_numpy(dtype=float)
@@ -207,7 +221,7 @@ def _trades_for_symbol(setup, df: pd.DataFrame,
         gross = (exit_price - entry) / entry * direction
         trades.append((gross - cost, direction, exit_idx - entry_idx + 1))
 
-    return trades, n_sl
+    return trades, n_sl, None
 
 
 def _summarise_trades(trades: list[tuple], n_sl: int) -> dict:
@@ -265,32 +279,37 @@ def _hft_worker_init(timeframe: str, years: list[int] | None,
     """Load all vector-capable setups once per worker process."""
     global _gw_setups, _gw_timeframe, _gw_years
     from setup_loader import load_setups
-    _gw_setups    = [s for s in load_setups(use_optimal_params=use_optimal)
-                     if hasattr(s, "vector_signals")]
+    excluded   = HFT_EXCLUDED_SETUPS.get(timeframe, set())
+    _gw_setups = [s for s in load_setups(use_optimal_params=use_optimal)
+                  if hasattr(s, "vector_signals") and s.name not in excluded]
     _gw_timeframe = timeframe
     _gw_years     = years
 
 
-def _hft_worker_symbol(symbol: str) -> dict[str, tuple[list[tuple], int]]:
+def _hft_worker_symbol(symbol: str) -> tuple[dict[str, tuple[list[tuple], int]], dict[str, float]]:
     """Run every setup over one symbol's intraday data. Returns
-    {setup_name: (trades, n_sl)}."""
+    ({setup_name: (trades, n_sl)}, {setup_name: skip_rate}) where skip_rate
+    is the signal rate for setups skipped for firing too often."""
     out: dict[str, tuple[list[tuple], int]] = {}
+    skipped: dict[str, float] = {}
     try:
         df = load_symbol(_gw_timeframe, symbol, _gw_years)
     except Exception:
-        return out
+        return out, skipped
     if df.empty:
-        return out
+        return out, skipped
     for setup in _gw_setups:
         try:
-            trades, n_sl = _trades_for_symbol(setup, df, HFT_TRANSACTION_COST)
+            trades, n_sl, skip_rate = _trades_for_symbol(setup, df, HFT_TRANSACTION_COST)
         except Exception:
             continue
         if trades:
             out[setup.name] = (trades, n_sl)
+        elif skip_rate is not None:
+            skipped[setup.name] = skip_rate
     del df
     gc.collect()
-    return out
+    return out, skipped
 
 
 # ── Public interface ──────────────────────────────────────────────────────────
@@ -310,9 +329,14 @@ def run_hft_backtest(timeframe: str,
 
     log.info(f"hft[{timeframe}]: {len(symbols)} symbols, years={years or 'all'}, "
              f"{max_workers} workers, cost={HFT_TRANSACTION_COST:.4%}")
+    excluded = HFT_EXCLUDED_SETUPS.get(timeframe)
+    if excluded:
+        log.info(f"hft[{timeframe}]: excluding noisy setups: {', '.join(sorted(excluded))}")
 
     all_trades: dict[str, list[tuple]] = {}
     all_sl:     dict[str, int]         = {}
+    skip_counts: dict[str, int]        = {}
+    skip_rate_sums: dict[str, float]   = {}
     done, t0 = 0, time.time()
 
     with ProcessPoolExecutor(
@@ -324,19 +348,31 @@ def run_hft_backtest(timeframe: str,
         futures = {pool.submit(_hft_worker_symbol, s): s for s in symbols}
         for fut in as_completed(futures):
             try:
-                res = fut.result()
+                res, skipped = fut.result()
             except Exception as exc:
                 log.warning(f"hft: worker failed on {futures[fut]} — {exc}")
-                res = {}
+                res, skipped = {}, {}
             for name, (trades, n_sl) in res.items():
                 if target_setup and name != target_setup:
                     continue
                 all_trades.setdefault(name, []).extend(trades)
                 all_sl[name] = all_sl.get(name, 0) + n_sl
+            for name, rate in skipped.items():
+                if target_setup and name != target_setup:
+                    continue
+                skip_counts[name] = skip_counts.get(name, 0) + 1
+                skip_rate_sums[name] = skip_rate_sums.get(name, 0.0) + rate
             done += 1
             if done % max(1, len(symbols) // 10) == 0 or done == len(symbols):
                 log.info(f"  [{timeframe}] {done}/{len(symbols)} symbols "
                          f"({time.time()-t0:.0f}s)")
+
+    for name, count in sorted(skip_counts.items(), key=lambda kv: -kv[1]):
+        avg_rate = skip_rate_sums[name] / count
+        log.info(
+            f"hft[{timeframe}]: skipped {name} on {count}/{len(symbols)} symbols "
+            f"(signal rate > {MAX_SIGNAL_RATE:.0%}, avg {avg_rate:.0%} of bars)"
+        )
 
     results = {}
     for name, trades in all_trades.items():
