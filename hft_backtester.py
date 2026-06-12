@@ -358,7 +358,6 @@ def run_hft_backtest(timeframe: str,
         max_workers=max_workers,
         initializer=_hft_worker_init,
         initargs=(timeframe, years, use_optimal),
-        max_tasks_per_child=15,
     ) as pool:
         futures = {pool.submit(_hft_worker_symbol, s): s for s in symbols}
         for fut in as_completed(futures):
