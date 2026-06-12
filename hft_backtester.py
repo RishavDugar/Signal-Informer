@@ -93,15 +93,18 @@ def load_symbol(timeframe: str, symbol: str,
         if years and y not in years:
             continue
         try:
-            parts.append(pd.read_parquet(ydir))
+            parts.append(pd.read_parquet(
+                ydir, columns=["timestamp", "open", "high", "low", "close", "volume"]))
         except Exception as exc:
             log.warning(f"hft: cannot read {ydir} — {exc}")
     if not parts:
         return pd.DataFrame()
     df = pd.concat(parts, ignore_index=True)
-    df = df[["timestamp", "open", "high", "low", "close", "volume"]]
     df = df.sort_values("timestamp").set_index("timestamp")
     df = df[~df.index.duplicated(keep="first")]
+    for col in ("open", "high", "low", "close"):
+        df[col] = df[col].astype("float32")
+    df["volume"] = df["volume"].astype("int32")
     df["session"] = df.index.normalize()
     return df
 
