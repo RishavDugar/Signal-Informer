@@ -128,12 +128,18 @@ def load_symbol(timeframe: str, symbol: str,
 
 # ── Core engine ───────────────────────────────────────────────────────────────
 
+_EMPTY_RETS  = np.array([], dtype=np.float32)
+_EMPTY_DIRS  = np.array([], dtype=np.int8)
+_EMPTY_HOLDS = np.array([], dtype=np.int16)
+
+
 def _trades_for_symbol(setup, df: pd.DataFrame,
-                       cost: float) -> tuple[list[tuple], int, float | None]:
+                       cost: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, int, float | None]:
     """
     Generate intraday trades for one (setup, symbol).
-    Returns (trades, n_sl_hits, skip_rate); each trade = (net_ret, direction,
-    hold_bars). skip_rate is the signal rate (fraction of bars) if this
+    Returns (rets, dirs, holds, n_sl_hits, skip_rate) — three parallel numpy
+    arrays (net return float32, direction int8, hold bars int16), one entry
+    per trade. skip_rate is the signal rate (fraction of bars) if this
     (setup, symbol) was skipped for firing too often, else None.
 
     Entry  : next bar open after the signal bar (same session only).
@@ -141,19 +147,19 @@ def _trades_for_symbol(setup, df: pd.DataFrame,
     """
     n = len(df)
     if n < setup.min_periods + 2:
-        return [], 0, None
+        return _EMPTY_RETS, _EMPTY_DIRS, _EMPTY_HOLDS, 0, None
 
     try:
         dirs = np.asarray(setup.vector_signals(df), dtype=float)
     except Exception:
-        return [], 0, None
+        return _EMPTY_RETS, _EMPTY_DIRS, _EMPTY_HOLDS, 0, None
 
     sig_idx = np.nonzero(dirs != 0)[0]
     if len(sig_idx) == 0:
-        return [], 0, None
+        return _EMPTY_RETS, _EMPTY_DIRS, _EMPTY_HOLDS, 0, None
     sig_rate = len(sig_idx) / n
     if sig_rate > MAX_SIGNAL_RATE:
-        return [], 0, sig_rate
+        return _EMPTY_RETS, _EMPTY_DIRS, _EMPTY_HOLDS, 0, sig_rate
 
     opens   = df["open"].to_numpy(dtype=float)
     highs   = df["high"].to_numpy(dtype=float)
@@ -170,7 +176,9 @@ def _trades_for_symbol(setup, df: pd.DataFrame,
     sess_end = last_of_session[np.searchsorted(last_of_session, np.arange(n))]
 
     sl_pct = getattr(setup, "sl_pct", None)
-    trades: list[tuple] = []
+    rets_l: list[float] = []
+    dirs_l: list[int]   = []
+    holds_l: list[int]  = []
     n_sl = 0
 
     for i in sig_idx:
@@ -219,18 +227,23 @@ def _trades_for_symbol(setup, df: pd.DataFrame,
                 n_sl      += 1
 
         gross = (exit_price - entry) / entry * direction
-        trades.append((gross - cost, direction, exit_idx - entry_idx + 1))
+        rets_l.append(gross - cost)
+        dirs_l.append(direction)
+        holds_l.append(exit_idx - entry_idx + 1)
 
-    return trades, n_sl, None
+    if not rets_l:
+        return _EMPTY_RETS, _EMPTY_DIRS, _EMPTY_HOLDS, n_sl, None
+    return (np.array(rets_l, dtype=np.float32),
+            np.array(dirs_l, dtype=np.int8),
+            np.array(holds_l, dtype=np.int16),
+            n_sl, None)
 
 
-def _summarise_trades(trades: list[tuple], n_sl: int) -> dict:
-    """Aggregate trade tuples into the stats dict (all net of costs)."""
-    if not trades:
+def _summarise_trades(rets: np.ndarray, dirs: np.ndarray, holds: np.ndarray, n_sl: int) -> dict:
+    """Aggregate per-trade arrays into the stats dict (all net of costs)."""
+    if len(rets) == 0:
         return {"n": 0}
-    rets  = np.array([t[0] for t in trades])
-    dirs  = np.array([t[1] for t in trades])
-    holds = np.array([t[2] for t in trades])
+    rets  = rets.astype(np.float64)
     n     = len(rets)
     wins  = int((rets > 0).sum())
     mean  = float(rets.mean())
@@ -286,11 +299,11 @@ def _hft_worker_init(timeframe: str, years: list[int] | None,
     _gw_years     = years
 
 
-def _hft_worker_symbol(symbol: str) -> tuple[dict[str, tuple[list[tuple], int]], dict[str, float]]:
+def _hft_worker_symbol(symbol: str) -> tuple[dict[str, tuple[np.ndarray, np.ndarray, np.ndarray, int]], dict[str, float]]:
     """Run every setup over one symbol's intraday data. Returns
-    ({setup_name: (trades, n_sl)}, {setup_name: skip_rate}) where skip_rate
-    is the signal rate for setups skipped for firing too often."""
-    out: dict[str, tuple[list[tuple], int]] = {}
+    ({setup_name: (rets, dirs, holds, n_sl)}, {setup_name: skip_rate}) where
+    skip_rate is the signal rate for setups skipped for firing too often."""
+    out: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray, int]] = {}
     skipped: dict[str, float] = {}
     try:
         df = load_symbol(_gw_timeframe, symbol, _gw_years)
@@ -300,11 +313,11 @@ def _hft_worker_symbol(symbol: str) -> tuple[dict[str, tuple[list[tuple], int]],
         return out, skipped
     for setup in _gw_setups:
         try:
-            trades, n_sl, skip_rate = _trades_for_symbol(setup, df, HFT_TRANSACTION_COST)
+            rets, dirs, holds, n_sl, skip_rate = _trades_for_symbol(setup, df, HFT_TRANSACTION_COST)
         except Exception:
             continue
-        if trades:
-            out[setup.name] = (trades, n_sl)
+        if len(rets):
+            out[setup.name] = (rets, dirs, holds, n_sl)
         elif skip_rate is not None:
             skipped[setup.name] = skip_rate
     del df
@@ -333,10 +346,12 @@ def run_hft_backtest(timeframe: str,
     if excluded:
         log.info(f"hft[{timeframe}]: excluding noisy setups: {', '.join(sorted(excluded))}")
 
-    all_trades: dict[str, list[tuple]] = {}
-    all_sl:     dict[str, int]         = {}
-    skip_counts: dict[str, int]        = {}
-    skip_rate_sums: dict[str, float]   = {}
+    all_rets:  dict[str, list[np.ndarray]] = {}
+    all_dirs:  dict[str, list[np.ndarray]] = {}
+    all_holds: dict[str, list[np.ndarray]] = {}
+    all_sl:    dict[str, int]              = {}
+    skip_counts: dict[str, int]            = {}
+    skip_rate_sums: dict[str, float]       = {}
     done, t0 = 0, time.time()
 
     with ProcessPoolExecutor(
@@ -352,10 +367,12 @@ def run_hft_backtest(timeframe: str,
             except Exception as exc:
                 log.warning(f"hft: worker failed on {futures[fut]} — {exc}")
                 res, skipped = {}, {}
-            for name, (trades, n_sl) in res.items():
+            for name, (rets, dirs, holds, n_sl) in res.items():
                 if target_setup and name != target_setup:
                     continue
-                all_trades.setdefault(name, []).extend(trades)
+                all_rets.setdefault(name, []).append(rets)
+                all_dirs.setdefault(name, []).append(dirs)
+                all_holds.setdefault(name, []).append(holds)
                 all_sl[name] = all_sl.get(name, 0) + n_sl
             for name, rate in skipped.items():
                 if target_setup and name != target_setup:
@@ -375,8 +392,11 @@ def run_hft_backtest(timeframe: str,
         )
 
     results = {}
-    for name, trades in all_trades.items():
-        stats = _summarise_trades(trades, all_sl.get(name, 0))
+    for name in all_rets:
+        rets  = np.concatenate(all_rets[name])
+        dirs  = np.concatenate(all_dirs[name])
+        holds = np.concatenate(all_holds[name])
+        stats = _summarise_trades(rets, dirs, holds, all_sl.get(name, 0))
         if stats.get("n", 0) >= MIN_TRADES:
             results[name] = stats
     return results
