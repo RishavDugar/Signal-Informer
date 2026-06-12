@@ -62,6 +62,11 @@ HFT_TRANSACTION_COST = float(os.getenv("HFT_TRANSACTION_COST", "0.0010"))
 # Relaxed minimum average net return per trade for HFT signals (5 bps).
 HFT_MIN_AVG_RETURN   = float(os.getenv("HFT_MIN_AVG_RETURN", "0.0005"))
 MIN_TRADES           = 30      # below this a (setup, timeframe) row is noise
+# A daily-timeframe "setup" whose condition flips on a large fraction of bars
+# is not an actionable intraday signal — it's noise (e.g. a colour-change
+# oscillator whipsawing every other 5min bar). Skip it for this symbol rather
+# than generating millions of near-meaningless trades.
+MAX_SIGNAL_RATE      = 0.05
 
 _Z_BY_CONF = {0.80: 0.8416, 0.85: 1.0364, 0.90: 1.2816, 0.95: 1.6449, 0.975: 1.9600}
 _Z = _Z_BY_CONF.get(round(WR_CONFIDENCE, 3), 1.2816)
@@ -132,6 +137,8 @@ def _trades_for_symbol(setup, df: pd.DataFrame,
 
     sig_idx = np.nonzero(dirs != 0)[0]
     if len(sig_idx) == 0:
+        return [], 0
+    if len(sig_idx) > MAX_SIGNAL_RATE * n:
         return [], 0
 
     opens   = df["open"].to_numpy(dtype=float)
