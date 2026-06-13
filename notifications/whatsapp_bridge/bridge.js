@@ -10,7 +10,10 @@
  *
  * It exposes a tiny localhost HTTP API the Python side calls:
  *   GET  /status        -> { ready: bool, state: string }
- *   POST /send          -> { phone, message }  ->  { ok, id } | { ok:false, error }
+ *   POST /send          -> { phone, message } | { group, message }
+ *                        -> { ok, id } | { ok:false, error }
+ *   GET  /messages       -> ?group=<name>&since=<epoch ms>
+ *                        -> { ok, messages: [{ts, chatName, isGroup, from, body}, ...] }
  *   POST /reconnect     -> {}  ->  { ok, state }
  *
  * Session is persisted by LocalAuth (./.wwebjs_auth), so you scan the QR code
@@ -49,6 +52,18 @@ const HEALTH_INTERVAL_MS    = parseInt(process.env.HEALTH_CHECK_INTERVAL_MS || "
 let ready        = false;
 let lastState    = "starting";
 let reconnecting = false;   // guard: only one reconnect cycle at a time
+
+// ── Inbound message log ──────────────────────────────────────────────────────
+// In-memory ring buffer so callers (e.g. a Python automation poller) can ask
+// "any new messages in group X since timestamp Y?" via GET /messages.
+const MAX_LOG = 500;
+const messageLog = [];
+
+function findChatByName(name) {
+  const target = String(name || "").trim().toLowerCase();
+  return client.getChats().then(chats =>
+    chats.find(c => c.isGroup && (c.name || "").trim().toLowerCase() === target));
+}
 
 // ── Reconnect helper ──────────────────────────────────────────────────────────
 
@@ -103,6 +118,21 @@ client.on("auth_failure", (m) => {
   ready     = false;
   lastState = "auth_failure";
   console.error("[bridge] auth failure:", m);
+});
+
+// Layer 0: log inbound messages (group chats only matter for the automation trigger,
+// but we keep DMs too in case a future caller wants them).
+client.on("message", async (msg) => {
+  try {
+    const chat = await msg.getChat();
+    messageLog.push({
+      ts: Date.now(), chatId: chat.id._serialized, chatName: chat.name || "",
+      isGroup: !!chat.isGroup, from: msg.author || msg.from, body: msg.body || "",
+    });
+    if (messageLog.length > MAX_LOG) messageLog.splice(0, messageLog.length - MAX_LOG);
+  } catch (e) {
+    console.warn("[bridge] message log error:", e && e.message || e);
+  }
 });
 
 client.on("ready", () => {
@@ -174,20 +204,28 @@ app.post("/reconnect", (req, res) => {
 });
 
 app.post("/send", async (req, res) => {
-  const { phone, message } = req.body || {};
-  if (!phone || !message) {
-    return res.status(400).json({ ok: false, error: "phone and message are required" });
+  const { phone, group, message } = req.body || {};
+  if ((!phone && !group) || !message) {
+    return res.status(400).json({ ok: false, error: "message and (phone or group) are required" });
   }
   if (!ready) {
     return res.status(503).json({ ok: false, error: `client not ready (state=${lastState})` });
   }
   try {
-    const digits   = String(phone).replace(/[^\d]/g, "");
-    const numberId = await client.getNumberId(digits);
-    if (!numberId) {
-      return res.status(404).json({ ok: false, error: `not a WhatsApp number: ${phone}` });
+    let chatId;
+    if (group) {
+      const chat = await findChatByName(group);
+      if (!chat) return res.status(404).json({ ok: false, error: `no group chat named: ${group}` });
+      chatId = chat.id._serialized;
+    } else {
+      const digits   = String(phone).replace(/[^\d]/g, "");
+      const numberId = await client.getNumberId(digits);
+      if (!numberId) {
+        return res.status(404).json({ ok: false, error: `not a WhatsApp number: ${phone}` });
+      }
+      chatId = numberId._serialized;
     }
-    const sent = await client.sendMessage(numberId._serialized, message);
+    const sent = await client.sendMessage(chatId, message);
     return res.json({ ok: true, id: sent.id._serialized });
   } catch (e) {
     const msg = String((e && e.message) || e);
@@ -198,6 +236,16 @@ app.post("/send", async (req, res) => {
     }
     return res.status(500).json({ ok: false, error: msg });
   }
+});
+
+// GET /messages?group=<name>&since=<epoch ms> — inbound messages from a group chat,
+// for the Python side to poll for an automation trigger phrase.
+app.get("/messages", (req, res) => {
+  const group = String(req.query.group || "").trim().toLowerCase();
+  const since = parseInt(req.query.since, 10) || 0;
+  const messages = messageLog.filter(m =>
+    m.ts > since && (!group || (m.isGroup && m.chatName.trim().toLowerCase() === group)));
+  res.json({ ok: true, messages, now: Date.now() });
 });
 
 app.listen(PORT, "127.0.0.1", () => {
