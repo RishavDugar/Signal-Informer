@@ -74,6 +74,12 @@ def _fetch_ticker(symbol: str, start: date, end: date) -> pd.DataFrame:
     # Normalise column names to lowercase
     df.columns = [c.lower() for c in df.columns]
 
+    # yfinance occasionally returns duplicate-named columns (e.g. both "Close"
+    # and "Adj Close" collapsing to "close" under some auto_adjust paths) —
+    # keep the first occurrence so downstream df[col] always yields a Series.
+    if df.columns.duplicated().any():
+        df = df.loc[:, ~df.columns.duplicated()]
+
     missing = _REQUIRED_COLS - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns {missing} for {symbol}")
