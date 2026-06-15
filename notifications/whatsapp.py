@@ -907,245 +907,53 @@ def _meta_lines(setup_name: str, meta: dict) -> list[str]:
     return lines
 
 
-# ── Send backends ──────────────────────────────────────────────────────────────
+# ── Send backend (delegated to the shared whatsapp_bridge package) ──────────────
+# Transport — the headless Node bridge / pywhatkit, autostart, retries and self-
+# heal — lives in the reusable `whatsapp_bridge` package (github.com/RishavDugar/
+# WhatsApp-Bridge). This module keeps only Signal Infomer's message formatting and
+# alert logic; the thin wrappers below preserve the historical public API.
 
-_bridge_started = False   # process-local guard so we attempt autostart only once
+from whatsapp_bridge import BridgeClient
 
-
-def _bridge_headers() -> dict:
-    return {"X-Token": WHATSAPP_BRIDGE_TOKEN} if WHATSAPP_BRIDGE_TOKEN else {}
-
-
-def _bridge_ready() -> bool:
-    """True if the Node bridge is reachable AND its WhatsApp client is logged in."""
-    try:
-        r = requests.get(f"{WHATSAPP_BRIDGE_URL}/status",
-                         headers=_bridge_headers(), timeout=5)
-        return bool(r.ok and r.json().get("ready"))
-    except Exception:
-        return False
-
-
-def _autostart_bridge() -> bool:
-    """
-    Launch the Node bridge detached (headless) if it isn't already running, then
-    wait for it to authenticate from its saved session. Returns True once ready.
-
-    Requires a one-time interactive QR scan beforehand (`npm start` in the bridge
-    dir) — after that the LocalAuth session persists and headless starts need no QR.
-    """
-    global _bridge_started
-    if not WHATSAPP_BRIDGE_AUTOSTART:
-        return False
-    if _bridge_started and _bridge_ready():
-        return True
-
-    bridge_js = WHATSAPP_BRIDGE_DIR / "bridge.js"
-    if not bridge_js.exists():
-        log.error(f"whatsapp: bridge not found at {bridge_js} — run its npm install first")
-        return False
-    if not (WHATSAPP_BRIDGE_DIR / ".wwebjs_auth").exists():
-        log.error("whatsapp: bridge has no saved session — run `npm start` once and "
-                  "scan the QR before relying on autostart")
-        return False
-
-    # If the bridge is up but mid-reinit (ready=false, state=reconnecting/starting),
-    # don't launch a second process — just fall through to the poll loop below.
-    live_state = _bridge_state(timeout=3)
-    if live_state in ("reconnecting", "starting", "authenticated", "disconnected"):
-        log.info(f"whatsapp: bridge is up but mid-reinit (state={live_state}) — waiting for it to recover")
-        _bridge_started = True  # suppress another launch attempt
-
-    if not _bridge_started:
-        log.info("whatsapp: bridge not ready — launching it headless...")
-        try:
-            flags = 0
-            if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):  # Windows: fully detach
-                flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "DETACHED_PROCESS", 0)
-            log_path = WHATSAPP_BRIDGE_DIR / "bridge.log"
-            with open(log_path, "a", encoding="utf-8") as logf:
-                subprocess.Popen(
-                    ["node", "bridge.js"],
-                    cwd=str(WHATSAPP_BRIDGE_DIR),
-                    stdout=logf, stderr=logf, stdin=subprocess.DEVNULL,
-                    creationflags=flags,
-                )
-            _bridge_started = True
-        except FileNotFoundError:
-            log.error("whatsapp: `node` not found on PATH — install Node.js to use the bridge")
-            return False
-        except Exception as exc:
-            log.error(f"whatsapp: failed to launch bridge — {exc}")
-            return False
-
-    # Poll until the WhatsApp client authenticates (Chromium boot + session load).
-    deadline = time.time() + WHATSAPP_BRIDGE_READY_TIMEOUT
-    while time.time() < deadline:
-        if _bridge_ready():
-            log.info("whatsapp: bridge is ready")
-            return True
-        time.sleep(2)
-    log.error(f"whatsapp: bridge did not become ready within "
-              f"{WHATSAPP_BRIDGE_READY_TIMEOUT}s (check {WHATSAPP_BRIDGE_DIR / 'bridge.log'})")
-    return False
-
-
-def _send_via_bridge(target: str, message: str) -> bool:
-    """
-    Send through the headless Node bridge. Returns True only on a confirmed send
-    (the bridge resolves the WhatsApp id and reports the server-side message id).
-    Raises on any failure so the retry loop in send_whatsapp can react.
-    """
-    if not _bridge_ready() and not _autostart_bridge():
-        raise RuntimeError(
-            "bridge unreachable / not logged in — start it with `npm start` in "
-            f"{WHATSAPP_BRIDGE_DIR} and scan the QR once")
-    r = requests.post(
-        f"{WHATSAPP_BRIDGE_URL}/send",
-        json={"phone": target, "message": message},
-        headers=_bridge_headers(),
-        timeout=90,
-    )
-    if r.ok and r.json().get("ok"):
-        return True
-    detail = ""
-    try:
-        detail = r.json().get("error", "")
-    except Exception:
-        detail = r.text[:200]
-    # Puppeteer "detached Frame" / "context destroyed" means WhatsApp Web reloaded
-    # and all frame references are stale.  Hit /reconnect so the bridge self-heals
-    # before the retry loop in send_whatsapp tries again.
-    if re.search(r"detached|context.*destroyed|target.*closed", detail, re.I):
-        log.warning("whatsapp: stale Puppeteer frame detected — triggering bridge reconnect")
-        try:
-            requests.post(f"{WHATSAPP_BRIDGE_URL}/reconnect",
-                          headers=_bridge_headers(), timeout=5)
-        except Exception:
-            pass
-    raise RuntimeError(f"bridge send failed (HTTP {r.status_code}): {detail}")
-
-
-def _send_via_pywhatkit(target: str, message: str) -> None:
-    """Legacy GUI-automation send. Imported lazily so the bridge path needs no
-    pywhatkit install. Note: silently fails when the screen is off / locked."""
-    import pywhatkit  # noqa: PLC0415 — optional dependency, only the legacy path needs it
-    pywhatkit.sendwhatmsg_instantly(
-        phone_no=target,
-        message=message,
-        wait_time=WAIT_TIME,
-        tab_close=True,
-        close_time=CLOSE_TIME,
-    )
+_wa = BridgeClient(
+    backend=WHATSAPP_BACKEND,
+    url=WHATSAPP_BRIDGE_URL,
+    token=WHATSAPP_BRIDGE_TOKEN,
+    autostart=WHATSAPP_BRIDGE_AUTOSTART,
+    bridge_dir=WHATSAPP_BRIDGE_DIR,
+    ready_timeout=WHATSAPP_BRIDGE_READY_TIMEOUT,
+    default_phone=WHATSAPP_PHONE,
+    logger=log,
+)
 
 
 def _bridge_state(timeout: float = 5.0) -> str:
-    """Reported bridge state: 'ready' | 'qr' | 'starting' | 'auth_failure' |
-    'disconnected' | 'unreachable'."""
-    try:
-        r = requests.get(f"{WHATSAPP_BRIDGE_URL}/status",
-                         headers=_bridge_headers(), timeout=timeout)
-        if r.ok:
-            j = r.json()
-            return "ready" if j.get("ready") else str(j.get("state", "not_ready"))
-    except Exception:
-        pass
-    return "unreachable"
+    """Reported bridge state (kept for the module CLI self-check below)."""
+    return _wa.state(timeout)
 
 
 def bridge_health(timeout: float = 2.0) -> dict:
-    """
-    Lightweight, read-only health probe for the dashboard / status checks.
-    Does NOT autostart anything (safe to poll). Returns:
-      {backend, ready, state, configured}
-    For non-bridge backends, reports ready=True (nothing to monitor).
-    """
-    if WHATSAPP_BACKEND != "bridge":
-        return {"backend": WHATSAPP_BACKEND, "ready": True,
-                "state": "n/a", "configured": bool(WHATSAPP_PHONE or WHATSAPP_PHONES)}
-    state = _bridge_state(timeout=timeout)
-    return {"backend": "bridge", "ready": state == "ready", "state": state,
-            "configured": bool(WHATSAPP_PHONE or WHATSAPP_PHONES)}
+    """Read-only health probe for the dashboard. Reports configured=True when any
+    recipient number is set (WHATSAPP_PHONE or WHATSAPP_PHONES)."""
+    h = _wa.health(timeout)
+    if WHATSAPP_BACKEND == "bridge":
+        h["configured"] = bool(WHATSAPP_PHONE or WHATSAPP_PHONES)
+    return h
 
 
 def ensure_bridge_ready() -> bool:
-    """
-    Startup self-check for the headless WhatsApp bridge.
-
-    Intended to be called by the scheduler at launch and at the top of each job.
-    When WHATSAPP_BACKEND == 'bridge':
-      • returns True (logs OK) if the bridge is logged in and ready;
-      • otherwise launches it headless (autostart) and waits for it to reconnect
-        from its saved session;
-      • if it still isn't ready, logs a loud, actionable WARNING and returns
-        False — so a never-scanned or expired session is surfaced at 8 AM instead
-        of failing silently when the first alert tries to send.
-
-    No-op (returns True) for any other backend.
-    """
-    if WHATSAPP_BACKEND != "bridge":
-        log.info(f"whatsapp self-check: backend={WHATSAPP_BACKEND} (no bridge needed)")
-        return True
-
-    if _bridge_ready() or _autostart_bridge():
-        log.info("whatsapp self-check: bridge is logged in and READY")
-        return True
-
-    # Not ready — build an actionable reason for the warning.
-    state       = _bridge_state()
-    auth_exists = (WHATSAPP_BRIDGE_DIR / ".wwebjs_auth").exists()
-    if not auth_exists:
-        hint = (f"never linked. One-time step: run `npm start` in {WHATSAPP_BRIDGE_DIR} "
-                "and scan the QR (WhatsApp > Linked Devices). After that the scheduler "
-                "starts it headlessly — no terminal needed.")
-    elif state in ("qr", "auth_failure"):
-        hint = (f"the linked session expired. Re-run `npm start` in {WHATSAPP_BRIDGE_DIR} "
-                "once and re-scan the QR.")
-    else:
-        hint = (f"state={state}. Check Node.js is on PATH and see "
-                f"{WHATSAPP_BRIDGE_DIR / 'bridge.log'}.")
-    log.warning(f"whatsapp self-check: WhatsApp bridge is NOT ready — alerts may not be "
-                f"delivered. {hint}")
-    return False
+    """Startup self-check: ensure the headless bridge is logged in and ready,
+    autostarting it from its saved session if needed. Returns False (with an
+    actionable warning) if it can't be made ready."""
+    return _wa.ensure_running()
 
 
 # ── Core sender ───────────────────────────────────────────────────────────────
 
 def send_whatsapp(message: str, phone: Optional[str] = None, retries: int = 1) -> bool:
-    """
-    Send a single message via the configured backend (config.WHATSAPP_BACKEND).
-    Never raises. Returns True only on a confirmed send.
-
-    "bridge"  — headless; works with the screen off / device locked (recommended).
-    "pywhatkit" — GUI automation; only works on an unlocked, focused desktop.
-
-    Retries on failure: transient page-load / readiness hiccups usually clear on
-    a second attempt.
-    """
-    target = phone or WHATSAPP_PHONE
-    if not target:
-        log.warning("whatsapp: WHATSAPP_PHONE not configured — skipping")
-        return False
-    if len(message) > MAX_CHARS:
-        message = message[:MAX_CHARS - 3] + "..."
-
-    attempts = retries + 1
-    for attempt in range(1, attempts + 1):
-        try:
-            if WHATSAPP_BACKEND == "pywhatkit":
-                _send_via_pywhatkit(target, message)
-            else:
-                _send_via_bridge(target, message)
-            suffix = "" if attempt == 1 else f" (succeeded on attempt {attempt}/{attempts})"
-            log.info(f"whatsapp: message sent OK via {WHATSAPP_BACKEND}{suffix}")
-            return True
-        except Exception as exc:
-            if attempt < attempts:
-                log.warning(f"whatsapp: send attempt {attempt}/{attempts} failed — retrying — {exc}")
-                time.sleep(5 if WHATSAPP_BACKEND != "pywhatkit" else WAIT_TIME)
-            else:
-                log.error(f"whatsapp: send FAILED after {attempts} attempt(s) — {exc}")
-    return False
+    """Send a single message via the configured backend. Never raises; returns True
+    only on a confirmed send. 'bridge' works with the screen off / device locked."""
+    return _wa.send(message, phone, retries)
 
 
 # ── Public alert builders ─────────────────────────────────────────────────────

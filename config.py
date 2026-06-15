@@ -27,8 +27,11 @@ WHATSAPP_BRIDGE_TOKEN = os.getenv("WHATSAPP_BRIDGE_TOKEN", "")
 # (headless, detached) and wait for it to become ready. Requires a prior QR scan.
 WHATSAPP_BRIDGE_AUTOSTART = os.getenv("WHATSAPP_BRIDGE_AUTOSTART", "true").lower() == "true"
 # Where the Node bridge lives and how long to wait for it to become ready (s).
-WHATSAPP_BRIDGE_DIR = BASE_DIR / os.getenv(
-    "WHATSAPP_BRIDGE_DIR", "notifications/whatsapp_bridge")
+# Defaults to the bundled bridge inside the shared `whatsapp_bridge` package
+# (github.com/RishavDugar/WhatsApp-Bridge); override with an env path if needed.
+from whatsapp_bridge import bundled_bridge_dir as _bundled_bridge_dir
+_wa_bridge_dir_env = os.getenv("WHATSAPP_BRIDGE_DIR")
+WHATSAPP_BRIDGE_DIR = (BASE_DIR / _wa_bridge_dir_env) if _wa_bridge_dir_env else _bundled_bridge_dir()
 WHATSAPP_BRIDGE_READY_TIMEOUT = int(os.getenv("WHATSAPP_BRIDGE_READY_TIMEOUT", "75"))
 
 WHATSAPP_PHONE = os.getenv("WHATSAPP_PHONE", "")

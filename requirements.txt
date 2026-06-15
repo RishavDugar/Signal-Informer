@@ -6,7 +6,10 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 tenacity>=8.2.0
 pytz>=2024.1
+# WhatsApp transport — shared package (headless Node bridge + Python client).
+# Install editable from a local clone:  pip install -e "../WhatsApp Bridge"
+whatsapp-bridge @ git+https://github.com/RishavDugar/WhatsApp-Bridge.git
 pywhatkit>=5.4      # ONLY for legacy WHATSAPP_BACKEND=pywhatkit; the default
-                    # "bridge" backend uses the Node service in
-                    # notifications/whatsapp_bridge/ (run npm install there).
+                    # "bridge" backend uses the shared whatsapp-bridge package
+                    # (run `npm install` in its whatsapp_bridge/bridge/ once).
 flask>=3.0          # web dashboard (run_ui.py)
