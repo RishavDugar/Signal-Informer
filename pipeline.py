@@ -22,7 +22,10 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
 
-from config import MAX_WORKERS, NOTIFY_ON_INGESTION_FAILURE, NOTIFY_ON_SIGNAL
+from config import (
+    MAX_WORKERS, NOTIFY_ON_INGESTION_FAILURE, NOTIFY_ON_SIGNAL,
+    WHATSAPP_SIGNAL_GROUP,
+)
 from data import db, collector, sanitizer
 from data.stocks_list import NSE_500
 from notifications.whatsapp import (
@@ -186,7 +189,8 @@ def run_pipeline(symbols: list[str] | None = None) -> bool | None:
 
     # ── 0. Heads-up that the run has started (also warms up the WhatsApp bridge)
     if NOTIFY_ON_SIGNAL:
-        send_analysis_started_alert("Stock Analysis", today)
+        send_analysis_started_alert("Stock Analysis", today,
+                                    group=WHATSAPP_SIGNAL_GROUP)
 
     # ── 1. Backup ─────────────────────────────────────────────────────────────
     backup_path = create_backup()

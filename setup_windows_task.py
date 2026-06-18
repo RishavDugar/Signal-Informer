@@ -48,18 +48,22 @@ from config import (
 )
 
 PROJECT_DIR  = Path(__file__).parent.resolve()
-PIPELINE     = PROJECT_DIR / "pipeline.py"
+LISTENER     = PROJECT_DIR / "research_listener.py"
+LAUNCHER     = PROJECT_DIR / "run_task.py"
 LOG_DIR      = PROJECT_DIR / "logs"
 PYTHON_EXE   = sys.executable
-CMD_EXE      = os.environ.get("ComSpec", r"C:\Windows\System32\cmd.exe")
+# Windowless interpreter next to python.exe — every task runs through it so NO
+# console window flashes on the desktop (the pipelines go via run_task.py, which
+# redirects output to their log file since there's no shell to do ">> log").
+PYTHONW_EXE  = str(Path(PYTHON_EXE).with_name("pythonw.exe"))
 # "Allow wake timers" power setting GUID (subgroup: sleep). 1 = Enable.
 _WAKE_TIMER_GUID = "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d"
 
 
 # ── Task specifications ───────────────────────────────────────────────────────
-# One entry per scheduled job. `py_args` is the argument string handed to
-# python.exe (already quoted as needed); the working directory is the project
-# root so `-m` modules and relative paths resolve.
+# One entry per scheduled job. Calendar pipelines run windowless via run_task.py
+# (`kind` selects which pipeline); the logon listener runs research_listener.py
+# directly. The working directory is the project root so imports resolve.
 
 TASKS = [
     {
@@ -67,7 +71,7 @@ TASKS = [
         "desc"   : "Signal Infomer - News + AI stock picks (sends WhatsApp)",
         "hour"   : NEWS_SCHEDULE_HOUR,
         "minute" : NEWS_SCHEDULE_MINUTE,
-        "py_args": "-m news_analyzer.pipeline",
+        "kind"   : "news",
         "log"    : "news_task_output.log",
     },
     {
@@ -75,8 +79,15 @@ TASKS = [
         "desc"   : "Signal Infomer - Technical market data + setup signals (sends WhatsApp)",
         "hour"   : SCHEDULE_HOUR,
         "minute" : SCHEDULE_MINUTE,
-        "py_args": f'"{PIPELINE}"',
+        "kind"   : "daily",
         "log"    : "task_output.log",
+    },
+    {
+        "name"   : "SignalInfomer\\ResearchListener",
+        "desc"   : "Signal Infomer - On-demand 'Search SYMBOL' WhatsApp research listener",
+        "trigger": "logon",   # long-running watcher, started at logon (not a daily time)
+        "py_args": f'"{LISTENER}"',
+        "log"    : "research_listener.log",
     },
 ]
 
@@ -134,8 +145,66 @@ _TASK_XML = """\
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>{cmd_exe}</Command>
-      <Arguments>/c ""{python_exe}" -u {py_args} &gt;&gt; "{log_path}" 2&gt;&amp;1"</Arguments>
+      <Command>{pythonw_exe}</Command>
+      <Arguments>-u "{launcher}" {kind} "{log_path}"</Arguments>
+      <WorkingDirectory>{work_dir}</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>
+"""
+
+
+# Persistent watcher (research listener) — runs via pythonw.exe (windowless) so NO
+# console window appears on the desktop while it runs forever. With no cmd shell
+# there's no ">> log" redirection, so research_listener.py redirects its own
+# stdout/stderr to logs/research_listener.log when started windowless.
+# Persistent watcher (research listener): starts at logon and runs forever, so it
+# uses a LogonTrigger (not a daily calendar time) and an UNLIMITED execution time
+# limit (PT0S) — the daily-pipeline 2-hour cap would otherwise kill the loop. It
+# restarts on crash and refuses to launch a second copy if one is already running.
+_LOGON_TASK_XML = """\
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>{description}</Description>
+    <Author>SignalInfomer</Author>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <UserId>{user_id}</UserId>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>{user_id}</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <RestartOnFailure>
+      <Interval>PT1M</Interval>
+      <Count>10</Count>
+    </RestartOnFailure>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>7</Priority>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <Hidden>false</Hidden>
+    <Enabled>true</Enabled>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>{pythonw_exe}</Command>
+      <Arguments>-u {py_args}</Arguments>
       <WorkingDirectory>{work_dir}</WorkingDirectory>
     </Exec>
   </Actions>
@@ -173,24 +242,38 @@ def _enable_wake_timers() -> None:
 
 def _register_one(spec: dict) -> bool:
     log_path = LOG_DIR / spec["log"]
-    xml_content = _TASK_XML.format(
-        description = spec["desc"],
-        start_date  = datetime.now().strftime("%Y-%m-%d"),
-        hour        = spec["hour"],
-        minute      = spec["minute"],
-        cmd_exe     = str(CMD_EXE),
-        python_exe  = str(PYTHON_EXE),
-        py_args     = spec["py_args"],
-        log_path    = str(log_path),
-        work_dir    = str(PROJECT_DIR),
-    )
+    if spec.get("trigger") == "logon":
+        domain = os.environ.get("USERDOMAIN", "")
+        user   = os.environ.get("USERNAME", "")
+        user_id = f"{domain}\\{user}" if domain else user
+        xml_content = _LOGON_TASK_XML.format(
+            description = spec["desc"],
+            user_id     = user_id,
+            pythonw_exe = str(PYTHONW_EXE),
+            py_args     = spec["py_args"],
+            work_dir    = str(PROJECT_DIR),
+        )
+    else:
+        xml_content = _TASK_XML.format(
+            description = spec["desc"],
+            start_date  = datetime.now().strftime("%Y-%m-%d"),
+            hour        = spec["hour"],
+            minute      = spec["minute"],
+            pythonw_exe = str(PYTHONW_EXE),
+            launcher    = str(LAUNCHER),
+            kind        = spec["kind"],
+            log_path    = str(log_path),
+            work_dir    = str(PROJECT_DIR),
+        )
     with tempfile.NamedTemporaryFile(
         mode="w", encoding="utf-16", suffix=".xml", delete=False
     ) as f:
         f.write(xml_content)
         xml_file = f.name
 
-    print(f"  {spec['name']}  @ {spec['hour']:02d}:{spec['minute']:02d}  ->  log: {log_path.name}")
+    when = ("at logon" if spec.get("trigger") == "logon"
+            else f"@ {spec['hour']:02d}:{spec['minute']:02d}")
+    print(f"  {spec['name']}  {when}  ->  log: {log_path.name}")
     rc, out, err = _run(["schtasks", "/Create", "/TN", spec["name"], "/XML", xml_file, "/F"])
     Path(xml_file).unlink(missing_ok=True)
     if rc != 0:

@@ -187,10 +187,11 @@ def run_news_pipeline() -> None:
     # ── 0. Heads-up that the run has started (also warms up the WhatsApp bridge)
     # Broadcast to the news recipient list (WHATSAPP_PHONES) so the heads-up
     # reaches the same audience as the picks that follow — not just the owner.
-    from config import NOTIFY_ON_SIGNAL, WHATSAPP_PHONES
+    from config import NOTIFY_ON_SIGNAL, WHATSAPP_PHONES, WHATSAPP_NEWS_GROUP
     from notifications.whatsapp import send_analysis_started_alert
     if NOTIFY_ON_SIGNAL:
-        send_analysis_started_alert("News Analysis", today, WHATSAPP_PHONES)
+        send_analysis_started_alert("News Analysis", today, WHATSAPP_PHONES,
+                                    group=WHATSAPP_NEWS_GROUP)
 
     # ── 1. Verify Ollama (auto-starts if not running) ────────────────────────
     if not ensure_available():

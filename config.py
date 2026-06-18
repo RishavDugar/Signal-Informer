@@ -43,6 +43,29 @@ WHATSAPP_PHONE = os.getenv("WHATSAPP_PHONE", "")
 _news_phones_raw = os.getenv("WHATSAPP_PHONES", "")
 WHATSAPP_PHONES = [p.strip() for p in _news_phones_raw.split(",") if p.strip()] \
     or ([WHATSAPP_PHONE] if WHATSAPP_PHONE else [])
+
+# Destination WhatsApp GROUP chats (by exact group name as shown in WhatsApp).
+# When set, alerts go to the group instead of the individual phone numbers above:
+#   WHATSAPP_SIGNAL_GROUP — technical signal pipeline (pipeline.py): trade setups,
+#                           'no setups' note, ingestion failures, weekly scorecard.
+#   WHATSAPP_NEWS_GROUP    — news pipeline (news_analyzer): AI picks + all scout
+#                           lenses and the run-started heads-up.
+# Leave blank to fall back to the phone-number recipients (legacy behaviour).
+# The linked WhatsApp account must be a member of each named group.
+WHATSAPP_SIGNAL_GROUP = os.getenv("WHATSAPP_SIGNAL_GROUP", "")
+WHATSAPP_NEWS_GROUP = os.getenv("WHATSAPP_NEWS_GROUP", "")
+
+# ── On-demand research listener ───────────────────────────────────────────────
+# A background watcher (research_listener.py) polls a WhatsApp group for a
+# "<trigger> <SYMBOL>" message (e.g. "Search RELIANCE.NS"), gathers price +
+# technicals and the latest web-news insights for that stock, and replies in the
+# same group. Mirrors the group-poll pattern used by the WorldQuant engine.
+#   RESEARCH_GROUP   — group to listen on (defaults to the news group).
+#   RESEARCH_TRIGGER — leading keyword that marks a request (case-insensitive).
+#   WHATSAPP_POLL_INTERVAL_S — seconds between inbound-message polls.
+RESEARCH_GROUP = os.getenv("RESEARCH_GROUP", "") or WHATSAPP_NEWS_GROUP
+RESEARCH_TRIGGER = os.getenv("RESEARCH_TRIGGER", "search").strip().lower()
+WHATSAPP_POLL_INTERVAL_S = int(os.getenv("WHATSAPP_POLL_INTERVAL_S", "15"))
 NOTIFY_ON_SIGNAL = os.getenv("NOTIFY_ON_SIGNAL", "true").lower() == "true"
 NOTIFY_ON_INGESTION_FAILURE = os.getenv("NOTIFY_ON_INGESTION_FAILURE", "true").lower() == "true"
 # Minimum conviction-weighted avg return (fraction) for a stock to appear in alerts.

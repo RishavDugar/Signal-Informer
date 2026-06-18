@@ -263,9 +263,12 @@ def format_scorecard(sc: dict) -> str:
 # ── Weekly send ──────────────────────────────────────────────────────────────--
 
 def send_scorecard_now(days: int = SCORECARD_DAYS) -> bool:
-    """Build and send the scorecard immediately (manual / dashboard trigger)."""
-    from notifications.whatsapp import send_whatsapp
-    return send_whatsapp(format_scorecard(scorecard(days)))
+    """Build and send the scorecard immediately (manual / dashboard trigger).
+    Goes to the signal group (WHATSAPP_SIGNAL_GROUP) — same audience as the
+    technical trade-setup alerts — falling back to WHATSAPP_PHONE."""
+    from config import WHATSAPP_SIGNAL_GROUP
+    from notifications.whatsapp import _deliver
+    return _deliver(format_scorecard(scorecard(days)), WHATSAPP_SIGNAL_GROUP)
 
 
 def send_weekly_scorecard_if_due() -> bool:

@@ -26,6 +26,7 @@ from config import (
     WHATSAPP_PHONE, WHATSAPP_PHONES, MIN_AVG_RETURN, MIN_CONFIDENCE,
     WHATSAPP_BACKEND, WHATSAPP_BRIDGE_URL, WHATSAPP_BRIDGE_TOKEN,
     WHATSAPP_BRIDGE_AUTOSTART, WHATSAPP_BRIDGE_DIR, WHATSAPP_BRIDGE_READY_TIMEOUT,
+    WHATSAPP_SIGNAL_GROUP, WHATSAPP_NEWS_GROUP,
 )
 from utils.logger import get_logger
 
@@ -937,7 +938,8 @@ def bridge_health(timeout: float = 2.0) -> dict:
     recipient number is set (WHATSAPP_PHONE or WHATSAPP_PHONES)."""
     h = _wa.health(timeout)
     if WHATSAPP_BACKEND == "bridge":
-        h["configured"] = bool(WHATSAPP_PHONE or WHATSAPP_PHONES)
+        h["configured"] = bool(WHATSAPP_PHONE or WHATSAPP_PHONES
+                               or WHATSAPP_SIGNAL_GROUP or WHATSAPP_NEWS_GROUP)
     return h
 
 
@@ -954,6 +956,28 @@ def send_whatsapp(message: str, phone: Optional[str] = None, retries: int = 1) -
     """Send a single message via the configured backend. Never raises; returns True
     only on a confirmed send. 'bridge' works with the screen off / device locked."""
     return _wa.send(message, phone, retries)
+
+
+def send_to_group(group: str, message: str) -> bool:
+    """Send one message to a WhatsApp group chat by name (bridge backend only).
+    Never raises; returns True only on a confirmed send."""
+    return _wa.send_to_group(group, message)
+
+
+def poll_group(group: str, since_ms: int) -> list[dict]:
+    """Inbound messages from a group chat since `since_ms` (epoch ms). Each item is
+    {ts, chatName, isGroup, from, body}. Returns [] on any error / non-bridge backend."""
+    return _wa.poll_group(group, since_ms)
+
+
+def _deliver(message: str, group: str = "", phone: Optional[str] = None,
+             retries: int = 1) -> bool:
+    """Route one message to a WhatsApp GROUP when `group` is set, otherwise fall
+    back to a direct phone send. Lets each pipeline target its group while keeping
+    the legacy per-phone behaviour when no group is configured. Never raises."""
+    if group:
+        return _wa.send_to_group(group, message)
+    return send_whatsapp(message, phone=phone, retries=retries)
 
 
 # ── Public alert builders ─────────────────────────────────────────────────────
@@ -1110,7 +1134,7 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
     # Try single message first
     full = _build(qualifying, 1, 1)
     if len(full) <= MAX_CHARS:
-        return send_whatsapp(full)
+        return _deliver(full, WHATSAPP_SIGNAL_GROUP)
 
     # Split into chunks of 2 stocks each
     chunk_size = 2
@@ -1120,7 +1144,7 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
 
     ok = True
     for i, chunk in enumerate(chunks, start=1):
-        ok = send_whatsapp(_build(chunk, i, total)) and ok
+        ok = _deliver(_build(chunk, i, total), WHATSAPP_SIGNAL_GROUP) and ok
         if i < total:
             time.sleep(WAIT_TIME + CLOSE_TIME + 3)
     return ok
@@ -1135,12 +1159,29 @@ def send_news_picks_alert(messages: list[str]) -> bool:
     MAX_CHARS) produced by news_analyzer.formatter.format_messages() /
     format_scout_messages().
 
-    Sent to every recipient configured in WHATSAPP_PHONES (.env — comma
-    separated; falls back to the single WHATSAPP_PHONE). Returns True only
-    if every part was confirmed sent to every recipient.
+    Destination: the WHATSAPP_NEWS_GROUP chat when configured; otherwise every
+    recipient in WHATSAPP_PHONES (.env — comma separated; falls back to the
+    single WHATSAPP_PHONE). Returns True only if every part was confirmed sent.
     """
     if not messages:
         return True
+
+    # Group send: one copy of each part to the news group, in order.
+    if WHATSAPP_NEWS_GROUP:
+        total  = len(messages)
+        failed = 0
+        for n, msg in enumerate(messages, start=1):
+            if not _deliver(msg, WHATSAPP_NEWS_GROUP):
+                failed += 1
+            if n < total:
+                time.sleep(WAIT_TIME + CLOSE_TIME + 3)
+        if failed:
+            log.error(f"whatsapp: {failed}/{total} send(s) FAILED to group "
+                      f"'{WHATSAPP_NEWS_GROUP}'")
+        else:
+            log.info(f"whatsapp: all {total} send(s) confirmed to group "
+                     f"'{WHATSAPP_NEWS_GROUP}'")
+        return failed == 0
 
     targets = [p for p in WHATSAPP_PHONES if p]
     if not targets:
@@ -1169,19 +1210,23 @@ def send_news_picks_alert(messages: list[str]) -> bool:
 
 
 def send_analysis_started_alert(kind: str, run_date: str,
-                                phones: Optional[list[str]] = None) -> bool:
+                                phones: Optional[list[str]] = None,
+                                group: str = "") -> bool:
     """
     Heads-up that a morning analysis run has STARTED, sent before the scans begin.
 
     Doubles as a 'did the scheduled job actually fire?' heartbeat and warms up the
     headless bridge so the picks that follow send without a cold-start delay.
 
-    `phones` is the recipient list — pass WHATSAPP_PHONES for the news run (so the
-    heads-up reaches the same audience as the picks); defaults to the single owner
-    number (WHATSAPP_PHONE), matching the technical signal alerts.
+    Destination: the `group` chat when given (the run's results go there too);
+    otherwise `phones` — pass WHATSAPP_PHONES for the news run so the heads-up
+    reaches the same audience as the picks; defaults to the single owner number
+    (WHATSAPP_PHONE), matching the technical signal alerts.
     """
     msg = (f"*Started {kind} for {run_date}*\n"
            f"_Scanning now — results will follow shortly._")
+    if group:
+        return _deliver(msg, group)
     targets = [p for p in (phones if phones is not None else [WHATSAPP_PHONE]) if p]
     if not targets:
         log.warning("whatsapp: no recipient configured for started-alert — skipping")
@@ -1198,13 +1243,14 @@ def send_no_setups_alert(run_date: str, screen_desc: str = "") -> bool:
     """
     Tell the owner that no stocks cleared today's screen, so a quiet morning
     reads as 'scanned, nothing qualified' rather than 'did it even run?'.
-    Goes to WHATSAPP_PHONE (same audience as the technical signal alerts).
+    Goes to the signal group (WHATSAPP_SIGNAL_GROUP), same audience as the
+    technical signal alerts, falling back to WHATSAPP_PHONE.
     """
     extra = f" ({screen_desc})" if screen_desc else ""
     msg = (f"*Trade Setups — {run_date}*\n"
            f"_No stocks cleared today's screen{extra}. "
            f"No new positions today._")
-    return send_whatsapp(msg)
+    return _deliver(msg, WHATSAPP_SIGNAL_GROUP)
 
 
 def _record_pick_outcomes(qualifying: list[tuple], stats: dict, weights: dict,
@@ -1246,7 +1292,7 @@ def send_ingestion_failure_alert(failed_symbols: list[str], run_date: str) -> bo
         f"{sym_list}{extra}\n\n"
         f"Check logs and manually verify missing data."
     )
-    return send_whatsapp(msg)
+    return _deliver(msg, WHATSAPP_SIGNAL_GROUP)
 
 
 # ── CLI: manual bridge self-check ──────────────────────────────────────────────
