@@ -28,6 +28,7 @@ from datetime import datetime, timedelta
 
 import requests
 
+from config import OLLAMA_GEN_TIMEOUT, OLLAMA_THINK_TIMEOUT
 from news_analyzer.analyzer import _CLEAN_SYMBOLS, _SYMBOL_MAP
 from news_analyzer.fetcher import (
     RSS_FEEDS, _NSE_HDRS, _NSE_MAIN, _fetch_google_news, _fetch_rss,
@@ -407,12 +408,12 @@ def _news_block(sym: dict) -> str | None:
     warmup_model()
     analysis = ""
     try:
-        analysis = generate(prompt, timeout=210, think=True)
+        analysis = generate(prompt, timeout=OLLAMA_THINK_TIMEOUT, think=True)
     except Exception as exc:
         log.warning(f"research[{sym['clean']}]: insight think=True failed — {exc}")
     if not analysis:
         try:
-            analysis = generate(prompt, timeout=120, think=False)
+            analysis = generate(prompt, timeout=OLLAMA_GEN_TIMEOUT, think=False)
         except Exception as exc:
             log.warning(f"research[{sym['clean']}]: insight think=False failed — {exc}")
     if not analysis:

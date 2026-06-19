@@ -60,16 +60,39 @@ def _score_model(name: str) -> int:
 
 
 def available_model() -> str | None:
-    """Return the best available model name from the local Ollama instance."""
+    """Return the model to use from the local Ollama instance.
+
+    An explicit config.OLLAMA_MODEL (env OLLAMA_MODEL) wins when that model is
+    installed — matched exactly, by family (before ':'), or by prefix, so
+    'gemma4:31b-it-qat' or just 'gemma4:31b' both resolve. Otherwise the best
+    model is auto-selected by _score_model.
+    """
     global _MODEL_CACHE
     if _MODEL_CACHE:
         return _MODEL_CACHE
+    try:
+        from config import OLLAMA_MODEL
+    except Exception:
+        OLLAMA_MODEL = ""
     try:
         r = requests.get(f"{_host()}/api/tags", timeout=5)
         r.raise_for_status()
         models = r.json().get("models", [])
         if not models:
             return None
+        names = [m.get("name", "") for m in models]
+
+        if OLLAMA_MODEL:
+            want = OLLAMA_MODEL.strip()
+            match = next((n for n in names
+                          if n == want or n.split(":")[0] == want or n.startswith(want)), None)
+            if match:
+                _MODEL_CACHE = match
+                log.info(f"ollama: using configured model '{match}' (OLLAMA_MODEL)")
+                return _MODEL_CACHE
+            log.warning(f"ollama: configured OLLAMA_MODEL '{want}' is not installed "
+                        f"(have: {names}) — falling back to auto-select")
+
         scored = sorted(models, key=lambda m: _score_model(m.get("name", "")), reverse=True)
         _MODEL_CACHE = scored[0]["name"]
         log.info(f"ollama: selected model '{_MODEL_CACHE}' from {len(models)} available")
@@ -187,6 +210,12 @@ def warmup_model(model: str | None = None) -> bool:
         log.warning("ollama warmup — no model selected, skipping")
         return False
 
+    from config import OLLAMA_GEN_TIMEOUT
+    # Big models (e.g. 15-20 GB MoE/dense) take a while to cold-load from disk into
+    # VRAM/RAM; the probe returns as soon as the model is resident, so give it a
+    # generous budget. Too short a timeout returns before the load finishes and the
+    # first real generate() then races the still-loading model (and times out).
+    warm_timeout = max(300, OLLAMA_GEN_TIMEOUT)
     log.info(f"ollama warmup — loading '{m}' into VRAM (sending 1-token probe)...")
     t0 = time.time()
     try:
@@ -194,13 +223,13 @@ def warmup_model(model: str | None = None) -> bool:
             f"{_host()}/api/generate",
             json={"model": m, "prompt": "Hi", "stream": False,
                   "think": False, "options": {"num_predict": 1}},
-            timeout=120,
+            timeout=warm_timeout,
         )
         r.raise_for_status()
         elapsed = time.time() - t0
         log.info(f"ollama warmup — model ready in {elapsed:.1f}s")
     except requests.Timeout:
-        log.warning("ollama warmup — timed out after 120s; model may still be loading")
+        log.warning(f"ollama warmup — timed out after {warm_timeout}s; model may still be loading")
         return False
     except Exception as exc:
         log.warning(f"ollama warmup — failed: {exc}")

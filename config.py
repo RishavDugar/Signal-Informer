@@ -125,7 +125,12 @@ NEWS_SCHEDULE_MINUTE = int(os.getenv("NEWS_SCHEDULE_MINUTE", "0"))
 
 # Ollama (local inference)
 OLLAMA_HOST  = os.getenv("OLLAMA_HOST",  "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "")  # empty = auto-detect best qwen model
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "")  # empty = auto-detect best model by score
+# Per-call read timeouts (seconds). Larger models that spill out of VRAM run the
+# chain-of-thought (think=True) step slowly, so it gets a much bigger budget than
+# plain (think=False) generations. Tune down if you move to a model that fits VRAM.
+OLLAMA_THINK_TIMEOUT = int(os.getenv("OLLAMA_THINK_TIMEOUT", "900"))  # think=True reasoning
+OLLAMA_GEN_TIMEOUT   = int(os.getenv("OLLAMA_GEN_TIMEOUT",   "300"))  # think=False generations
 
 # News analyzer
 NEWS_DEDUP_DAYS = int(os.getenv("NEWS_DEDUP_DAYS", "28"))   # days before re-recommending a symbol

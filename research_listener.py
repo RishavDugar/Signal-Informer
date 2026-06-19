@@ -85,6 +85,9 @@ def _watch_loop() -> None:
              f"'{RESEARCH_TRIGGER} <SYMBOL>' (poll every {WHATSAPP_POLL_INTERVAL_S}s)")
     while True:
         try:
+            # Keep the bridge alive across reconnects/crashes (cheap when already
+            # ready; autostarts it from the saved session when it isn't).
+            ensure_bridge_ready()
             for m in poll_group(RESEARCH_GROUP, since):
                 since = max(since, int(m.get("ts", since)))
                 body  = (m.get("body") or "").strip()
@@ -104,10 +107,13 @@ def main() -> int:
     if not RESEARCH_GROUP:
         log.error("listener: no RESEARCH_GROUP / WHATSAPP_NEWS_GROUP configured — exiting")
         return 1
+    # Best-effort warm-up only — do NOT exit if the bridge is briefly unready (e.g.
+    # mid-reconnect at logon). Exiting here left the listener dead until a manual
+    # restart; instead we enter the watch loop and let poll/send re-establish the
+    # bridge on demand (it self-heals), so a transient blip never kills the watcher.
     if not ensure_bridge_ready():
-        log.error("listener: WhatsApp bridge is not ready — scan the QR once, then "
-                  "restart this listener (see bridge log for details)")
-        return 1
+        log.warning("listener: WhatsApp bridge not ready at startup — entering the watch "
+                    "loop anyway; it will be retried on demand as requests arrive")
     try:
         _watch_loop()
     except KeyboardInterrupt:

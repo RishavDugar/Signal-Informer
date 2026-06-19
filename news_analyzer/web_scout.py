@@ -33,6 +33,7 @@ from email.utils import parsedate_to_datetime
 
 import requests
 
+from config import OLLAMA_GEN_TIMEOUT, OLLAMA_THINK_TIMEOUT
 from data.stocks_list import NSE_500
 from news_analyzer.ollama_client import generate
 from utils.logger import get_logger
@@ -550,7 +551,7 @@ def run_scout(config: ScoutConfig, top_n: int = 3,
     log.info(f"scout[{config.key}]: Pass 1 prompt = {len(prompt1)} chars "
              f"(~{len(prompt1)//4} tokens est.)")
     try:
-        response = generate(prompt1, timeout=180, think=False)
+        response = generate(prompt1, timeout=OLLAMA_GEN_TIMEOUT, think=False)
         log.info(f"scout[{config.key}]: Pass 1 raw response (first 400 chars):\n{response[:400]}")
     except Exception as exc:
         log.warning(f"scout[{config.key}]: Pass 1 failed — {exc}")
@@ -597,7 +598,7 @@ def run_scout(config: ScoutConfig, top_n: int = 3,
         # answers directly in ~10-25s, so a pick never ships with blank analysis text.
         analysis = ""
         try:
-            analysis = generate(prompt2, timeout=210, think=True)
+            analysis = generate(prompt2, timeout=OLLAMA_THINK_TIMEOUT, think=True)
             if not analysis:
                 log.warning(f"scout[{config.key}]: Pass 2 think=True returned empty "
                             f"for {pick['clean']} — retrying with think=False")
@@ -607,7 +608,7 @@ def run_scout(config: ScoutConfig, top_n: int = 3,
 
         if not analysis:
             try:
-                analysis = generate(prompt2, timeout=120, think=False)
+                analysis = generate(prompt2, timeout=OLLAMA_GEN_TIMEOUT, think=False)
             except Exception as exc:
                 log.warning(f"scout[{config.key}]: Pass 2 think=False fallback "
                             f"also failed for {pick['clean']} — {exc}")

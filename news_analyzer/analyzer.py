@@ -21,6 +21,7 @@ import json
 import re
 from typing import Any
 
+from config import OLLAMA_GEN_TIMEOUT, OLLAMA_THINK_TIMEOUT
 from data.stocks_list import NSE_500
 from news_analyzer.ollama_client import generate
 from utils.logger import get_logger
@@ -248,7 +249,7 @@ def analyze_news(articles: list[dict], top_n: int = 5) -> list[dict]:
     log.info("analyzer: Pass 1 — identifying top stock picks from news digest")
     prompt1  = _PASS1_PROMPT.format(symbol_ref=_SYMBOL_REF, digest=digest)
     log.info(f"analyzer: Pass 1 prompt size = {len(prompt1)} chars (~{len(prompt1)//4} tokens est.)")
-    response = generate(prompt1, timeout=180)
+    response = generate(prompt1, timeout=OLLAMA_GEN_TIMEOUT)
     log.info(f"analyzer: Pass 1 raw response (first 300 chars):\n{response[:300]}")
 
     picks = _parse_picks(response)
@@ -287,7 +288,7 @@ def analyze_news(articles: list[dict], top_n: int = 5) -> list[dict]:
         # back to the short Pass-1 one-liner. A pick should never ship blank text.
         analysis = ""
         try:
-            analysis = generate(prompt2, timeout=210, think=True)
+            analysis = generate(prompt2, timeout=OLLAMA_THINK_TIMEOUT, think=True)
             if not analysis:
                 log.warning(f"analyzer: Pass 2 think=True returned empty for "
                             f"{pick['clean']} — retrying with think=False")
@@ -297,7 +298,7 @@ def analyze_news(articles: list[dict], top_n: int = 5) -> list[dict]:
 
         if not analysis:
             try:
-                analysis = generate(prompt2, timeout=120, think=False)
+                analysis = generate(prompt2, timeout=OLLAMA_GEN_TIMEOUT, think=False)
             except Exception as exc:
                 log.warning(f"analyzer: Pass 2 think=False fallback also failed "
                             f"for {pick['clean']} — {exc}")
