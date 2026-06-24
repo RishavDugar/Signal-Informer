@@ -173,6 +173,10 @@ _LOGON_TASK_XML = """\
     <LogonTrigger>
       <Enabled>true</Enabled>
       <UserId>{user_id}</UserId>
+      <Repetition>
+        <Interval>PT15M</Interval>
+        <StopAtDurationEnd>false</StopAtDurationEnd>
+      </Repetition>
     </LogonTrigger>
   </Triggers>
   <Principals>

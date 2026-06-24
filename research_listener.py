@@ -40,7 +40,7 @@ from config import (
     RESEARCH_GROUP, RESEARCH_TRIGGER, WHATSAPP_BACKEND, WHATSAPP_POLL_INTERVAL_S,
 )
 from notifications.whatsapp import (
-    ensure_bridge_ready, poll_group, send_to_group,
+    bridge_health, ensure_bridge_ready, poll_group, send_to_group,
 )
 from utils.logger import get_logger
 
@@ -85,9 +85,11 @@ def _watch_loop() -> None:
              f"'{RESEARCH_TRIGGER} <SYMBOL>' (poll every {WHATSAPP_POLL_INTERVAL_S}s)")
     while True:
         try:
-            # Keep the bridge alive across reconnects/crashes (cheap when already
-            # ready; autostarts it from the saved session when it isn't).
-            ensure_bridge_ready()
+            # Self-heal the bridge only when it's actually down — a quiet /status
+            # probe each cycle (no logging), escalating to a full autostart just
+            # when needed, so the log isn't spammed with a "READY" line every poll.
+            if not bridge_health().get("ready"):
+                ensure_bridge_ready()
             for m in poll_group(RESEARCH_GROUP, since):
                 since = max(since, int(m.get("ts", since)))
                 body  = (m.get("body") or "").strip()
