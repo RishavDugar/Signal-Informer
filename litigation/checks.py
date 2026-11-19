@@ -25,6 +25,7 @@ Times come from LITIGATION_MORNING / LITIGATION_EVENING (IST, "HH:MM").
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, time, timedelta
 
 from litigation import db as ldb
@@ -36,6 +37,10 @@ from utils.logger import get_logger
 log = get_logger("litigation.checks")
 
 _TIER_RANK = {"material": 2, "near": 1, "below": 0}
+# Regulators act by orders, not listed hearings.
+_REGULATOR = re.compile(r"\bsebi\b|securities and exchange board|competition commission|\bcci\b|"
+                        r"reserve bank|\brbi\b|enforcement directorate|income tax department|\bcit\s*\(a|"
+                        r"\bgst\b|\birdai\b|\bdot\b|department of telecom|ministry", re.I)
 
 
 def _hhmm(s: str, default: time) -> time:
@@ -177,11 +182,23 @@ def build(now: datetime | None = None, horizon_days: int = 7) -> list[dict]:
                 _pick_links(links, "schedule"), "verdict pending — could come any day")
         else:
             monday = today - timedelta(days=today.weekday())
+            if _REGULATOR.search(court) and not re.search(r"tribunal|appellate|\bsat\b", court, re.I):
+                action = (f"{court} decides by orders, not hearing dates. Open its orders page, search the "
+                          f"company name (below) and look for a new order in this matter — e.g. the final "
+                          f"order. Attach it if there is one; otherwise just tick Done.")
+                why = "watching for a new regulator order"
+            elif auto_court(c):
+                action = ("Next hearing date unknown. The nightly schedule scan will flag it the evening "
+                          f"before it's listed — to know sooner, search the {court} case page with the details "
+                          "below and look for 'next date' / 'tentatively listed on'; attach the page.")
+                why = "next hearing date unknown"
+            else:
+                action = (f"We don't know the next hearing date. Search the {court} case page with the "
+                          "details below, look for 'next date' / 'tentatively listed on', and attach the page.")
+                why = "next hearing date unknown"
             # one per week; shown as due today until done (never "overdue")
             add(c, f"{c['id']}:status:w{monday}", today, morning if now.time() >= morning else now.time(),
-                f"We don't know the next hearing date. Open the {court} case page, look for "
-                f"'next date' / 'tentatively listed on', and attach the page.",
-                _pick_links(links, "case page", "find case"), "next hearing date unknown")
+                action, _pick_links(links, "case page", "find case", "orders"), why)
 
     out.sort(key=lambda x: ({"overdue": 0, "due": 1, "today": 2, "upcoming": 3}[x["status"]],
                             x["due"], -_TIER_RANK.get(x["tier"], 0)))

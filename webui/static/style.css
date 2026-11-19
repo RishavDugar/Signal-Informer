@@ -418,4 +418,8 @@ tbody tr:hover { background: var(--panel); }
 .recipe-sub { margin-top: 6px; } .recipe-sub ul { margin: 3px 0 0; padding-left: 18px; line-height: 1.5; }
 .recipe-src { font-size: 11.5px; margin-top: 6px; } .recipe-src a { color: var(--accent); }
 .lit-auto { font-size: 12.5px; line-height: 1.5; background: var(--green-bg); border: 1px solid #1d5a3f; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+.lit-warn { font-size: 12.5px; line-height: 1.5; background: var(--red-bg); border: 1px solid var(--red); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+.lit-warn ul { margin: 4px 0 0 18px; padding: 0; }
+.lit-verdicts { font-size: 12.5px; background: var(--amber-bg); border: 1px solid #6b5520; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; overflow-x: auto; }
+.lit-verdicts table { margin-top: 6px; width: 100%; }
 .recipe-auto { font-size: 12px; color: var(--green); margin-bottom: 6px; }

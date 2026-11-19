@@ -285,7 +285,10 @@ def sc_replay(ev: dict) -> dict:
     case = {"case_number": ev.get("case_number") or "", "company_name": ev.get("company") or "",
             "symbol": ev["symbol"]}
     num_pats = [p for p in _terms(case) if re.search("[0-9]", p.pattern)]
-    names = [ev.get("company") or ""] + list(ev.get("court_party_names") or [])
+    # the company's own side only — government / regulator parties appear in hundreds of cases
+    gov = re.compile(r"union of india|state of|government|commissioner|department|directorate|reserve bank|"
+                     r"securities and exchange|sebi|ministry|authority|board|corporation of", re.I)
+    names = [ev.get("company") or ""] + [n for n in (ev.get("court_party_names") or []) if not gov.search(n)]
     name_pats = []
     for nm in names:
         pats = _terms({"company_name": nm})
@@ -297,7 +300,7 @@ def sc_replay(ev: dict) -> dict:
 
     def take(u, txt, m, how):
         ctx = _section_context(txt, m.start())
-        jud = "JUDGMENT" in ctx.upper() or "PRONOUNCEMENT" in ctx.upper()
+        jud = ctx.startswith("VERDICT SECTION")
         if not res["listed"] or (jud and not res["judgment_section"]):
             res.update(listed=True, url=u, where=ctx[:200], match=how, judgment_section=jud)
 
@@ -315,7 +318,7 @@ def sc_replay(ev: dict) -> dict:
                     take(u, txt, m, "party name")
             elif hits:                                 # generic name: credit only a verdict-section hit
                 for u, txt, m in hits:
-                    if "JUDGMENT" in _section_context(txt, m.start()).upper():
+                    if _section_context(txt, m.start()).startswith("VERDICT SECTION"):
                         take(u, txt, m, "party name (verdict list)")
                         break
     return res
@@ -446,10 +449,13 @@ def score(ev: dict) -> dict:
     sc = ev.get("sc") or {}
     is_sc = "supreme" in (ev.get("forum") or "").lower()
 
-    if is_sc and sc.get("listed"):
+    if is_sc and (sc.get("judgment_section") or ev.get("census")):
         level = 3
-        basis = ("SC schedule: in the verdict list" if sc.get("judgment_section")
-                 else "SC schedule: listed that day") + f" ({sc.get('match')})"
+        basis = ("SC verdict list: tracked case found" + f" ({sc.get('match')})" if sc.get("judgment_section")
+                 else "SC verdict list: verdict watch (company named)")
+    elif is_sc and sc.get("listed"):
+        level = 3
+        basis = f"SC schedule: listed that day ({sc.get('match')})"
     elif ev.get("date_known_in_advance") and (known_ok or reserved_ok or last_hearing):
         level, basis = 3, "news: date public in advance" + (" (SC list didn't match)" if is_sc else "")
     elif reserved_ok:
@@ -492,6 +498,69 @@ def score(ev: dict) -> dict:
     return out
 
 
+# ── Supreme Court census (mechanical, complete for named listed companies) ─────
+
+def _impact(rx: dict) -> tuple[str, float | None]:
+    day_thr = max(IMPACT, 2.5 * rx["sigma"])
+    cum_thr = max(IMPACT, 2.5 * rx["sigma"] * 3 ** 0.5)
+    if abs(rx["r0"]) >= day_thr:
+        return "same day", rx["r0"]
+    if abs(rx["cum"]) >= cum_thr and abs(rx["cum"] - rx["r0"]) >= abs(rx["cum"]) / 2:
+        return "1-2 days later", rx["cum"]
+    return "none", None
+
+
+def census_analysis(llm_events: list[dict], fno: set[str]) -> tuple[dict, list[dict]]:
+    """Every SC verdict that named a listed company (litigation.census), with the
+    stock's reaction and when the list was signed. Cross-checked with the LLM list."""
+    from litigation.census import run as census_run
+    days = census_run()
+    evs: dict[tuple[str, str], dict] = {}
+    for d in days:
+        for h in d.get("hits", []):
+            k = (h["symbol"], d["date"])
+            e = evs.setdefault(k, {"symbol": h["symbol"], "date": d["date"], "company": h["company"],
+                                   "items": [], "signed": None})
+            e["items"].append({x: h.get(x) for x in ("item", "case_no", "petitioner", "respondent", "court_no", "list")})
+            if h.get("signed") and (e["signed"] is None or h["signed"] > e["signed"]):
+                e["signed"] = h["signed"]          # latest bench signature that carries it
+    events = sorted(evs.values(), key=lambda e: e["date"])
+    prices = _download([e["symbol"] for e in events])
+    nifty = prices.get("^NSEI")
+    for e in events:
+        rx = reaction(prices.get(e["symbol"]), nifty, e["date"], "market_hours")
+        e["rx"] = rx
+        e["timing"], e["move"] = _impact(rx) if rx else (None, None)
+        e["fno"] = e["symbol"] in fno
+        s = e.get("signed")
+        if not s:
+            e["notice"] = "unknown"
+        elif s[:10] < e["date"]:
+            e["notice"] = "evening before" if s[11:] <= "21:15" else "late evening before"
+        elif s[:10] == e["date"] and s[11:] <= "09:15":
+            e["notice"] = "before market open"
+        else:
+            e["notice"] = "after open"
+    priced = [e for e in events if e["rx"]]
+    movers = [e for e in priced if e["timing"] not in (None, "none")]
+    llm_sc = [e for e in llm_events if "supreme" in (e.get("forum") or "").lower()]
+    keys = {(e["symbol"], e["date"]) for e in events}
+    in_census = [e for e in llm_sc if (e["symbol"], e["ruling_date"]) in keys]
+    llm_keys = {(e["symbol"], e["ruling_date"]) for e in llm_events}
+    s = {"days": len(days), "days_with_lists": sum(1 for d in days if d.get("lists")),
+         "events": len(events), "priced": len(priced), "companies": len({e["symbol"] for e in events}),
+         "fno_events": sum(1 for e in events if e["fno"]),
+         "movers": len(movers), "movers_same_day": sum(1 for e in movers if e["timing"] == "same day"),
+         "movers_later": sum(1 for e in movers if e["timing"] == "1-2 days later"),
+         "notice": {k: sum(1 for e in events if e["notice"] == k)
+                    for k in ("evening before", "late evening before", "before market open", "after open", "unknown")},
+         "llm_sc": len(llm_sc), "llm_sc_in_census": len(in_census),
+         "llm_sc_not_in_census": [f"{e['symbol']} {e['ruling_date']}" for e in llm_sc
+                                  if (e["symbol"], e["ruling_date"]) not in keys],
+         "movers_not_in_llm": [f"{e['symbol']} {e['date']}" for e in movers if (e["symbol"], e["date"]) not in llm_keys]}
+    return s, events
+
+
 # ── run ──────────────────────────────────────────────────────────────────────
 
 def run(refresh: bool = False) -> dict:
@@ -523,11 +592,22 @@ def run(refresh: bool = False) -> dict:
         e["fno"] = e["symbol"] in fno
         e["score"] = score(e)
 
+    # Supreme Court census: complete list of verdicts naming a listed company. An
+    # LLM-listed SC ruling also counts as 'date known' if the live verdict watch
+    # (which reads every verdict list) would have flagged it.
+    census_sum, census_events = census_analysis(events, fno)
+    ckeys = {(c["symbol"], c["date"]) for c in census_events}
+    for e in events:
+        e["census"] = (e["symbol"], e["ruling_date"]) in ckeys
+        e["score"] = score(e)
+
     summary = summarise(events)
+    summary["census"] = census_sum
     OUT_JSON.write_text(json.dumps({"generated": datetime.now().isoformat(timespec="minutes"),
-                                    "summary": summary, "events": events},
+                                    "summary": summary, "events": events,
+                                    "census_events": census_events},
                                    indent=1, ensure_ascii=False, default=str), encoding="utf-8")
-    OUT_MD.write_text(markdown(events, summary), encoding="utf-8")
+    OUT_MD.write_text(markdown(events, summary, census_events), encoding="utf-8")
     log.info(f"backtest: wrote {OUT_JSON.name} and {OUT_MD.name}")
     return summary
 
@@ -567,7 +647,11 @@ def summarise(events: list[dict]) -> dict:
     s["sc"] = {"rulings": len(scs),
                "lists": sum(1 for e in scs if (e.get("sc") or {}).get("lists_found")),
                "listed": sum(1 for e in scs if (e.get("sc") or {}).get("listed")),
-               "verdict_list": sum(1 for e in scs if (e.get("sc") or {}).get("judgment_section"))}
+               "verdict_list": sum(1 for e in scs if (e.get("sc") or {}).get("judgment_section")),
+               "watch": sum(1 for e in scs if e.get("census")),
+               "dated": sum(1 for e in scs if e["score"]["level"] == 3),
+               "movers": sum(1 for e in scs if e["score"]["timing"] != "none"),
+               "movers_dated": sum(1 for e in scs if e["score"]["timing"] != "none" and e["score"]["level"] == 3)}
     other = [e for e in ok if not e["score"]["is_sc"]]
     s["other_dated"] = sum(1 for e in other if e["score"]["level"] == 3)
     s["other"] = len(other)
@@ -578,7 +662,41 @@ def _p(x):
     return "—" if x is None else f"{x * 100:+.1f}%"
 
 
-def markdown(events: list[dict], s: dict) -> str:
+def _census_md(c: dict, cev: list[dict]) -> list[str]:
+    n = c["notice"]
+    L = ["", "## Supreme Court census — every verdict that named a listed company", "",
+         "Read mechanically from the Supreme Court's own daily schedules for every working day "
+         f"({c['days_with_lists']} days with lists). This is what the live *verdict watch* now does every "
+         "evening, so it doesn't depend on our having discovered the case first.", "",
+         f"- **{c['events']}** verdict days naming a listed company ({c['companies']} companies, "
+         f"{c['fno_events']} in F&O); **{c['movers']}** moved the stock unusually "
+         f"({c['movers_same_day']} same day, {c['movers_later']} over the next 1-2 days).",
+         f"- When the list was signed (registrar's stamp on the PDF): **{n['evening before']}** by 21:15 the evening "
+         f"before, {n['late evening before']} later that evening, {n['before market open']} before 09:15 on the day, "
+         f"{n['after open']} after the open, {n['unknown']} unknown.",
+         f"- The LLM-compiled list had {c['llm_sc']} SC rulings; **{c['llm_sc_in_census']}** of them are in the census "
+         "(company named in the verdict list). The rest were listed under another party (a subsidiary, a PIL "
+         "petitioner, the target company), were orders passed at an ordinary hearing, or carry a wrong date: "
+         + (", ".join(c["llm_sc_not_in_census"]) or "none") + ".",
+         f"- Census movers the LLM list **missed**: " + (", ".join(c["movers_not_in_llm"]) or "none") + ".", "",
+         "| Verdict day | Stock | F&O | Parties | Case | List signed | T0 | 3-day | Reaction |",
+         "|---|---|---|---|---|---|---:|---:|---|"]
+    for e in cev:
+        rx = e.get("rx")
+        if not rx or e["timing"] in (None, "none"):
+            continue
+        it = e["items"][0]
+        more = f" +{len(e['items']) - 1}" if len(e["items"]) > 1 else ""
+        L.append(f"| {e['date']} | {e['symbol']} | {'✓' if e['fno'] else ''} | "
+                 f"{(it.get('petitioner') or '')[:40]} vs {(it.get('respondent') or '')[:40]} | "
+                 f"{it.get('case_no') or ''}{more} | {(e.get('signed') or '').replace('T', ' ')} | "
+                 f"{_p(rx['r0'])} | {_p(rx['cum'])} | {e['timing']} |")
+    quiet = sum(1 for e in cev if e.get("rx") and e["timing"] == "none")
+    L += ["", f"_Plus {quiet} verdict days with no unusual move (full list in db/litigation_backtest.json)._"]
+    return L
+
+
+def markdown(events: list[dict], s: dict, census_events: list[dict] | None = None) -> str:
     b = s["buckets"]
     L = ["# Legal tracker — 3-year backtest", "",
          f"_Generated {datetime.now():%d %b %Y %H:%M}. Rulings {START:%b %Y} → {END:%b %Y}._", "",
@@ -595,7 +713,10 @@ def markdown(events: list[dict], s: dict) -> str:
          f"- Direction: {s['as_expected']} movers went the way the ruling implied, {s['against']} the "
          f"opposite way (market had priced it / 'sell the news').",
          f"- Supreme Court: {s['sc']['rulings']} rulings, schedules downloaded for {s['sc']['lists']}, case "
-         f"found on the schedule for **{s['sc']['listed']}** ({s['sc']['verdict_list']} in the verdict list). "
+         f"found on the schedule for **{s['sc']['listed']}** ({s['sc']['verdict_list']} in the verdict list as a "
+         f"tracked case; {s['sc']['watch']} caught by the company-name verdict watch). Exact date known the evening "
+         f"before for **{s['sc']['dated']}/{s['sc']['rulings']}** — and for **{s['sc']['movers_dated']}/"
+         f"{s['sc']['movers']}** SC rulings that moved the stock. "
          f"Other forums: date known in advance for {s['other_dated']}/{s['other']} (news evidence only).",
          f"- Noise cost: {s['no_move_alerted']} rulings that didn't move the stock were on an "
          f"'any-day' or dated alert.", "",
@@ -627,6 +748,8 @@ def markdown(events: list[dict], s: dict) -> str:
     if miss:
         L += ["", f"_No usable prices (delisted / renamed / too close to today): "
                   f"{', '.join(sorted({e['symbol'] for e in miss}))}._"]
+    if s.get("census"):
+        L += _census_md(s["census"], census_events or [])
     L += ["", "## Method & caveats", "",
           "- **Events**: Claude with web search, 9 slices (3 years × Supreme Court / High Courts & "
           "arbitration / tribunals & regulators), told to include rulings with no stock move; then a "

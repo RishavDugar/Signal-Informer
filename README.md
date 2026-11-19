@@ -597,6 +597,7 @@ goes through [news_analyzer/llm.py](news_analyzer/llm.py), which picks a backend
 - **Dashboard → Litigation:** cases colour-coded by impact tier (red material / amber near / grey below), each with key dates, analysis, trade idea and research sources.
 - **Where to look** ([litigation/portals.py](litigation/portals.py)): every case links the official pages for its forum (SC case status / cause list / daily orders / judgments, HC + eCourts, NCLT, NCLAT, SAT, SEBI, CCI, TDSAT, CESTAT, ITAT, APTEL, DRT, NGT), the company's BSE/NSE filings and legal-news searches, with a hint on what to type in. Captcha pages are linked, never scraped.
 - **Check queue** ([litigation/checks.py](litigation/checks.py)): stage + dates → *what to check, where, when* — evening before a hearing (tomorrow's cause list), morning of (position), evening of (today's order), nightly for reserved judgments (pronouncement list), weekly for undated cases (next listing date), and after a ruling (get the judgment). WhatsApp reminders at `LITIGATION_MORNING` / `LITIGATION_EVENING` (default 09:00 / 19:30), sent by the always-on research listener.
+- **Verdict watch** ([litigation/verdicts.py](litigation/verdicts.py), [litigation/matching.py](litigation/matching.py)): every evening (20:45, 23:00, and 06:30-09:10 as a catch-up if the PC slept) the Supreme Court daily lists and the Delhi HC judgments list are read in full and **every listed company** (F&O + market cap ≥ ₹5,000 cr) named under a verdict heading ('JUDGMENT BY …' / 'FOR JUDGEMENT', items 1501+) is flagged — tracked or not. New ones become cases and are assessed; one WhatsApp digest per verdict day (only if WhatsApp is up). Cases listed under a subsidiary or target are matched via the case number and the `listed_as` names found by `python -m litigation.identify`. The litigation page shows a red banner if no scan ran for 26 h (listener down) or WhatsApp isn't linked.
 - **Attach a file** ([litigation/attachments.py](litigation/attachments.py)): attach a downloaded PDF / HTML / screenshot to a case; Claude reads it (via its Read tool for images/scans; long cause lists are first narrowed to passages mentioning the case) and updates stage, next date, listing details (court/item no.) and outcome, re-assesses impact, and closes the case's due checks. Or **scan** a whole cause list against every tracked case. NCLAT cause lists are public PDFs and are fetched + scanned automatically each night.
 
 ```bash
@@ -607,6 +608,7 @@ python -m litigation.tracker discover YESBANK   # one company
 python -m litigation.tracker report YESBANK     # WhatsApp-style report
 python -m litigation.tracker casestudy          # Yes Bank AT1 replay → docs/litigation_case_study_yesbank.md
 python -m litigation.backtest                    # 3-year replay of real rulings → docs/litigation_backtest.md
+python -m litigation.census                      # every SC verdict naming a listed company, 3 years (resumable)
 python setup_windows_task.py                    # (re)registers tasks incl. SignalInfomer\LitigationTracker
 ```
 

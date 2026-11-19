@@ -95,29 +95,36 @@ def _handle_legal(symbol: str, sender: str) -> None:
     send_to_group(RESEARCH_GROUP, message)
 
 
-_SCAN_SLOTS = ("21:15", "07:15")      # after tomorrow's lists go up / before market open
+# (start, end) — a slot runs once, any time inside its window, so a laptop that was
+# asleep at 20:45 still scans when it wakes. SC lists are signed ~17:30-20:30 the
+# evening before (supplementary lists later) → evening + late pass + pre-market.
+_SCAN_SLOTS = (("20:45", "22:59"), ("23:00", "23:59"), ("06:30", "09:10"))
 _scan_done: set[str] = set()
 
 
 def _maybe_autoscan() -> None:
-    """Read the free court schedules (SC daily+advance, Delhi HC, NCLAT) twice a day
-    and WhatsApp any change — e.g. a tracked case listed for a verdict tomorrow."""
+    """Read the free court schedules (SC daily+advance, Delhi HC, NCLAT) and
+    WhatsApp what matters — a tracked case dated for a verdict, and every listed
+    company in tomorrow's verdict lists (even ones we weren't tracking)."""
     import datetime as _dt
     now = _dt.datetime.now()
-    for slot in _SCAN_SLOTS:
-        h, m = map(int, slot.split(":"))
-        key = f"{now:%Y-%m-%d} {slot}"
-        if key in _scan_done or not (0 <= (now - now.replace(hour=h, minute=m, second=0)).total_seconds() < 3600):
+    hm = now.strftime("%H:%M")
+    for start, end in _SCAN_SLOTS:
+        key = f"{now:%Y-%m-%d} {start}"
+        if key in _scan_done or not (start <= hm <= end):
             continue
         _scan_done.add(key)
 
-        def _run(slot=slot):
+        def _run(slot=start):
             try:
                 from litigation.attachments import auto_scan_public_lists
                 from litigation.tracker import send_alerts
+                from litigation.verdicts import send_digest
                 found = auto_scan_public_lists()
+                digests = send_digest()            # before send_alerts: it marks duplicates done
                 sent = send_alerts()
-                log.info(f"listener: schedule scan {slot} — {found} tracked case(s) found, {sent} alert(s)")
+                log.info(f"listener: schedule scan {slot} — {found} tracked case(s) found, "
+                         f"{digests} verdict digest(s), {sent} alert(s)")
             except Exception as exc:
                 log.warning(f"listener: schedule scan {slot} failed — {exc}")
 
@@ -140,7 +147,9 @@ def _watch_loop() -> None:
             # check becomes due — LITIGATION_MORNING / LITIGATION_EVENING slots).
             try:
                 from litigation.checks import send_due_reminders
+                from litigation.verdicts import send_digest
                 send_due_reminders()
+                send_digest()          # retries a verdict digest held back while WhatsApp was down
             except Exception as exc:
                 log.warning(f"listener: legal reminders failed — {exc}")
             _maybe_autoscan()

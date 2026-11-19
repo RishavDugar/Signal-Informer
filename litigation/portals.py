@@ -184,16 +184,34 @@ def nclat_cause_lists(for_dates: list[date] | None = None) -> list[dict]:
     return out
 
 
+_SC_CODES = ("M_J_1", "M_J_2", "M_J_3", "F_J_1", "F_J_2", "M_C_1", "M_C_2", "M_S_1", "M_CC_1")
+
+
 def sc_cause_lists(from_date: date, to_date: date) -> list[dict]:
     """Supreme Court daily + advance cause lists — public PDFs on api.sci.gov.in,
     linked from sci.gov.in/cause-list ('Cause Lists at a Glance'); no captcha.
     Verdicts to be delivered sit under '[ JUDGMENT BY :- HON'BLE ... ]'."""
     from litigation.sources import _get
     r = _get("https://www.sci.gov.in/cause-list/", {"Referer": "https://www.sci.gov.in/"}, tries=2, timeout=60)
-    if r is None:
-        return []
     out, seen = [], set()
-    for href in re.findall(r'href="(https://api\.sci\.gov\.in/jonew/cl/(?:advance/)?\d{4}-\d{2}-\d{2}/[^"]+\.pdf)"', r.text):
+    hrefs = re.findall(r'href="(https://api\.sci\.gov\.in/jonew/cl/(?:advance/)?\d{4}-\d{2}-\d{2}/[^"]+\.pdf)"',
+                       r.text) if r is not None else []
+    # The page sometimes lags or changes layout — the PDFs themselves live at
+    # predictable URLs, so probe the usual list codes for today + next working day.
+    probe = [from_date]
+    nxt = from_date + timedelta(days=1)
+    while nxt.weekday() >= 5:
+        nxt += timedelta(days=1)
+    probe.append(nxt)
+    for d in probe:
+        if d > to_date or any(f"/{d.isoformat()}/" in h for h in hrefs):
+            continue
+        for code in _SC_CODES:
+            u = f"https://api.sci.gov.in/jonew/cl/{d.isoformat()}/{code}.pdf"
+            rr = _get(u, {"Referer": "https://www.sci.gov.in/"}, tries=1, timeout=45)
+            if rr is not None and rr.content[:4] == b"%PDF":
+                hrefs.append(u)
+    for href in hrefs:
         m = re.search(r"/cl/(advance/)?(\d{4}-\d{2}-\d{2})/([^/]+)\.pdf", href)
         d = date.fromisoformat(m.group(2))
         if href in seen or not (from_date <= d <= to_date):

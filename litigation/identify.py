@@ -63,6 +63,7 @@ Return ONLY JSON:
   "respondent": "first respondent exactly as named in court records",
   "company_side": "petitioner | respondent",
   "registered_name": "the company's name as it appears in court records (often older/legal name, e.g. 'IDEA CELLULAR LTD' before 2018)",
+  "listed_as": ["other party names the court lists this case under when the company itself is NOT named — its subsidiary / SPV / the acquired target, e.g. 'Delhi Airport Metro Express Pvt Ltd' for Reliance Infrastructure, 'Bhushan Power and Steel Ltd' for JSW Steel. Never the opposing party. [] if none"],
   "filed_year": "YYYY the case was filed",
   "last_hearing": "YYYY-MM-DD or null",
   "next_date": "YYYY-MM-DD or null",
@@ -203,7 +204,8 @@ def build_recipe(c: dict, ids: dict) -> dict:
             "ids": {k: _v(ids.get(k)) for k in ("forum", "case_type", "case_number", "case_year",
                                                   "diary_number", "diary_year", "cause_title",
                                                   "registered_name", "company_side", "filed_year",
-                                                  "last_hearing", "next_date", "stage_now")},
+                                                  "last_hearing", "next_date", "stage_now", "connected")},
+            "listed_as": [x for x in (ids.get("listed_as") or []) if isinstance(x, str) and x.strip()][:4],
             "confidence": _v(ids.get("confidence")) or "low",
             "sources": [u for u in (ids.get("sources") or []) if isinstance(u, str) and u.startswith("http")][:5],
             "updated": datetime.now().isoformat(timespec="seconds")}

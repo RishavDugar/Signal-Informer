@@ -814,12 +814,12 @@ function searchRecipe(s, opts = {}) {
         <td><b class="mono">${esc(v)}</b> <button class="copy" data-copy="${esc(v)}" title="Copy">⧉</button></td></tr>`).join("")}</tbody></table>
     </div>`).join("");
   const ids = s.ids || {};
-  const autoNote = opts.auto ? `<div class="recipe-auto">✅ The daily court schedule for this court is checked automatically — use this only to find the next date sooner or to download hearing notes.</div>` : "";
+  const autoNote = opts.auto && !opts.compact ? `<div class="recipe-auto">✅ The daily court schedule for this court is checked automatically — use this only to find the next date sooner or to download hearing notes.</div>` : "";
   return `<div class="recipe">${autoNote}
     <div class="recipe-h">🔎 <b>What to type</b> <span class="badge ${conf[0]}">${esc(conf[1])}</span>
       ${ids.stage_now ? `<span class="faint recipe-now">Latest known: ${esc(ids.stage_now)}</span>` : ""}</div>
     ${steps}
-    ${(s.spot || []).length ? `<div class="recipe-sub"><b>How to spot the right case</b><ul>${s.spot.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    ${(s.spot || []).length ? `<div class="recipe-sub"><b>How to spot the right case</b><ul>${s.spot.slice(0, opts.compact ? 2 : 99).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
     ${(s.look_for || []).length && !opts.compact ? `<div class="recipe-sub"><b>On the result page, look for</b><ul>${s.look_for.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
     ${(s.sources || []).length && !opts.compact ? `<div class="faint recipe-src">Identifiers found in: ${s.sources.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(hostOf(u))}</a>`).join(" · ")}</div>` : ""}
   </div>`;
@@ -836,8 +836,8 @@ function nextChecks(d) {
         <div>${compact ? "" : verdictChip(c.verdict) + " "}<b>${esc(c.symbol)}</b> <span class="faint">· ${esc(c.court_plain || c.court || "")}${c.auto ? " · checked automatically" : ""}</span></div>
         <div class="chk-action">${esc(c.action)}</div>
         ${compact ? "" : `<div class="chk-why">Why bother: ${esc(c.why_time || c.headline || "")}</div>`}
-        ${compact ? `<div class="lit-links">${(c.links || []).slice(0, 1).map(linkChip).join("")}</div>`
-                  : searchRecipe(c.search, { auto: c.auto })}
+        ${compact && !c.search ? `<div class="lit-links">${(c.links || []).slice(0, 1).map(linkChip).join("")}</div>` : ""}
+        ${searchRecipe(c.search, { auto: c.auto, compact })}
       </div>
       <div class="chk-btns">${attachBtn(c.case_id)}
         <button class="btn sm" data-done="${esc(c.key)}" data-case="${c.case_id}" title="I've checked this">✓ Done</button></div>
@@ -850,6 +850,35 @@ function nextChecks(d) {
     ${routine.length ? `<details class="lit-more"><summary>${routine.length} weekly "find the next hearing date" checks — batch them once a week</summary>${routine.map(c => row(c, true)).join("")}</details>` : ""}
     ${low.length ? `<details class="lit-more"><summary>${low.length} low-priority check(s) — optional, small likely moves</summary>${low.map(c => row(c, true)).join("")}</details>` : ""}
   </div>`;
+}
+
+// Red banner when nothing is actually watching the courts (listener down → no
+// schedule scan for > 26h) or WhatsApp can't deliver the alerts.
+function litHealth(h) {
+  if (!h) return "";
+  const issues = [];
+  if (h.scan_age_h == null || h.scan_age_h > 26)
+    issues.push(`Court schedules haven't been scanned ${h.scan_age_h == null ? "yet" : `for ${Math.round(h.scan_age_h)} hours`} — the background listener (SignalInfomer\\ResearchListener) isn't running, so verdict alerts won't fire. Restart it or log off/on.`);
+  (h.warnings || []).forEach(w => issues.push(esc(w)));
+  if (!h.wa_ready)
+    issues.push(`WhatsApp isn't linked (${esc(h.wa_state || "down")}) — alerts are held until you re-scan the QR (npm start in the WhatsApp Bridge folder).`);
+  return issues.length ? `<div class="lit-warn">⚠️ <b>Not fully protected right now:</b><ul>${issues.map(i => `<li>${i}</li>`).join("")}</ul></div>` : "";
+}
+
+// Every listed company in the upcoming verdict lists — tracked or not.
+function verdictWatch(items) {
+  if (!items || !items.length) return "";
+  const byDay = {};
+  items.forEach(x => (byDay[x.date] = byDay[x.date] || {})[x.symbol] = (byDay[x.date][x.symbol] || []).concat([x]));
+  const rows = Object.entries(byDay).sort().map(([dt, syms]) => Object.values(syms).map(xs => {
+    const x = xs[0], worst = Math.max(Math.abs(x.move_adverse || 0), Math.abs(x.move_favourable || 0));
+    const icon = x.p_adverse == null ? "⚪" : worst >= 0.05 ? "🔴" : worst >= 0.02 ? "🟠" : "⚪";
+    return `<tr><td>${fmtD(dt)}</td><td>${icon} <b>${esc(x.symbol)}</b></td><td>${esc(x.petitioner || "")} <span class="faint">vs</span> ${esc(x.respondent || "")}</td>
+      <td class="mono">${esc(x.case_no || "")}${xs.length > 1 ? ` <span class="faint">+${xs.length - 1}</span>` : ""}</td><td>${esc([x.court, x.court_no].filter(Boolean).join(", "))}</td>
+      <td><a href="${esc(x.url)}" target="_blank" rel="noopener">list ↗</a></td></tr>`;
+  }).join("")).join("");
+  return `<div class="lit-verdicts"><b>⚖️ Verdicts listed for listed companies</b> <span class="faint">— read from the courts' own schedules every evening, whether or not we were tracking the case</span>
+    <table class="tbl"><thead><tr><th>Day</th><th>Company</th><th>Parties</th><th>Case</th><th>Where</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function scanCard(d) {
@@ -960,6 +989,8 @@ async function loadLitigation() {
   v.innerHTML = `
     <div class="lit-top"><button class="btn sm" id="lit-help-btn" title="A 4-step guide to this page">ⓘ How to read this page</button>
       <span class="faint" style="font-size:12px">${d.scanned || 0} companies scanned · updated ${esc((d.last_scan || "").replace("T", " ").slice(0, 16))}</span></div>
+    ${litHealth(d.health)}
+    ${verdictWatch(d.verdict_watch)}
     ${d.autoscan ? `<div class="lit-auto">✅ <b>Checked for you automatically:</b> ${Object.entries(d.autoscan.courts || {}).map(([k, n]) => `${esc(k)} (${n})`).join(", ")} court schedules, up to ${fmtD((d.autoscan.dates || []).slice(-1)[0] || "")} — last run ${esc(fmtDT(d.autoscan.ran))}. For cases in these courts you don't need to check the schedule yourself; we'll WhatsApp you if one is listed for a verdict.</div>` : ""}
     ${helpPanel(d)}
     ${brief(open)}

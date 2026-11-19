@@ -12,7 +12,7 @@ Everything here is read-only and reuses the existing backend wherever possible:
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from config import (
@@ -126,6 +126,28 @@ def status() -> dict:
     return out
 
 
+def _verdict_watch() -> list[dict]:
+    try:
+        from litigation.verdicts import upcoming
+        return upcoming()
+    except Exception:
+        return []
+
+
+def _lit_health() -> dict:
+    """Is anything actually watching the courts right now? (listener alive =
+    a schedule scan in the last ~26h; WhatsApp linked)."""
+    out = {"wa_ready": bool(whatsapp_status().get("ready")), "wa_state": whatsapp_status().get("state")}
+    try:
+        a = json.loads((ROOT / "db" / "cache" / "autoscan.json").read_text(encoding="utf-8"))
+        ran = datetime.fromisoformat(a["ran"])
+        out["scan_age_h"] = round((datetime.now() - ran).total_seconds() / 3600, 1)
+        out["warnings"] = a.get("warnings") or []
+    except Exception:
+        out["scan_age_h"] = None
+    return out
+
+
 def whatsapp_status() -> dict:
     """Send-backend health for the dashboard (bridge readiness). Never raises."""
     try:
@@ -232,6 +254,8 @@ def litigation(days: int = 7) -> dict:
                 "autoscan": (json.loads((ROOT / "db" / "cache" / "autoscan.json").read_text(encoding="utf-8"))
                              if (ROOT / "db" / "cache" / "autoscan.json").exists() else None),
                 "slots": {"morning": LITIGATION_MORNING, "evening": LITIGATION_EVENING},
+                "verdict_watch": _verdict_watch(),
+                "health": _lit_health(),
                 "thresholds": {"min_move": LITIGATION_MIN_MOVE, "materiality": LITIGATION_MATERIALITY,
                                "near_move": 0.6 * LITIGATION_MIN_MOVE,
                                "near_materiality": 0.5 * LITIGATION_MATERIALITY}}

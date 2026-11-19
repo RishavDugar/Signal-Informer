@@ -82,23 +82,29 @@ _GENERIC = {"limited", "ltd", "india", "indian", "private", "pvt", "company", "c
             "the", "and", "of", "co", "industries", "bank", "union", "state", "others", "anr", "ors"}
 
 
-def _ids(case: dict) -> dict:
+def _search(case: dict) -> dict:
     s = case.get("search")
     if s is None and case.get("search_json"):
         try:
             s = json.loads(case["search_json"])
         except Exception:
             s = None
-    return (s or {}).get("ids", {}) or {}
+    return s or {}
+
+
+def _ids(case: dict) -> dict:
+    return _search(case).get("ids", {}) or {}
 
 
 def _terms(case: dict) -> list[re.Pattern]:
-    """Case number (strongest) + the company's name as courts register it.
-    The counterparty is deliberately NOT a search term — 'Union of India' or a
-    regulator appears in hundreds of unrelated cases."""
+    """Case number(s) (strongest) + every name the court may list the case under:
+    the company's registered / current name and any subsidiary / target it is
+    listed as ('listed_as'). The opposing party is deliberately NOT a search term —
+    'Union of India' or a regulator appears in hundreds of unrelated cases."""
+    from litigation.matching import name_regex
     pats: list[re.Pattern] = []
     ids = _ids(case)
-    nums = [case.get("case_number") or ""]
+    nums = [case.get("case_number") or "", ids.get("connected") or ""]
     if ids.get("case_number") and ids.get("case_year"):
         nums.append(f"{ids['case_number']}/{ids['case_year']}")
     if ids.get("diary_number") and ids.get("diary_year"):
@@ -106,14 +112,18 @@ def _terms(case: dict) -> list[re.Pattern]:
     seen = set()
     for num in nums:
         # "SLP(C) 3713/2023", "C.A. No. 841-842/2023", "3713 of 2023" → number + year in any style
-        for n, y in re.findall(r"(\d{2,6})(?:-\d{2,6})?\s*(?:/|of|-)\s*((?:19|20)\d{2})", num, re.I):
+        for n, y in re.findall(r"(\d{2,6})(?:-\d{2,6})?\s*(?:/|of|-)\s*((?:19|20)\d{2})", str(num), re.I):
             if (n, y) not in seen:
                 seen.add((n, y))
                 pats.append(re.compile(rf"\b{n}(?:-\d{{2,6}})?\s*(?:/|of|-)\s*{y}\b", re.I))
-    for name in (ids.get("registered_name"), case.get("company_name")):
-        words = [w for w in re.findall(r"[A-Za-z]+", name or "") if w.lower() not in _GENERIC and len(w) > 2]
-        if words:
-            pats.append(re.compile(r"\b" + r"\W+".join(map(re.escape, words[:3])) + r"\b", re.I))
+    names = ([ids.get("registered_name"), case.get("company_name")]
+             + list(_search(case).get("listed_as") or []) + list(case.get("listed_as") or []))
+    seen_rx = set()
+    for name in names:
+        rx = name_regex(name or "")
+        if rx is not None and rx.pattern not in seen_rx:
+            seen_rx.add(rx.pattern)
+            pats.append(rx)
     sym = case.get("symbol") or ""
     if sym and not pats:
         pats.append(re.compile(rf"\b{re.escape(sym)}\b", re.I))
@@ -121,13 +131,15 @@ def _terms(case: dict) -> list[re.Pattern]:
 
 
 _HDR = re.compile(r"(DAILY CAUSE LIST FOR DATED[^\n]*|COURT NO\.?\s*:?\s*\d+[^\n]*|CHIEF JUSTICE'S COURT|"
-                  r"\[\s*JUDGMENT BY[^\]]*\]?|REGULAR HEARING|MISCELLANEOUS HEARING|FRESH MATTERS|"
-                  r"AFTER NOTICE|FOR JUDGMENT[^\n]*|PRONOUNCEMENT[^\n]*|\(TIME\s*:[^)]*\))", re.I)
+                  r"\[?\s*JUDG(?:E)?MENT BY[^\]\n]*\]?|REGULAR HEARING|MISCELLANEOUS HEARING|FRESH MATTERS|"
+                  r"AFTER NOTICE|FOR JUDG(?:E)?MENTS?[^\n]*|PRONOUNCEMENT[^\n]*|\(TIME\s*:[^)]*\))", re.I)
 
 
 def _section_context(text: str, pos: int, lookback: int = 9000) -> str:
     """Court / section headings above a hit. Cause lists put 'COURT NO.' and the
-    verdict marker '[ JUDGMENT BY :- HON'BLE ... ]' above the items."""
+    verdict marker ('JUDGMENT BY :- HON'BLE ...' / 'FOR JUDGEMENT', with or without
+    brackets) above the items. A hit inside a verdict section is labelled so."""
+    from litigation.matching import is_verdict
     seg = text[max(0, pos - lookback):pos]
     court = list(re.finditer(r"COURT NO\.?\s*:?\s*\d+|CHIEF JUSTICE'S COURT", seg, re.I))
     if court:
@@ -138,7 +150,14 @@ def _section_context(text: str, pos: int, lookback: int = 9000) -> str:
         if h.upper() not in seen:
             seen.add(h.upper())
             out.append(h)
-    return " | ".join(out[-6:])
+    ctx = " | ".join(out[-6:])
+    try:
+        sc = "SUPREME COURT" in text[:3000].upper()
+        if is_verdict(text.upper(), pos, sc=sc):
+            ctx = "VERDICT SECTION — listed for pronouncement of judgment | " + ctx
+    except Exception:
+        pass
+    return ctx
 
 
 def find_snippets(text: str, case: dict, window: int = 1200, cap: int = 20) -> list[str]:
@@ -321,6 +340,22 @@ def scan_document(path: Path, source: str = "upload") -> dict:
             "note": None if results else f"None of the {len(cases)} tracked open cases appear in this document."}
 
 
+def _scan_warnings(lists: list[dict]) -> list[str]:
+    """Silent failure is the worst case — say so when the Supreme Court's lists for
+    the next working day couldn't be fetched (site down / rate-limiting us)."""
+    from datetime import date, timedelta
+    if date.today().weekday() >= 5:                # weekend: Monday's list may not be out yet
+        return []
+    nxt = date.today() + timedelta(days=1)
+    while nxt.weekday() >= 5:
+        nxt += timedelta(days=1)
+    sc = [x for x in lists if x.get("court") == "Supreme Court" and x["date"] in (date.today().isoformat(), nxt.isoformat())]
+    if not sc:
+        return [f"Supreme Court lists for {nxt:%a %d %b} couldn't be downloaded (court holiday, site down or rate-limiting us) — "
+                "check sci.gov.in/cause-list yourself, or wait for the next scan."]
+    return []
+
+
 def auto_scan_public_lists() -> int:
     """Download the free, captcha-free cause lists (Supreme Court daily + advance,
     Delhi HC, NCLAT) and scan each once against every tracked case. A case found
@@ -330,7 +365,7 @@ def auto_scan_public_lists() -> int:
     from litigation.sources import _get
     done = {r["source"] for r in ldb.query("SELECT DISTINCT source FROM lit_attachments WHERE source LIKE 'auto:%'")}
     lists = auto_cause_lists()
-    n = scanned = 0
+    n = scanned = verdict_items = 0
     for cl in lists:
         src = f"auto: {cl['label']} | {cl['url']}"
         if src in done:
@@ -345,7 +380,17 @@ def auto_scan_public_lists() -> int:
         found = [m for m in res["matches"] if m.get("case_found")]
         n += len(found)
         scanned += 1
-        if not found:
+        # Discovery-independent: every listed company in this list's verdict section
+        # (runs after the tracked-case scan so an already-tracked case is reused).
+        vnew = 0
+        try:
+            from litigation import verdicts
+            vnew = verdicts.process(extract_text(p), cl.get("court") or "", cl["date"], cl["url"],
+                                    Path(cl["url"]).name)
+            verdict_items += vnew
+        except Exception as exc:
+            log.warning(f"auto-scan: verdict watch failed on {cl['label']} — {exc}")
+        if not found and not vnew:
             p.unlink(missing_ok=True)              # keep disk tidy: nothing of ours in it
     log.info(f"auto-scan: {scanned} new list(s) of {len(lists)} available → {n} tracked case(s) found")
     try:                                           # summary for the dashboard header
@@ -353,7 +398,8 @@ def auto_scan_public_lists() -> int:
         from config import BASE_DIR as _B
         (_B / "db" / "cache" / "autoscan.json").write_text(json.dumps({
             "ran": datetime.now().isoformat(timespec="minutes"), "available": len(lists),
-            "new_scanned": scanned, "found": n,
+            "new_scanned": scanned, "found": n, "verdict_items": verdict_items,
+            "warnings": _scan_warnings(lists),
             "courts": dict(Counter(x.get("court", "?") for x in lists)),
             "dates": sorted({x["date"] for x in lists})}), encoding="utf-8")
     except Exception as exc:
