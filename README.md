@@ -568,6 +568,48 @@ Runs before the technical pipeline. Fetches internet news, uses a local Ollama L
 - **22 Google News RSS queries**: sectors (pharma, IT, banking, auto…), corporate actions (bonus, buyback, M&A), capital flows
 - **NSE event calendar**: upcoming corporate events (14-day lookahead)
 
+### LLM provider toggle — Claude Sonnet (default) or Ollama
+
+All analysis (news picks, scout lenses, "Search SYMBOL" research, litigation tracker)
+goes through [news_analyzer/llm.py](news_analyzer/llm.py), which picks a backend from
+`LLM_PROVIDER` (`.env` or dashboard → Config dropdown):
+
+| `LLM_PROVIDER` | How it runs | Cost |
+|---|---|---|
+| `claude` (default) | Claude Code CLI headless: `claude -p --model $CLAUDE_MODEL` (default `sonnet`). Uses the **Claude subscription you're logged into on this PC** — no API key; `ANTHROPIC_API_KEY` is stripped from the child env so it can never fall onto API billing. Runs from a temp dir so the repo's CLAUDE.md/settings don't leak into prompts. | Plan usage limits only |
+| `ollama` | Local Ollama, as below | Free / offline |
+
+- CLI discovery: `CLAUDE_CLI` → PATH → `~/.local/bin` → newest VS Code extension bundle (`anthropic.claude-code-*/resources/native-binary/claude.exe`), so extension updates are picked up automatically.
+- `generate(..., web=True)` gives Claude its WebSearch/WebFetch tools (used by the litigation tracker).
+- `LLM_FALLBACK=true` (default): if a Claude call fails (usage limit, logged out, network) the same prompt is retried on Ollama.
+- `CLAUDE_MAX_PARALLEL` (default 3) caps concurrent `claude -p` processes.
+- Scheduled tasks run as your user, so they see the same `~/.claude` login. If the login expires, run `claude` once interactively to refresh it.
+
+## Litigation & legal-risk tracker
+
+[litigation/](litigation/) finds pending court / tribunal / regulatory cases on listed companies, estimates how a ruling would move the stock, follows the case through its stages, and suggests a short-dated options structure.
+
+- **Free sources:** BSE announcements JSON + filing PDFs (generic "Regulation 30" titles are opened and read; titles alone missed every Yes Bank AT1 filing), BSE scrip master (market cap → materiality), NSE `fo_mktlots.csv` (F&O universe + lots), NSE F&O UDiFF bhavcopy (option prices → implied move). Supreme Court / eCourts case status and cause lists are captcha-gated and **not** scraped; stage tracking uses Claude web search over legal news.
+- **Stages:** filed → pending → hearing → arguments_concluded → **reserved** → **listed_for_pronouncement** → decided. The bold ones are "hot": the ruling can land any day.
+- **Assessment** (no web, point-in-time): P(adverse), % move if adverse or favourable, ruling window. **Trade idea** (deterministic, [analyzer.trade_idea](litigation/analyzer.py)): watch until hot. Then buy puts if P(adverse) ≥ 65% and the adverse move is ≥ 1.5× the implied move; buy calls for the mirror case; long straddle if expected |move| ≥ 1.3× the implied move; otherwise "no edge". After an adverse ruling it suggests a post-ruling drift short.
+- **Signal gate** (`LITIGATION_GATE=flag|skip|off`): technical alerts on stocks with a hot material case get a ⚖️ line (or are dropped).
+- **WhatsApp:** the evening task (`LITIGATION_SCHEDULE_HOUR/MINUTE`, default 20:30) alerts on new material cases and stage changes. Send `Legal SYMBOL` in the research group for an on-demand case report.
+- **Dashboard → Litigation:** cases colour-coded by impact tier (red material / amber near / grey below), each with key dates, analysis, trade idea and research sources.
+- **Where to look** ([litigation/portals.py](litigation/portals.py)): every case links the official pages for its forum (SC case status / cause list / daily orders / judgments, HC + eCourts, NCLT, NCLAT, SAT, SEBI, CCI, TDSAT, CESTAT, ITAT, APTEL, DRT, NGT), the company's BSE/NSE filings and legal-news searches, with a hint on what to type in. Captcha pages are linked, never scraped.
+- **Check queue** ([litigation/checks.py](litigation/checks.py)): stage + dates → *what to check, where, when* — evening before a hearing (tomorrow's cause list), morning of (position), evening of (today's order), nightly for reserved judgments (pronouncement list), weekly for undated cases (next listing date), and after a ruling (get the judgment). WhatsApp reminders at `LITIGATION_MORNING` / `LITIGATION_EVENING` (default 09:00 / 19:30), sent by the always-on research listener.
+- **Attach a file** ([litigation/attachments.py](litigation/attachments.py)): attach a downloaded PDF / HTML / screenshot to a case; Claude reads it (via its Read tool for images/scans; long cause lists are first narrowed to passages mentioning the case) and updates stage, next date, listing details (court/item no.) and outcome, re-assesses impact, and closes the case's due checks. Or **scan** a whole cause list against every tracked case. NCLAT cause lists are public PDFs and are fetched + scanned automatically each night.
+
+```bash
+python -m litigation.tracker daily              # filings + refresh hot cases + rolling discovery + alerts
+python -m litigation.tracker sweep --days 7     # themed market sweep + top-60 F&O discovery
+python -m litigation.tracker themes             # themed market sweep only
+python -m litigation.tracker discover YESBANK   # one company
+python -m litigation.tracker report YESBANK     # WhatsApp-style report
+python -m litigation.tracker casestudy          # Yes Bank AT1 replay → docs/litigation_case_study_yesbank.md
+python -m litigation.backtest                    # 3-year replay of real rulings → docs/litigation_backtest.md
+python setup_windows_task.py                    # (re)registers tasks incl. SignalInfomer\LitigationTracker
+```
+
 ### LLM (Ollama — free, local)
 - Model: `gemma4:12b-it-qat` (~5.2 GB loaded VRAM — QAT keeps a 12B model smaller in memory than the previous `qwen3:8b` at ~5.9 GB)
 - Pull: `ollama pull gemma4:12b-it-qat`

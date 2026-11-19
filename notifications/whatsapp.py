@@ -1032,6 +1032,24 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
             qualifying.append((symbol, sigs, dominant, score,
                                net_ret, net_conf, net_wrlo, net_loss, net_sl))
 
+    # ── 2b. Legal-risk gate: a material case with a ruling imminent (judgment
+    # reserved / listed for pronouncement) is a binary event the backtest never
+    # saw — flag it on the alert, or drop the stock (LITIGATION_GATE).
+    legal: dict[str, dict] = {}
+    try:
+        from config import LITIGATION_GATE
+        if LITIGATION_GATE in ("flag", "skip"):
+            from litigation.tracker import legal_risk
+            for t in qualifying:
+                c = legal_risk(t[0])
+                if c:
+                    legal[t[0]] = c
+            if LITIGATION_GATE == "skip" and legal:
+                log.info(f"whatsapp: legal gate dropped {sorted(legal)}")
+                qualifying = [t for t in qualifying if t[0] not in legal]
+    except Exception as exc:
+        log.warning(f"whatsapp: legal-risk gate skipped — {exc}")
+
     if not qualifying:
         log.info(f"whatsapp: 0/{len(ranked)} stocks cleared screen ({screen_desc}) "
                  f"— sending 'no setups' note")
@@ -1103,6 +1121,14 @@ def send_batch_signal_alert(signals: list[dict], run_date: str) -> bool:
                 risk_bits.append(f"stopped out {net_sl:.0%} of the time")
             if risk_bits:
                 body.append("⚠️ Risk: " + " · ".join(risk_bits))
+            lc = legal.get(symbol)
+            if lc:
+                stage = (lc.get("stage") or "").replace("_", " ")
+                odds = (f" · {lc['p_adverse']:.0%} odds against, {lc['move_adverse']:+.0%} if so"
+                        if lc.get("p_adverse") is not None and lc.get("move_adverse") is not None else "")
+                body.append(f"⚖️ *Legal risk:* {lc.get('court') or 'court'} ruling pending "
+                            f"({stage}) — {lc.get('title') or lc.get('subject') or ''}{odds}. "
+                            f"Binary event; the backtest can't see it.")
             ohlc = _ohlc_line(symbol)
             if ohlc:
                 body.append(ohlc)

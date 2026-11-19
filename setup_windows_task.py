@@ -45,6 +45,7 @@ from pathlib import Path
 from config import (
     SCHEDULE_HOUR, SCHEDULE_MINUTE,
     NEWS_SCHEDULE_HOUR, NEWS_SCHEDULE_MINUTE,
+    LITIGATION_SCHEDULE_HOUR, LITIGATION_SCHEDULE_MINUTE,
 )
 
 PROJECT_DIR  = Path(__file__).parent.resolve()
@@ -81,6 +82,14 @@ TASKS = [
         "minute" : SCHEDULE_MINUTE,
         "kind"   : "daily",
         "log"    : "task_output.log",
+    },
+    {
+        "name"   : "SignalInfomer\\LitigationTracker",
+        "desc"   : "Signal Infomer - Legal-risk tracker: court/regulatory case stages + alerts",
+        "hour"   : LITIGATION_SCHEDULE_HOUR,
+        "minute" : LITIGATION_SCHEDULE_MINUTE,
+        "kind"   : "litigation",
+        "log"    : "litigation_task_output.log",
     },
     {
         "name"   : "SignalInfomer\\ResearchListener",

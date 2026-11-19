@@ -1,10 +1,10 @@
 """
 News analyzer pipeline — orchestrates the full flow:
 
-  1. Check Ollama is available
+  1. Check the LLM (Claude CLI or Ollama — config.LLM_PROVIDER) is available
   2. Fetch news from all sources (parallel)
   3. Deduplicate against recently recommended symbols
-  4. Analyze with Ollama (Pass 1 + Pass 2)
+  4. Analyze with the LLM (Pass 1 + Pass 2)
   5. Enrich with recent price data from the OHLCV DB
   6. Save recommendations to DB
   7. Format and send WhatsApp message(s)
@@ -36,9 +36,10 @@ from news_analyzer.db import (
 )
 from news_analyzer.fetcher import fetch_all_news
 from news_analyzer.formatter import format_messages, format_scout_messages
-from news_analyzer.ollama_client import (
+from news_analyzer.llm import (
     available_model, ensure_available, server_status, warmup_model, unload_model,
 )
+from news_analyzer.llm import label as llm_label
 from news_analyzer.web_scout import ALL_SCOUTS, run_scout
 from utils.logger import get_logger
 
@@ -193,18 +194,19 @@ def run_news_pipeline() -> None:
         send_analysis_started_alert("News Analysis", today, WHATSAPP_PHONES,
                                     group=WHATSAPP_NEWS_GROUP)
 
-    # ── 1. Verify Ollama (auto-starts if not running) ────────────────────────
+    # ── 1. Verify the LLM (Claude CLI found / Ollama auto-started) ───────────
     if not ensure_available():
-        log.error("news_pipeline: Ollama unavailable — aborting. "
-                  "Install from https://ollama.com then run: ollama pull qwen3:8b")
+        log.error("news_pipeline: LLM unavailable — aborting. Claude: install Claude "
+                  "Code and log in (or set CLAUDE_CLI). Ollama: ollama pull <model>.")
         return
     log.info(f"news_pipeline: using model '{available_model()}'")
     server_status()
 
     # ── 1b. Warm up: force model into VRAM before the large Pass 1 prompt ───
     if not warmup_model():
-        log.error("news_pipeline: model warmup failed — model may not be downloaded. "
-                  f"Run: ollama pull {available_model()}")
+        log.error(f"news_pipeline: model warmup failed for {available_model()} — "
+                  "Claude: check the subscription login / usage limit; "
+                  "Ollama: check the model is pulled.")
         return
 
     # ── 2. Fetch news ─────────────────────────────────────────────────────────
@@ -216,18 +218,18 @@ def run_news_pipeline() -> None:
     # ── 3. Dedup: filter out recently recommended symbols ────────────────────
     recent_syms = get_recently_recommended()
 
-    # ── 4. Analyze with Ollama (main news picks) ─────────────────────────────
+    # ── 4. Analyze with the LLM (main news picks) ─────────────────────────────
     from concurrent.futures import ThreadPoolExecutor
     from config import NEWS_TOP_N, SCOUT_DEDUP_DAYS
     from notifications.whatsapp import send_news_picks_alert
 
-    log.info(f"news_pipeline: analyzing {len(articles)} articles with Ollama "
-             f"(model={available_model()}) — long step, GPU-bound, ~1-3 min...")
+    log.info(f"news_pipeline: analyzing {len(articles)} articles with {llm_label()} "
+             f"(model={available_model()}) — long step...")
     picks = analyze_news(articles, top_n=NEWS_TOP_N)
-    log.info(f"news_pipeline: Ollama analysis complete — {len(picks)} candidate pick(s)")
+    log.info(f"news_pipeline: LLM analysis complete — {len(picks)} candidate pick(s)")
 
     if not picks:
-        log.warning("news_pipeline: Ollama returned no picks — aborting")
+        log.warning("news_pipeline: LLM returned no picks — aborting")
         unload_model()
         return
 
@@ -239,9 +241,9 @@ def run_news_pipeline() -> None:
 
     run_date_str = date.today().strftime("%d %b %Y")
     subtitles = {
-        "hidden_gems"     : "Hidden gems  |  contrarian + under-the-radar  |  Ollama AI",
-        "small_cap_growth": "Emerging small-caps  |  growth potential  |  Ollama AI",
-        "smart_money"     : "Broking-house ratings + super-investor moves  |  Ollama AI",
+        "hidden_gems"     : f"Hidden gems  |  contrarian + under-the-radar  |  {llm_label()}",
+        "small_cap_growth": f"Emerging small-caps  |  growth potential  |  {llm_label()}",
+        "smart_money"     : f"Broking-house ratings + super-investor moves  |  {llm_label()}",
     }
 
     # WhatsApp sends run on a background single-worker thread, so each search

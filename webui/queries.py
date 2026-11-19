@@ -20,6 +20,7 @@ from config import (
     SCHEDULE_HOUR, SCHEDULE_MINUTE, NEWS_SCHEDULE_HOUR, NEWS_SCHEDULE_MINUTE,
     WHATSAPP_PHONE, WHATSAPP_PHONES, WHATSAPP_BACKEND,
     NEWS_TOP_N, NEWS_DEDUP_DAYS, SCOUT_DEDUP_DAYS,
+    LLM_PROVIDER, CLAUDE_MODEL, LITIGATION_GATE,
 )
 from data import db
 from utils.logger import get_logger
@@ -96,8 +97,13 @@ def status() -> dict:
         out["setups_loaded"] = None
         out["setups_error"] = str(exc)
 
-    # Ollama
+    # Ollama + active LLM provider (Claude CLI / Ollama)
     out["ollama"] = ollama_status()
+    try:
+        from news_analyzer.llm import status as _llm_status
+        out["llm"] = _llm_status()
+    except Exception as exc:
+        out["llm"] = {"provider": "?", "up": False, "detail": str(exc)}
 
     # WhatsApp send backend health (bridge readiness etc.) — read-only probe.
     out["whatsapp"] = whatsapp_status()
@@ -107,6 +113,9 @@ def status() -> dict:
         "schedule": f"{SCHEDULE_HOUR:02d}:{SCHEDULE_MINUTE:02d}",
         "news_schedule": f"{NEWS_SCHEDULE_HOUR:02d}:{NEWS_SCHEDULE_MINUTE:02d}",
         "ollama_model": OLLAMA_MODEL or "(auto)",
+        "llm_provider": LLM_PROVIDER,
+        "claude_model": CLAUDE_MODEL,
+        "litigation_gate": LITIGATION_GATE,
         "whatsapp_phone": WHATSAPP_PHONE or "(unset)",
         "whatsapp_phones": WHATSAPP_PHONES,
         "whatsapp_backend": WHATSAPP_BACKEND,
@@ -135,6 +144,100 @@ def outcomes_scorecard() -> dict:
     except Exception as exc:
         log.warning(f"webui: outcomes scorecard failed — {exc}")
         return {"n": 0, "pending": 0, "error": str(exc)}
+
+
+def _with_case_insight(checks: list[dict], cases: list[dict]) -> list[dict]:
+    """Attach each check's case-level 'why it matters' + attention score, and order
+    by what deserves the reader's time first."""
+    by_id = {c["id"]: c for c in cases}
+    for ch in checks:
+        c = by_id.get(ch["case_id"], {})
+        ins = c.get("insight") or {}
+        ch["score"] = ins.get("score", 0)
+        ch["verdict"] = ins.get("verdict", "Watch")
+        ch["headline"] = ins.get("headline", "")
+        ch["why_time"] = ins.get("why_time", "")
+        ch["court_plain"] = c.get("court_plain") or ch.get("court")
+        ch["search"] = c.get("search")
+        # routine = weekly "find the next date" on a case that isn't urgent
+        ch["routine"] = ch["kind"] == "status" and ins.get("verdict") not in ("Act now", "Prepare")
+    rank = {"Act now": 0, "Prepare": 1, "Watch": 2, "Low priority": 3}
+    checks.sort(key=lambda x: (x["routine"], rank.get(x["verdict"], 4), -x["score"], x["due"]))
+    return checks
+
+
+def litigation(days: int = 7) -> dict:
+    """Legal-risk tracker: upcoming-window cases, all active material cases,
+    recent events and the Yes Bank case study. Never raises."""
+    try:
+        from datetime import date, timedelta
+        from litigation import db as ldb
+        from litigation.db import HOT_STAGES
+        ldb.init()
+        today = date.today().isoformat()
+        end = (date.today() + timedelta(days=days)).isoformat()
+        from config import LITIGATION_MATERIALITY, LITIGATION_MIN_MOVE
+        from litigation.analyzer import tier as _tier
+        # Every real case is shown — below-threshold ones are colour-coded, not hidden.
+        # Only bookkeeping rows (duplicates, rejected mis-extractions) are left out.
+        rows = ldb.query("SELECT * FROM lit_cases WHERE status IN ('active','closed','immaterial') "
+                         "ORDER BY COALESCE(expected_abs_move,0) DESC")
+        recent = (date.today() - timedelta(days=5)).isoformat()
+        from litigation.portals import official_links
+        from litigation import plain as _PLAIN
+        atts: dict[int, list] = {}
+        for a in ldb.attachments():
+            try:
+                a["analysis"] = json.loads(a.get("analysis") or "{}")
+            except Exception:
+                a["analysis"] = {}
+            a.pop("path", None)
+            atts.setdefault(a.get("case_id"), []).append(a)
+        cases = []
+        for r in rows:
+            r["links"] = official_links(r)
+            r["attachments"] = atts.get(r["id"], [])[:6]
+            try:
+                r["sources"] = json.loads(r.get("sources") or "[]")
+            except Exception:
+                r["sources"] = [r["sources"]] if r.get("sources") else []
+            r["tier"], r["tier_reason"] = _tier(r)
+            from litigation.insight import insight as _insight
+            from litigation.plain import court as _plain_court, decode as _decode
+            r["insight"] = _insight(r, r["tier"])
+            try:
+                r["search"] = json.loads(r.pop("search_json", None) or "null")
+            except Exception:
+                r["search"] = None
+            r["court_plain"] = _plain_court(r.get("court"))
+            r["decoder"] = _decode(r.get("title") or "", r.get("court") or "", r.get("subject") or "",
+                                   r.get("case_number") or "")
+            nd = r.get("next_date") or ""
+            decided = r.get("stage") in ("decided", "disposed") or r.get("status") == "closed"
+            r["recently_decided"] = decided and ((r.get("stage_date") or "") >= recent
+                                                 or (r.get("next_date") or "") >= recent)
+            r["decided"] = decided
+            r["upcoming"] = (not decided and (r.get("stage") in HOT_STAGES or today <= nd <= end)) \
+                or r["recently_decided"]
+            cases.append(r)
+        events = ldb.query("SELECT e.*, c.title FROM lit_events e LEFT JOIN lit_cases c "
+                           "ON c.id=e.case_id ORDER BY e.id DESC LIMIT 40")
+        scan = ldb.query("SELECT COUNT(*) n, MAX(last_discovered) last FROM lit_scan")[0]
+        from config import LITIGATION_EVENING, LITIGATION_MORNING
+        from litigation.checks import build as _checks
+        return {"days": days, "today": today, "window_end": end, "cases": cases,
+                "events": events, "scanned": scan.get("n"), "last_scan": scan.get("last"),
+                "checks": _with_case_insight(_checks(), cases), "general_docs": atts.get(None, [])[:10],
+                "plain": {"stage": _PLAIN.STAGE, "doc": _PLAIN.DOC},
+                "autoscan": (json.loads((ROOT / "db" / "cache" / "autoscan.json").read_text(encoding="utf-8"))
+                             if (ROOT / "db" / "cache" / "autoscan.json").exists() else None),
+                "slots": {"morning": LITIGATION_MORNING, "evening": LITIGATION_EVENING},
+                "thresholds": {"min_move": LITIGATION_MIN_MOVE, "materiality": LITIGATION_MATERIALITY,
+                               "near_move": 0.6 * LITIGATION_MIN_MOVE,
+                               "near_materiality": 0.5 * LITIGATION_MATERIALITY}}
+    except Exception as exc:
+        log.warning(f"webui: litigation query failed — {exc}")
+        return {"error": str(exc), "cases": [], "events": []}
 
 
 def ollama_status() -> dict:
@@ -411,8 +514,25 @@ EDITABLE_KEYS = [
     "SCHEDULE_HOUR", "SCHEDULE_MINUTE", "SCHEDULE_TZ",
     "NEWS_SCHEDULE_HOUR", "NEWS_SCHEDULE_MINUTE",
     "NEWS_DEDUP_DAYS", "NEWS_TOP_N", "SCOUT_DEDUP_DAYS",
+    "LLM_PROVIDER", "CLAUDE_MODEL", "LLM_FALLBACK", "CLAUDE_MAX_PARALLEL", "CLAUDE_CLI",
     "OLLAMA_HOST", "OLLAMA_MODEL",
+    "LITIGATION_ENABLED", "LITIGATION_UNIVERSE", "LITIGATION_GATE",
+    "LITIGATION_MATERIALITY", "LITIGATION_MIN_MOVE", "LITIGATION_DISCOVERY_PER_RUN",
 ]
+
+# Keys rendered as a dropdown instead of a free-text box: {key: [choices]}.
+CHOICE_KEYS = {
+    "LLM_PROVIDER": ["claude", "ollama"],
+    "CLAUDE_MODEL": ["sonnet", "opus", "haiku"],
+    "LLM_FALLBACK": ["true", "false"],
+    "LITIGATION_ENABLED": ["true", "false"],
+    "LITIGATION_UNIVERSE": ["fno", "db"],
+    "LITIGATION_GATE": ["flag", "skip", "off"],
+}
+# Defaults shown when a key isn't in .env yet (mirrors config.py).
+KEY_DEFAULTS = {"LLM_PROVIDER": "claude", "CLAUDE_MODEL": "sonnet", "LLM_FALLBACK": "true",
+                "LITIGATION_ENABLED": "true", "LITIGATION_UNIVERSE": "fno",
+                "LITIGATION_GATE": "flag"}
 
 
 def read_env() -> dict:
@@ -426,7 +546,8 @@ def read_env() -> dict:
             values[k.strip()] = v.strip()
     return {
         "keys": EDITABLE_KEYS,
-        "values": {k: values.get(k, "") for k in EDITABLE_KEYS},
+        "values": {k: values.get(k, KEY_DEFAULTS.get(k, "")) for k in EDITABLE_KEYS},
+        "choices": CHOICE_KEYS,
         "path": str(ENV_PATH),
     }
 

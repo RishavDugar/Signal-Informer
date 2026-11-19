@@ -1,0 +1,6137 @@
+{
+ "generated": "2026-11-20T00:50",
+ "summary": {
+  "events": 115,
+  "priced": 107,
+  "fno": 57,
+  "by_level": {
+   "2": 11,
+   "3": 32,
+   "1": 57,
+   "0": 7
+  },
+  "matrix": {
+   "none": {
+    "2": 9,
+    "3": 27,
+    "1": 46,
+    "0": 5
+   },
+   "same day": {
+    "3": 5,
+    "1": 7,
+    "0": 2
+   },
+   "1-2 days later": {
+    "2": 2,
+    "1": 4
+   }
+  },
+  "buckets": {
+   "ahead": 7,
+   "after": 9,
+   "missed": 4
+  },
+  "moved": 20,
+  "moved_same_day": 14,
+  "moved_later": 6,
+  "no_move": 87,
+  "captured": 16,
+  "as_expected": 19,
+  "against": 0,
+  "dated_ahead": 5,
+  "no_move_alerted": 36,
+  "sc": {
+   "rulings": 36,
+   "lists": 36,
+   "listed": 30,
+   "verdict_list": 12
+  },
+  "other_dated": 1,
+  "other": 71
+ },
+ "events": [
+  {
+   "symbol": "IDEA",
+   "company": "Vodafone Idea Limited",
+   "forum": "Bombay High Court",
+   "case": "Writ against I-T assessment AY2016-17 for being time-barred; court ordered ₹1,128 cr refund",
+   "case_number": "Writ Petition (L) No. 15398 of 2023",
+   "ruling_date": "2023-11-08",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": 1128,
+   "case_known_since": "2023-08-31",
+   "reserved_on": "2023-11-03",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.businesstoday.in/amp/markets/company-stock/story/vodafone-idea-stock-rises-3-as-bombay-hc-orders-rs-1128-cr-tax-refund-405209-2023-11-09",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "last_hearing_before": "2023-11-03",
+   "court_party_names": [
+    "Vodafone Idea Limited",
+    "Deputy Commissioner of Income Tax, CPC Bangalore"
+   ],
+   "bse": {
+    "mcap_now": 131203.42
+   },
+   "rx": {
+    "t0": "2023-11-09",
+    "r0": 0.020793956196674124,
+    "r1": -0.015937759827409193,
+    "r2": 0.017311195035103033,
+    "cum": 0.021975424831482737,
+    "post": 0.0011094201268486703,
+    "sigma": 0.03812996307214189,
+    "gap": 0.01098905321586674,
+    "px_prev": 13.649999618530273
+   },
+   "_px_now": 12.109999656677246,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2023-11-03",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 147888.24803660347,
+    "claim_pct": 0.007627380910759125,
+    "thr": 0.09532490768035473
+   }
+  },
+  {
+   "symbol": "IIFLSEC",
+   "company": "IIFL Securities Ltd",
+   "forum": "SAT",
+   "case": "SAT sets aside SEBI ban on onboarding new clients and cuts penalty from ₹1 cr to ₹20 lakh",
+   "case_number": null,
+   "ruling_date": "2023-12-07",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 1,
+   "case_known_since": "2023-06-19",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The SEBI order was from Jun 2023, with a pending appeal. No advance date was found. The ruling date is inferred from an article dated 2023-12-08 saying SAT ruled 'a day after'. The stock rose up to 13.9% on 2023-12-08.",
+   "source_url": "https://fortuneindia-web.quintype.io/investing/iifl-securities-shares-surge-14-to-hit-52-week-high-on-sat-relief/115023",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "IIFL Securities Limited",
+    "Securities and Exchange Board of India"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-06-19",
+    "is_sc": false,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "ADANIENT",
+   "company": "Adani Enterprises Ltd",
+   "forum": "Supreme Court",
+   "case": "Adani-Hindenburg: SC refuses SIT/CBI probe, directs SEBI to finish pending probes in 3 months",
+   "case_number": "WP(C) 162/2023 (Vishal Tiwari) with WP(C) 69/2023 (M.L. Sharma); exact numbers not re-verified",
+   "ruling_date": "2024-01-03",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": "2023-11-24",
+   "date_known_in_advance": true,
+   "advance_evidence": "Supreme Court listed the judgment for pronouncement on 3 Jan 2024. This was reported on 2 Jan 2024 (cause list/media: 'SC to pronounce verdict on Adani-Hindenburg tomorrow'). Recalled from memory, not re-verified.",
+   "source_url": "https://www.businesstoday.in/amp/markets/company-stock/story/adani-enterprises-shares-rally-over-9-on-sc-verdict-whats-next-for-adani-groups-flagship-firm-411678-2024-01-03",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2023-11-24",
+   "court_party_names": [
+    "Vishal Tiwari v. Union of India",
+    "Anamika Jaiswal v. Union of India",
+    "Securities and Exchange Board of India"
+   ],
+   "sc": {
+    "lists_found": 4,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | [JUDGMENT BY: HON. THE CHIEF JUSTICE]",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-01-03/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 365155.46
+   },
+   "rx": {
+    "t0": "2024-01-03",
+    "r0": 0.03092768931142731,
+    "r1": -0.008129608803608912,
+    "r2": 0.0003580944555612309,
+    "cum": 0.023226484408512604,
+    "post": -0.007791668654172801,
+    "sigma": 0.028668436734507502,
+    "gap": 0.03908059689818666,
+    "px_prev": 2928.4921875
+   },
+   "_px_now": 2703.10009765625,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 395603.14942097914,
+    "claim_pct": null,
+    "thr": 0.07167109183626875
+   }
+  },
+  {
+   "symbol": "ADANIPORTS",
+   "company": "Adani Ports and Special Economic Zone Ltd",
+   "forum": "Supreme Court",
+   "case": "Adani-Hindenburg: SC refuses SIT/CBI probe, directs SEBI to finish pending probes in 3 months",
+   "case_number": "WP(C) 162/2023 (Vishal Tiwari) with WP(C) 69/2023; exact numbers not re-verified",
+   "ruling_date": "2024-01-03",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": "2023-11-24",
+   "date_known_in_advance": true,
+   "advance_evidence": "Supreme Court listed the judgment for pronouncement on 3 Jan 2024. This was reported on 2 Jan 2024. Recalled from memory, not re-verified.",
+   "source_url": "https://businessworld.in/article/adani-shares-surge-post-sc-verdict-adani-ports-ambuja-cement-touch-52-week-high--504481",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2023-11-24",
+   "court_party_names": [
+    "Vishal Tiwari v. Union of India",
+    "Anamika Jaiswal v. Union of India",
+    "Securities and Exchange Board of India"
+   ],
+   "sc": {
+    "lists_found": 4,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | [JUDGMENT BY: HON. THE CHIEF JUSTICE]",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-01-03/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 441668.96
+   },
+   "rx": {
+    "t0": "2024-01-03",
+    "r0": 0.02154961739251171,
+    "r1": 0.019891932061757878,
+    "r2": 0.02523406257293348,
+    "cum": 0.06825866653860868,
+    "post": 0.04584154032562271,
+    "sigma": 0.02454176699978544,
+    "gap": 0.024666223325209513,
+    "px_prev": 1064.109375
+   },
+   "_px_now": 1917.0999755859375,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 245153.66280720718,
+    "claim_pct": null,
+    "thr": 0.061354417499463604
+   }
+  },
+  {
+   "symbol": "ADANIENSOL",
+   "company": "Adani Energy Solutions Ltd",
+   "forum": "Supreme Court",
+   "case": "Adani-Hindenburg: SC refuses SIT/CBI probe, directs SEBI to finish pending probes in 3 months",
+   "case_number": "WP(C) 162/2023 (Vishal Tiwari) with WP(C) 69/2023; exact numbers not re-verified",
+   "ruling_date": "2024-01-03",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": "2023-11-24",
+   "date_known_in_advance": true,
+   "advance_evidence": "Supreme Court listed the judgment for pronouncement on 3 Jan 2024. This was reported on 2 Jan 2024. Recalled from memory, not re-verified.",
+   "source_url": "https://www.businessinsider.in/stock-market/news/adani-hindenburg-sc-verdict-sees-pack-rally-with-adani-energy-solutions-in-the-lead/articleshow/106505824.cms",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2023-11-24",
+   "court_party_names": [
+    "Vishal Tiwari v. Union of India",
+    "Anamika Jaiswal v. Union of India",
+    "Securities and Exchange Board of India"
+   ],
+   "sc": {
+    "lists_found": 4,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | [JUDGMENT BY: HON. THE CHIEF JUSTICE]",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-01-03/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 180031.13
+   },
+   "rx": {
+    "t0": "2024-01-03",
+    "r0": 0.12050427877101433,
+    "r1": -0.009437950987614352,
+    "r2": -0.015802323417122177,
+    "cum": 0.09350401278465292,
+    "post": -0.02521761391352695,
+    "sigma": 0.0413915570619945,
+    "gap": 0.08240392757471349,
+    "px_prev": 1062.449951171875
+   },
+   "_px_now": 1473.4000244140625,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "up",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 129818.14993113143,
+    "claim_pct": null,
+    "thr": 0.10347889265498625
+   }
+  },
+  {
+   "symbol": "GODREJPROP",
+   "company": "Godrej Properties Limited",
+   "forum": "Bombay High Court",
+   "case": "Challenge to CIDCO cancellation of two Sanpada (Navi Mumbai) plot allotments; cancellation quashed",
+   "case_number": null,
+   "ruling_date": "2024-02-12",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2021-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Order dated 12 Feb 2024 but uploaded and disclosed 20 Feb 2024; stock reaction reported 23 Feb 2024",
+   "source_url": "https://zeebiz.com/markets/stocks/news-godrej-properties-bombay-hc-cidco-plot-allotment-bid-nse-bse-godrej-properties-stock-share-price-navi-mumbai-277733/amp",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Godrej Properties Limited",
+    "City and Industrial Development Corporation of Maharashtra Ltd (CIDCO)"
+   ],
+   "bse": {
+    "mcap_now": 56660.7
+   },
+   "rx": {
+    "t0": "2024-02-12",
+    "r0": 0.008682684576039934,
+    "r1": 0.0029684149663753434,
+    "r2": 0.010904569601810188,
+    "cum": 0.022769957045422284,
+    "post": 0.013982736938178197,
+    "sigma": 0.01900727017113571,
+    "gap": 0.00806452721128248,
+    "px_prev": 2245.94384765625
+   },
+   "_px_now": 1881.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2021-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 67653.77489042874,
+    "claim_pct": null,
+    "thr": 0.047518175427839274
+   }
+  },
+  {
+   "symbol": "VEDL",
+   "company": "Vedanta Ltd",
+   "forum": "Supreme Court",
+   "case": "SC rejects Vedanta plea to reopen Sterlite copper smelter at Thoothukudi",
+   "case_number": "2024 INSC 175",
+   "ruling_date": "2024-02-29",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2018-05-28",
+   "reserved_on": "2024-01-08",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://upstox.com/news/market-news/stocks/sc-dismisses-vedantas-plea-for-reopening-tuticorin-plant",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-01-08",
+   "court_party_names": [
+    "Vedanta Limited",
+    "State of Tamil Nadu"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 17,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 02:00 PM) | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-02-29/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 95178.85
+   },
+   "rx": {
+    "t0": "2024-02-29",
+    "r0": 0.01795354277238448,
+    "r1": -0.002202310238156535,
+    "r2": 0.013747866057376212,
+    "cum": 0.030257675395469308,
+    "post": 0.01173129601739964,
+    "sigma": 0.016162645109936348,
+    "gap": 0.0005705941642943912,
+    "px_prev": 218.93453979492188
+   },
+   "_px_now": 243.6999969482422,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 85506.51614240903,
+    "claim_pct": null,
+    "thr": 0.04040661277484087
+   }
+  },
+  {
+   "symbol": "SBIN",
+   "company": "State Bank of India",
+   "forum": "Supreme Court",
+   "case": "SC rejects SBI plea for extension to June 30, orders electoral bond data disclosure by 12 Mar",
+   "case_number": "WP(C) 880/2017 (ADR v. Union of India), SBI application",
+   "ruling_date": "2024-03-11",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2024-02-15",
+   "reserved_on": null,
+   "date_known_in_advance": true,
+   "advance_evidence": "SBI's application for extension was reported as listed before the Constitution Bench on Monday 11 Mar 2024. Recalled from memory, not re-verified.",
+   "source_url": "https://www.verdictum.in/court-updates/supreme-court/breaking-supreme-court-dismisses-sbis-plea-seeking-extension-of-time-for-disclosure-relating-to-electoral-bonds-directs-sbi-to-furnish-data-by-march-12-and-eci-to-publish-data-by-march-15-1524896",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "State Bank of India",
+    "Association for Democratic Reforms",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-03-11/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 1068922.79
+   },
+   "rx": {
+    "t0": "2024-03-11",
+    "r0": -0.011056289578774692,
+    "r1": -0.01823134302213192,
+    "r2": -0.0012554620215043943,
+    "cum": -0.029729255230193652,
+    "post": -0.01918819777385905,
+    "sigma": 0.014061354668860339,
+    "gap": 0.0024744833167007485,
+    "px_prev": 746.3433227539062
+   },
+   "_px_now": 1156.0,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 690124.0370726436,
+    "claim_pct": null,
+    "thr": 0.035153386672150844
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Ltd",
+   "forum": "Supreme Court",
+   "case": "Curative petition: SC sets aside Rs 8,000 cr arbitral award for DAMEPL vs Delhi Metro",
+   "case_number": "Curative Petition (C) Nos. 108-109 of 2022",
+   "ruling_date": "2024-04-10",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": 8000,
+   "case_known_since": "2017-05-11",
+   "reserved_on": "2024-02-20",
+   "date_known_in_advance": false,
+   "advance_evidence": "No evidence that the pronouncement date was public in advance. The stock hit the 20% lower circuit on the day.",
+   "source_url": "https://business-standard.com/markets/news/rinfra-tanks-20-as-sc-asks-co-to-refund-rs-8-000-cr-to-delhi-airport-metro-124041000474_1.html",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-02-20",
+   "court_party_names": [
+    "Delhi Airport Metro Express Pvt Ltd",
+    "Delhi Metro Rail Corporation Ltd"
+   ],
+   "sc": {
+    "lists_found": 5,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM)",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-04-10/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2024-04-10",
+    "r0": -0.20490445266074875,
+    "r1": -0.12084957284054987,
+    "r2": 0.02208903978371035,
+    "cum": -0.2808362475456003,
+    "post": -0.10033255408079444,
+    "sigma": 0.043351231121379064,
+    "gap": 0.007557096296957333,
+    "px_prev": 284.5
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 11597.399366365527,
+    "claim_pct": 0.6898098226401851,
+    "thr": 0.10837807780344766
+   }
+  },
+  {
+   "symbol": "TATAPOWER",
+   "company": "Tata Power Company Ltd",
+   "forum": "APTEL",
+   "case": "APTEL holds CERC deduction illegal and unreasoned",
+   "case_number": "Appeal No. 240 of 2022 (arising from CERC Petition 168/MP/2019)",
+   "ruling_date": "2024-05-14",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2020-06-22",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Listed in the APTEL list of finals, but the exact pronouncement date was not confirmed in advance. The claim amount is unknown.",
+   "source_url": "https://hsalegal.com/wp-content/uploads/2024/05/HSA-Projects-Energy-Infrastructure-Monthly-Newsletter-May-2024.pdf",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Tata Power Company Limited",
+    "Central Electricity Regulatory Commission"
+   ],
+   "bse": {
+    "mcap_now": 108641.54
+   },
+   "rx": {
+    "t0": "2024-05-14",
+    "r0": 0.04002478012234412,
+    "r1": 0.0029860275156672333,
+    "r2": -0.0030130169269897422,
+    "cum": 0.04035327279795187,
+    "post": -6.296244666748052e-06,
+    "sigma": 0.021551259191876518,
+    "gap": 0.0032787494165780195,
+    "px_prev": 404.9445495605469
+   },
+   "_px_now": 340.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2020-06-22",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 129393.52787901215,
+    "claim_pct": null,
+    "thr": 0.053878147979691295
+   }
+  },
+  {
+   "symbol": "SPICEJET",
+   "company": "SpiceJet Limited",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "Set aside order upholding arbitral award for Kal Airways/Maran (₹579 cr plus interest); remanded under Sec 34",
+   "case_number": "2024:DHC:3990-DB (Ajay Singh v. KAL Airways Pvt Ltd)",
+   "ruling_date": "2024-05-17",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 579,
+   "case_known_since": "2017-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Appeal pending against 31 Jul 2023 single-judge order; pronouncement date not found as publicly pre-announced",
+   "source_url": "https://www.businesstoday.in/amp/industry/aviation/story/delhi-hc-sets-aside-its-previous-order-asking-spicejet-to-pay-rs-270-cr-to-kalanithi-maran-430013-2024-05-17",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "SpiceJet Limited",
+    "Ajay Singh",
+    "Kal Airways Private Limited"
+   ],
+   "bse": {
+    "mcap_now": 1564.25
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2017-01-01",
+    "is_sc": false,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "INFY",
+   "company": "Infosys Limited",
+   "forum": "Madras High Court",
+   "case": "Writ against TANGEDCO ₹6.73 cr tariff shortfall demand dismissed",
+   "case_number": "W.P. No. 1839 of 2021",
+   "ruling_date": "2024-05-23",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 6.73,
+   "case_known_since": "2020-11-07",
+   "reserved_on": "2024-04-04",
+   "date_known_in_advance": false,
+   "advance_evidence": "Demand order dated 7 Nov 2020; writ pending since 2021; no advance listing found",
+   "source_url": "https://www.livelaw.in/high-court/madras-high-court/madras-high-court-infosys-petition-against-tangedco-order-dismissed-258835",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-04-04",
+   "court_party_names": [
+    "Infosys Limited",
+    "The Superintending Engineer, TANGEDCO, Chengalpattu"
+   ],
+   "bse": {
+    "mcap_now": 442577.05
+   },
+   "rx": {
+    "t0": "2024-05-23",
+    "r0": -0.004268537350204271,
+    "r1": -0.004498643936947988,
+    "r2": 0.0053397372702945756,
+    "cum": -0.003432632178456574,
+    "post": 0.0008194492700073219,
+    "sigma": 0.011405546559187981,
+    "gap": -6.859112341850437e-05,
+    "px_prev": 1310.6375732421875
+   },
+   "_px_now": 1091.9000244140625,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2024-04-04",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 531237.3823747812,
+    "claim_pct": 1.2668536182290107e-05,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "RAYMOND",
+   "company": "Raymond Ltd",
+   "forum": "NCLT Mumbai",
+   "case": "NCLT approves composite scheme demerging lifestyle business into Raymond Lifestyle",
+   "case_number": "CP (CAA)/38/MB-IV/2024 in CA (CAA)/281/MB/2023",
+   "ruling_date": "2024-06-21",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-04-01",
+   "reserved_on": "2024-06-06",
+   "date_known_in_advance": false,
+   "advance_evidence": "The scheme was public from the board approval. The order date was not announced in advance. The date is taken from a Business Standard report on 2024-06-22.",
+   "source_url": "https://business-standard.com/amp/markets/capital-market-news/raymond-received-nclt-approval-for-demerger-of-lifestyle-biz-into-raymond-lifestyle-124062200219_1.html",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-06-06",
+   "court_party_names": [
+    "Raymond Limited",
+    "Raymond Lifestyle Limited",
+    "Ray Global Consumer Trading Limited"
+   ],
+   "bse": {
+    "mcap_now": 7981.64
+   },
+   "rx": {
+    "t0": "2024-06-21",
+    "r0": 0.05354858608615798,
+    "r1": 0.03123032134857362,
+    "r2": 0.05678396998613722,
+    "cum": 0.14874399127394033,
+    "post": 0.0901198746459706,
+    "sigma": 0.024833872895589058,
+    "gap": 0.0017457606977440143,
+    "px_prev": 2405.800048828125
+   },
+   "_px_now": 1195.300048828125,
+   "fno": false,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2024-06-06",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 16064.777978177468,
+    "claim_pct": null,
+    "thr": 0.06208468223897264
+   }
+  },
+  {
+   "symbol": "BINNY",
+   "company": "Binny Limited",
+   "forum": "Madras High Court",
+   "case": "Board-meeting validity dispute: HC held NCLT is the proper forum",
+   "case_number": "C.S. No. 111 of 2024 (O.A. Nos. 360 and 361 of 2024)",
+   "ruling_date": "2024-07-03",
+   "ruling_time": "unknown",
+   "direction": "neutral",
+   "claim_cr": null,
+   "case_known_since": "2024-04-30",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://trendlyne.com/latest-news/2683/BINNY/binny-ltd/?page=5",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Binny Limited",
+    "Rajiv Bakshi"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-04-30",
+    "is_sc": false,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "ZYDUSLIFE",
+   "company": "Zydus Lifesciences Limited",
+   "forum": "Delhi High Court",
+   "case": "Roche patent suit: ad-interim injunction on Sigrima (pertuzumab biosimilar)",
+   "case_number": "CS(COMM) 159/2024",
+   "ruling_date": "2024-07-09",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2024-03-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.pearceip.law/2024/07/09/delhi-high-court-issues-temporary-injunction-banning-sale-of-zydus-pertuzumab-biosimilar/",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "F. Hoffmann-La Roche AG",
+    "Zydus Lifesciences Limited"
+   ],
+   "bse": {
+    "mcap_now": 119700.46
+   },
+   "rx": {
+    "t0": "2024-07-09",
+    "r0": 0.001975387792496175,
+    "r1": 0.017064203558655122,
+    "r2": -0.013886085441194962,
+    "cum": 0.004982716049729774,
+    "post": 0.002997005901526628,
+    "sigma": 0.018196896004387092,
+    "gap": 0.0010363412012699413,
+    "px_prev": 1140.814208984375
+   },
+   "_px_now": 1202.9000244140625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-03-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 113522.30677398382,
+    "claim_pct": null,
+    "thr": 0.04549224001096773
+   }
+  },
+  {
+   "symbol": "ADANIPOWER",
+   "company": "Adani Power Ltd",
+   "forum": "APTEL",
+   "case": "APTEL allows normal inland transport cost of coal in landed coal cost (Maharashtra, IPT policy)",
+   "case_number": "APL No. 261 of 2021 & APL No. 265 of 2022 & IA No. 86 of 2024",
+   "ruling_date": "2024-07-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2020-11-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Not known. The claim amount is unknown.",
+   "source_url": "https://www.jsalaw.com/deals-matter/aptel-carries-the-legal-fiction-created-in-ipt-policy-to-its-logical-conclusion/",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Power Maharashtra Limited",
+    "Maharashtra State Electricity Distribution Co. Ltd."
+   ],
+   "bse": {
+    "mcap_now": 405171.44
+   },
+   "rx": {
+    "t0": "2024-07-09",
+    "r0": 0.0339041353157703,
+    "r1": 0.008037289527108915,
+    "r2": -0.009065684618745573,
+    "cum": 0.032636728225605705,
+    "post": -0.0010637166382470031,
+    "sigma": 0.031622008286736586,
+    "gap": 0.0,
+    "px_prev": 139.61000061035156
+   },
+   "_px_now": 210.5,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2020-11-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 268722.01893442764,
+    "claim_pct": null,
+    "thr": 0.07905502071684146
+   }
+  },
+  {
+   "symbol": "COALINDIA",
+   "company": "Coal India Ltd",
+   "forum": "Supreme Court",
+   "case": "9-judge bench: states can tax mineral rights; royalty is not a tax",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-07-25",
+   "ruling_time": "market_hours",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "1999-01-01",
+   "reserved_on": "2024-03-14",
+   "date_known_in_advance": true,
+   "advance_evidence": "Judgment was listed on the Supreme Court cause list for 25 July 2024. I did not confirm this from a specific source, so treat it as likely rather than verified.",
+   "source_url": "https://www.businesstoday.in/markets/company-stock/story/tata-steel-coal-india-heres-what-analysts-say-about-the-supreme-court-ruling-means-for-metal-and-mining-sector-441722-2024-08-16",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-03-14",
+   "court_party_names": [
+    "Mineral Area Development Authority",
+    "Steel Authority of India Ltd",
+    "State of Jharkhand"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | PRONOUNCEMENT OF JUDGMENT",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-07-25/F_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 241578.95
+   },
+   "rx": {
+    "t0": "2024-07-25",
+    "r0": 0.0007081542949025632,
+    "r1": 0.014517756329023745,
+    "r2": 0.004460710668838352,
+    "cum": 0.019850696004720003,
+    "post": 0.019122319998621906,
+    "sigma": 0.019548775906000106,
+    "gap": -0.005670306863095553,
+    "px_prev": 412.44927978515625
+   },
+   "_px_now": 391.5,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 254505.9104438168,
+    "claim_pct": null,
+    "thr": 0.04887193976500026
+   }
+  },
+  {
+   "symbol": "SAIL",
+   "company": "Steel Authority of India Ltd",
+   "forum": "Supreme Court",
+   "case": "9-judge bench: states can tax mineral rights; royalty is not a tax",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-07-25",
+   "ruling_time": "market_hours",
+   "direction": "mixed",
+   "claim_cr": 3000,
+   "case_known_since": "1999-01-01",
+   "reserved_on": "2024-03-14",
+   "date_known_in_advance": true,
+   "advance_evidence": "Verdict reserved 14 Mar 2024. The 25 Jul pronouncement was understood to be listed in the cause list and reported the day before. I have not verified this.",
+   "source_url": "https://www.businesstoday.in/markets/company-stock/story/tata-steel-coal-india-heres-what-analysts-say-about-the-supreme-court-ruling-means-for-metal-and-mining-sector-441722-2024-08-16",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-03-14",
+   "court_party_names": [
+    "Steel Authority of India Ltd",
+    "Mineral Area Development Authority"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | PRONOUNCEMENT OF JUDGMENT",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-07-25/F_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 66081.47
+   },
+   "rx": {
+    "t0": "2024-07-25",
+    "r0": -0.029630989007608743,
+    "r1": 0.016095603058225327,
+    "r2": 0.0023243832918835583,
+    "cum": -0.012207754393819714,
+    "post": 0.01849904204060482,
+    "sigma": 0.028947431594713257,
+    "gap": -0.014218779142747495,
+    "px_prev": 142.18899536132812
+   },
+   "_px_now": 164.42999267578125,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 57143.211395907834,
+    "claim_pct": 0.05249967453202739,
+    "thr": 0.07236857898678314
+   }
+  },
+  {
+   "symbol": "TATASTEEL",
+   "company": "Tata Steel Ltd",
+   "forum": "Supreme Court",
+   "case": "9-judge bench: states can tax mineral rights; royalty is not a tax",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-07-25",
+   "ruling_time": "market_hours",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "1999-01-01",
+   "reserved_on": "2024-03-14",
+   "date_known_in_advance": true,
+   "advance_evidence": "Verdict reserved 14 Mar 2024. The 25 Jul pronouncement was understood to be listed in the cause list and reported the day before. I have not verified this.",
+   "source_url": "https://www.businesstoday.in/markets/company-stock/story/tata-steel-coal-india-heres-what-analysts-say-about-the-supreme-court-ruling-means-for-metal-and-mining-sector-441722-2024-08-16",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-03-14",
+   "court_party_names": [
+    "Tata Steel Ltd",
+    "Mineral Area Development Authority"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | PRONOUNCEMENT OF JUDGMENT",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-07-25/F_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 225700.64
+   },
+   "rx": {
+    "t0": "2024-07-25",
+    "r0": -0.017911536742295286,
+    "r1": 0.015217473932078729,
+    "r2": 0.0019181451924077386,
+    "cum": -0.0013411198520192347,
+    "post": 0.01719927107153807,
+    "sigma": 0.014461310989822108,
+    "gap": -0.01129057498675079,
+    "px_prev": 153.4912567138672
+   },
+   "_px_now": 180.88999938964844,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 191514.59445859556,
+    "claim_pct": null,
+    "thr": 0.03615327747455527
+   }
+  },
+  {
+   "symbol": "NMDC",
+   "company": "NMDC Ltd",
+   "forum": "Supreme Court",
+   "case": "SC allows states to recover mineral tax arrears from 1 Apr 2005, payable over 12 years",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-08-14",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "1999-01-01",
+   "reserved_on": "2024-07-31",
+   "date_known_in_advance": true,
+   "advance_evidence": "ThePrint/PTI, 13 Aug 2024 9:46 pm IST: SC scheduled to pronounce on 14 Aug whether the 25 July ruling applies retrospectively or prospectively",
+   "source_url": "https://www.indiainfoline.com/news/companies/mining-stocks-plunge-as-supreme-court-ruling-upends-royalty-landscape",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-07-31",
+   "court_party_names": [
+    "NMDC Ltd",
+    "Mineral Area Development Authority"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-08-14/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 59968.99
+   },
+   "rx": {
+    "t0": "2024-08-14",
+    "r0": -0.06043036667132762,
+    "r1": 0.014402196949909962,
+    "r2": 0.009799619007254012,
+    "cum": -0.03845823381915303,
+    "post": 0.0245227374625272,
+    "sigma": 0.021392461396990664,
+    "gap": 0.0024502095206417884,
+    "px_prev": 67.82295989990234
+   },
+   "_px_now": 68.19999694824219,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 59637.45727282581,
+    "claim_pct": null,
+    "thr": 0.05348115349247666
+   }
+  },
+  {
+   "symbol": "HINDCOPPER",
+   "company": "Hindustan Copper Ltd",
+   "forum": "Supreme Court",
+   "case": "SC allows states to recover mineral tax arrears from 1 Apr 2005, payable over 12 years",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-08-14",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2011-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The order was passed at the 14 Aug hearing on the retrospectivity question. I found no evidence of an advance pronouncement date. The stock fell about 4% on the next trading day.",
+   "source_url": "https://www.indiainfoline.com/news/companies/mining-stocks-plunge-as-supreme-court-ruling-upends-royalty-landscape",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-08-05",
+   "court_party_names": [
+    "Mineral Area Development Authority",
+    "Steel Authority of India Ltd"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 6,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-08-14/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 41137.2
+   },
+   "rx": {
+    "t0": "2024-08-14",
+    "r0": -0.04589108052599311,
+    "r1": 0.034770936698962585,
+    "r2": 0.029612991764015772,
+    "cum": 0.01622600232971405,
+    "post": 0.06594565326439339,
+    "sigma": 0.0274795323274126,
+    "gap": 0.007189597606578557,
+    "px_prev": 308.78155517578125
+   },
+   "_px_now": 425.45001220703125,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 29856.406692018,
+    "claim_pct": null,
+    "thr": 0.06869883081853151
+   }
+  },
+  {
+   "symbol": "MOIL",
+   "company": "MOIL Ltd",
+   "forum": "Supreme Court",
+   "case": "SC allows states to recover mineral tax arrears from 1 Apr 2005, payable over 12 years",
+   "case_number": "Civil Appeal No. 4056 of 1999 (Mineral Area Development Authority v. SAIL)",
+   "ruling_date": "2024-08-14",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2011-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The order was passed at the 14 Aug hearing on the retrospectivity question. I found no evidence of an advance pronouncement date. The stock fell about 3.5% on the next trading day.",
+   "source_url": "https://www.freepressjournal.in/business/mining-share-including-coal-india-nmdc-jsw-steel-plummet-down-after-apex-court-verdict-declared-states-can-levy-renew-demand-for-taxes",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "last_hearing_before": "2024-08-05",
+   "court_party_names": [
+    "Mineral Area Development Authority",
+    "Steel Authority of India Ltd"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 6,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 10:30 AM) | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-08-14/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 4352.55
+   },
+   "rx": {
+    "t0": "2024-08-14",
+    "r0": -0.03500502854683252,
+    "r1": -0.0230612781585674,
+    "r2": 0.0026543687205482502,
+    "cum": -0.05536893722875125,
+    "post": -0.02045403279226654,
+    "sigma": 0.03638296756519577,
+    "gap": 0.0005899788364065461,
+    "px_prev": 403.08197021484375
+   },
+   "_px_now": 213.86000061035156,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 8203.658582490893,
+    "claim_pct": null,
+    "thr": 0.09095741891298942
+   }
+  },
+  {
+   "symbol": "COFFEEDAY",
+   "company": "Coffee Day Enterprises Ltd",
+   "forum": "NCLAT Chennai",
+   "case": "NCLAT stays insolvency proceedings against company pending appeal",
+   "case_number": null,
+   "ruling_date": "2024-08-14",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-09-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The appeal was pending, but no listing date was found. The Supreme Court later directed disposal of the appeal by 2025-02-21.",
+   "source_url": "https://www.outlookbusiness.com/corporate/coffee-day-enterprises-stock-jumps-20-after-nclat-sets-aside-insolvency-proceedings",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Coffee Day Enterprises Ltd",
+    "IDBI Trusteeship Services Ltd",
+    "Malavika Hegde"
+   ],
+   "bse": {
+    "mcap_now": 612.21
+   },
+   "rx": {
+    "t0": "2024-08-14",
+    "r0": 0.04980322300012441,
+    "r1": 0.03333620570167173,
+    "r2": 0.048483110272748986,
+    "cum": 0.1391781365403053,
+    "post": 0.08427636835862984,
+    "sigma": 0.02715108966988445,
+    "gap": -0.015714263916015603,
+    "px_prev": 35.0
+   },
+   "_px_now": 28.8700008392334,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-09-01",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 742.2012253938325,
+    "claim_pct": null,
+    "thr": 0.06787772417471112
+   }
+  },
+  {
+   "symbol": "LT",
+   "company": "Larsen & Toubro Limited",
+   "forum": "Bombay High Court",
+   "case": "Writ allowed; ₹2,237 cr GST/service tax show-cause demand quashed",
+   "case_number": null,
+   "ruling_date": "2024-08-19",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": 2237,
+   "case_known_since": "2018-10-23",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Writ filed 14 Aug 2023; L&T says it received the order on 19 Aug 2024 and disclosed on 20 Aug, so the pronouncement date may be earlier",
+   "source_url": "https://studycafe.in/bombay-hc-quashed-larsen-toubro-gst-demand-of-rs-2237-crore-340129.html",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "L&T Hydrocarbon Engineering Limited",
+    "Principal Commissioner of GST and Service Tax, Mumbai"
+   ],
+   "bse": {
+    "mcap_now": 578572.71
+   },
+   "rx": {
+    "t0": "2024-08-20",
+    "r0": -0.00017102996501061618,
+    "r1": 0.0036468714100612587,
+    "r2": 0.0012386441416452065,
+    "cum": 0.00475220715752922,
+    "post": 0.004899691540334761,
+    "sigma": 0.015747210831693045,
+    "gap": 0.001954940229230928,
+    "px_prev": 3488.131103515625
+   },
+   "_px_now": 4211.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2018-10-23",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 479253.7319867788,
+    "claim_pct": 0.0046676736156573365,
+    "thr": 0.03936802707923261
+   }
+  },
+  {
+   "symbol": "NOIDATOLL",
+   "company": "Noida Toll Bridge Company Ltd",
+   "forum": "ITAT",
+   "case": "ITAT quashes roughly ₹21,000 cr tax and penalty demand for 9 assessment years",
+   "case_number": "ITA Nos. 213-218 & SA 312-317 (earlier batch); number of the 20 Aug 2024 batch unknown",
+   "ruling_date": "2024-08-20",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 21000,
+   "case_known_since": "2023-08-08",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No advance date found. The company filed on the exchange on 2024-08-28 saying there was no business impact. Sources differ on the exact order dates (an NSE filing is dated 2024-08-14).",
+   "source_url": "https://webjosh.com/article/il-fs-firm-ntbcl-gets-tax-demand-relief-of-%E2%82%B921-000-crore-from-itat-1726721072-16721",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Noida Toll Bridge Company Ltd",
+    "DCIT / ACIT Circle-18(2), Noida"
+   ],
+   "bse": {
+    "mcap_now": 68.15
+   },
+   "rx": {
+    "t0": "2024-08-20",
+    "r0": 0.003961519511590961,
+    "r1": -0.021612808794636673,
+    "r2": 0.016000487345618097,
+    "cum": -0.002022473613479736,
+    "post": -0.005947951273821639,
+    "sigma": 0.03674646190860767,
+    "gap": 0.009097278851501134,
+    "px_prev": 14.289999961853027
+   },
+   "_px_now": 3.7300000190734863,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-08-08",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 261.0894081556029,
+    "claim_pct": 80.43221725595438,
+    "thr": 0.09186615477151917
+   }
+  },
+  {
+   "symbol": "RPOWER",
+   "company": "Reliance Power Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final order bars Anil Ambani 5 years in Reliance Home Finance fund-diversion case; ₹25 cr fine",
+   "case_number": null,
+   "ruling_date": "2024-08-22",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2022-02-11",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No pronouncement date was public. The case was known from SEBI's Feb 2022 interim order. Stock fell about 5% on 2024-08-23.",
+   "source_url": "https://www.business-standard.com/amp/markets/news/adag-stocks-crack-up-to-7-as-sebi-bans-anil-ambani-from-markets-for-5-yrs-124082300318_1.html",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Anil Dhirubhai Ambani",
+    "Reliance Home Finance Ltd"
+   ],
+   "bse": {
+    "mcap_now": 7374.08
+   },
+   "rx": {
+    "t0": "2024-08-23",
+    "r0": -0.05060728977138795,
+    "r1": -0.057725388455696636,
+    "r2": -0.05036221165141075,
+    "cum": -0.1512878493738803,
+    "post": -0.10557722979957163,
+    "sigma": 0.03379410174667284,
+    "gap": 0.012121279632343107,
+    "px_prev": 36.29999923706055
+   },
+   "_px_now": 17.81999969482422,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2022-02-11",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 15021.274015609006,
+    "claim_pct": null,
+    "thr": 0.08448525436668211
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final order bars Anil Ambani 5 years; company said it was not a party",
+   "case_number": null,
+   "ruling_date": "2024-08-22",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2022-02-11",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No pronouncement date was public. The stock fell about 10-11% on 2024-08-23 even though the company was not a party.",
+   "source_url": "https://www.outlookbusiness.com/amp/story/corporate/anil-ambani-led-group-stocks-plummet-after-sebi-bans-him-others-from-securities-market",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Anil Dhirubhai Ambani",
+    "Reliance Home Finance Ltd"
+   ],
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2024-08-23",
+    "r0": -0.10207751299458423,
+    "r1": -0.031210220903633124,
+    "r2": 0.00474430286247296,
+    "cum": -0.12676336967875923,
+    "post": -0.026587085541584066,
+    "sigma": 0.037333582897204,
+    "gap": 0.007551647060354272,
+    "px_prev": 235.7100067138672
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2022-02-11",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 9608.516985973349,
+    "claim_pct": null,
+    "thr": 0.09333395724301001
+   }
+  },
+  {
+   "symbol": "IDEA",
+   "company": "Vodafone Idea Ltd",
+   "forum": "Supreme Court",
+   "case": "Curative petitions on AGR dues recomputation dismissed in chambers; order made public 19 Sep",
+   "case_number": "Curative Petition (C) Nos. 231-337 of 2023",
+   "ruling_date": "2024-08-30",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 58254,
+   "case_known_since": "2019-10-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The order was passed in chambers on 30 Aug and uploaded on 19 Sep 2024. There was no advance notice of the date.",
+   "source_url": "https://www.livelaw.in/amp/top-stories/supreme-court-telecom-companies-curative-petition-adjusted-gross-revenue-dues-dismissed-270014",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Vodafone Idea Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 8,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 1,
+    "where": "DAILY CAUSE LIST FOR DATED : 30-08-2024 | (TIME : 1:30 PM)",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-08-30/M_CC_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 131203.42
+   },
+   "rx": {
+    "t0": "2024-08-30",
+    "r0": -0.04382849164595626,
+    "r1": -0.03941974420763472,
+    "r2": 0.003941167127479384,
+    "cum": -0.07809122113758116,
+    "post": -0.035629046782905016,
+    "sigma": 0.028527656906971094,
+    "gap": 0.008589037027606494,
+    "px_prev": 16.299999237060547
+   },
+   "_px_now": 12.109999656677246,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 176599.15000249722,
+    "claim_pct": 0.3298656873443403,
+    "thr": 0.07131914226742773
+   }
+  },
+  {
+   "symbol": "BHARTIARTL",
+   "company": "Bharti Airtel Ltd",
+   "forum": "Supreme Court",
+   "case": "Curative petitions on AGR dues recomputation dismissed in chambers; order made public 19 Sep",
+   "case_number": "Curative Petition (C) Nos. 231-337 of 2023",
+   "ruling_date": "2024-08-30",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 43980,
+   "case_known_since": "2019-10-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The order was passed in chambers on 30 Aug and uploaded on 19 Sep 2024. There was no advance notice of the date.",
+   "source_url": "https://barandbench.com/news/supreme-court-dismisses-telecos-curative-petitions-review-agr-dues",
+   "_slice": "sc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Bharti Airtel Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 8,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 1,
+    "where": "DAILY CAUSE LIST FOR DATED : 30-08-2024 | (TIME : 1:30 PM)",
+    "url": "https://api.sci.gov.in/jonew/cl/2024-08-30/M_CC_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 1339960.39
+   },
+   "rx": {
+    "t0": "2024-08-30",
+    "r0": 0.011445988580248923,
+    "r1": -0.012834754630311251,
+    "r2": -0.006886645771960298,
+    "cum": -0.008469784127410618,
+    "post": -0.01964527548910211,
+    "sigma": 0.01208473527296355,
+    "gap": 0.006449852890325625,
+    "px_prev": 1533.616943359375
+   },
+   "_px_now": 2144.0,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 958482.2563127034,
+    "claim_pct": 0.04588504347403547,
+    "thr": 0.030211838182408877
+   }
+  },
+  {
+   "symbol": "NETWORK18",
+   "company": "Network18 Media & Investments Ltd",
+   "forum": "NCLT Mumbai",
+   "case": "NCLT sanctions Viacom18-Digital18-Star India merger scheme (Reliance-Disney JV)",
+   "case_number": null,
+   "ruling_date": "2024-08-30",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-12-14",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The deal was announced in Feb 2024. The CCI approved it in Aug 2024. No reports of the NCLT date before the order were found.",
+   "source_url": "https://variety.com/2024/tv/news/disney-reliance-merger-approved-1236120829",
+   "_slice": "trib:2023",
+   "enriched": true,
+   "court_party_names": [
+    "Viacom18 Media Pvt Ltd",
+    "Digital18 Media Ltd",
+    "Star Television Productions Ltd"
+   ],
+   "bse": {
+    "mcap_now": 4010.74
+   },
+   "rx": {
+    "t0": "2024-08-30",
+    "r0": -0.046186227034891614,
+    "r1": -0.010838475471587783,
+    "r2": -0.013090405372655933,
+    "cum": -0.06905614779729696,
+    "post": -0.023809694721765085,
+    "sigma": 0.03033998028026137,
+    "gap": 0.005833854775063374,
+    "px_prev": 99.41999816894531
+   },
+   "_px_now": 25.979999542236328,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-12-14",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 15348.259063971944,
+    "claim_pct": null,
+    "thr": 0.07584995070065342
+   }
+  },
+  {
+   "symbol": "ZYDUSLIFE",
+   "company": "Zydus Lifesciences Limited",
+   "forum": "Delhi High Court",
+   "case": "Roche v Zydus: interim injunction on Sigrima vacated/refused",
+   "case_number": "CS(COMM) 159/2024",
+   "ruling_date": "2024-10-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2024-06-28",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.pearceip.law/2024/10/11/delhi-high-court-refuses-interim-injunction-against-zydus-pertuzumab-biosimilar/",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "F. Hoffmann-La Roche AG",
+    "Zydus Lifesciences Limited"
+   ],
+   "bse": {
+    "mcap_now": 119700.46
+   },
+   "rx": {
+    "t0": "2024-10-09",
+    "r0": 0.011392836555550012,
+    "r1": -0.008498187656754141,
+    "r2": 0.00836895035352525,
+    "cum": 0.011199701522346284,
+    "post": -0.00018320473924360314,
+    "sigma": 0.017276764860281065,
+    "gap": 0.00023699242981112256,
+    "px_prev": 1041.769287109375
+   },
+   "_px_now": 1202.9000244140625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-06-28",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 103666.35659651455,
+    "claim_pct": null,
+    "thr": 0.043191912150702665
+   }
+  },
+  {
+   "symbol": "ZYDUSLIFE",
+   "company": "Zydus Lifesciences Limited",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "Roche appeal: Sigrima injunction reinstated",
+   "case_number": null,
+   "ruling_date": "2024-10-16",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2024-06-28",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.pearceip.law/2024/10/16/delhi-high-court-reinstates-injunction-against-zydus-pertuzumab-biosimilar/",
+   "_slice": "hc:2023",
+   "enriched": true,
+   "court_party_names": [
+    "F. Hoffmann-La Roche AG",
+    "Zydus Lifesciences Limited"
+   ],
+   "bse": {
+    "mcap_now": 119700.46
+   },
+   "rx": {
+    "t0": "2024-10-16",
+    "r0": -0.032524948687978616,
+    "r1": 0.009603454009249446,
+    "r2": -0.0026428063706349647,
+    "cum": -0.025624776703703223,
+    "post": 0.006999136788659377,
+    "sigma": 0.01732614595811429,
+    "gap": -0.02660304975590788,
+    "px_prev": 1045.2265625
+   },
+   "_px_now": 1202.9000244140625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-06-28",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 104010.38972163321,
+    "claim_pct": null,
+    "thr": 0.04331536489528573
+   }
+  },
+  {
+   "symbol": "NTPC",
+   "company": "NTPC Limited",
+   "forum": "Delhi High Court",
+   "case": "Section 34: Rs 1,891 cr Jindal ITF arbitral award set aside as perverse and patently illegal",
+   "case_number": "O.M.P. (COMM) 204/2019",
+   "ruling_date": "2025-01-30",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 1891,
+   "case_known_since": "2019-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.angelone.in/news/ntpc-stock-in-focus-delhi-high-court-overturns-arbitration-award",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "NTPC Limited",
+    "Jindal ITF Limited"
+   ],
+   "bse": {
+    "mcap_now": 315141.65
+   },
+   "rx": {
+    "t0": "2025-01-30",
+    "r0": 0.00171747030473135,
+    "r1": -0.00021538097136786227,
+    "r2": -0.018327626380238105,
+    "cum": -0.017110357722335046,
+    "post": -0.018742911115418037,
+    "sigma": 0.013871611783389078,
+    "gap": 0.003112927352084238,
+    "px_prev": 304.33782958984375
+   },
+   "_px_now": 325.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2019-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 295106.23315188364,
+    "claim_pct": 0.006407861941115796,
+    "thr": 0.0346790294584727
+   }
+  },
+  {
+   "symbol": "JINDALSAW",
+   "company": "Jindal Saw Limited (parent of Jindal ITF)",
+   "forum": "Delhi High Court",
+   "case": "Subsidiary Jindal ITF's Rs 1,891 cr award against NTPC set aside",
+   "case_number": "O.M.P. (COMM) 204/2019",
+   "ruling_date": "2025-01-30",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 1891,
+   "case_known_since": "2019-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://informistmedia.com/MoneyWire/25548/Arbitration-Award-HC-sets-aside-arbitral-award-asking-NTPC-to-pay-INR-18-9-bln-to-Jindal-ITF",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Jindal ITF Limited",
+    "NTPC Limited"
+   ],
+   "bse": {
+    "mcap_now": 15990.9
+   },
+   "rx": {
+    "t0": "2025-01-30",
+    "r0": -0.016898687430697334,
+    "r1": 0.015552784054847502,
+    "r2": -0.03347644890533508,
+    "cum": -0.035654232121398954,
+    "post": -0.018834468450182218,
+    "sigma": 0.02241906733466614,
+    "gap": 0.041328953666869506,
+    "px_prev": 242.2952423095703
+   },
+   "_px_now": 249.92999267578125,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2019-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 15502.417091950552,
+    "claim_pct": 0.12198097811352783,
+    "thr": 0.05604766833666535
+   }
+  },
+  {
+   "symbol": "BCG",
+   "company": "Brightcom Group Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final order: ₹34 cr penalty on company and four others; officers barred",
+   "case_number": "WTM/AN/CFID/CFID_4/31187/2024-25",
+   "ruling_date": "2025-02-06",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2023-04-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://business-standard.com/markets/news/sebi-slaps-rs-35-crore-penalty-on-brightcom-group-and-four-others-125020601496_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Brightcom Group Limited",
+    "M Suresh Kumar Reddy",
+    "Vijay Kancharla"
+   ],
+   "bse": {
+    "mcap_now": 1812.09
+   },
+   "rx": {
+    "t0": "2025-02-07",
+    "r0": 0.0018387386257991967,
+    "r1": 0.007570033692307909,
+    "r2": 0.013249684936046169,
+    "cum": 0.0225200590984711,
+    "post": 0.020719418066975748,
+    "sigma": 0.017418402135491153,
+    "gap": 0.0,
+    "px_prev": 10.25
+   },
+   "_px_now": 8.979999542236328,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-04-13",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 2068.365639957979,
+    "claim_pct": null,
+    "thr": 0.04354600533872788
+   }
+  },
+  {
+   "symbol": "TI",
+   "company": "Tilaknagar Industries Limited",
+   "forum": "Bombay High Court (Single Judge)",
+   "case": "Mansion House trademark: injunction refused, ABD allowed West Bengal launch; stock fell about 18-20% on 10 Feb",
+   "case_number": "Notice of Motion No. 1287 of 2010 in Counter Claim No. 6 of 2010 in Commercial IP Suit; Interim Application (L) No. 16999 of 2023",
+   "ruling_date": "2025-02-07",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2010-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://businessupturn.com/finance/stock-market/tilaknagar-industries-shares-nosedive-nearly-20-after-bombay-hc-dismisses-plea-in-mansion-house-dispute/",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Tilaknagar Industries Ltd",
+    "Herman Jansen Beverages Nederland B.V.",
+    "Allied Blenders and Distillers Ltd"
+   ],
+   "bse": {
+    "mcap_now": 13599.68
+   },
+   "rx": {
+    "t0": "2025-02-10",
+    "r0": -0.19232087603411097,
+    "r1": -0.03330561615994376,
+    "r2": -0.09883127794515967,
+    "cum": -0.29156616254283385,
+    "post": -0.12749744645627703,
+    "sigma": 0.029053125118404088,
+    "gap": -0.0421613949738705,
+    "px_prev": 364.9567565917969
+   },
+   "_px_now": 550.0499877929688,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2010-01-01",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 9023.352810898425,
+    "claim_pct": null,
+    "thr": 0.07263281279601022
+   }
+  },
+  {
+   "symbol": "RELIANCE",
+   "company": "Reliance Industries Limited",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "KG-D6 gas migration: 2018 arbitral award for RIL/BP/Niko set aside",
+   "case_number": "FAO(OS)(COMM) 201/2023",
+   "ruling_date": "2025-02-14",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2016-11-01",
+   "reserved_on": "2025-01-27",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://moneylife.in/article/setback-for-reliance-industries-as-delhi-hc-sets-aside-award-in-us17bn-kg-basin-gas-dispute/76390.html",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-01-27",
+   "court_party_names": [
+    "Union of India",
+    "Reliance Industries Limited",
+    "BP Exploration (Alpha) Limited"
+   ],
+   "bse": {
+    "mcap_now": 1853957.8
+   },
+   "rx": {
+    "t0": "2025-02-14",
+    "r0": 0.005380999333835179,
+    "r1": 0.004965460483377093,
+    "r2": 0.001026649935884083,
+    "cum": 0.011385928013031621,
+    "post": 0.005995491772292194,
+    "sigma": 0.009116386011228937,
+    "gap": 0.002384759701439254,
+    "px_prev": 1205.6876220703125
+   },
+   "_px_now": 1375.5999755859375,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-01-27",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1624959.2984679893,
+    "claim_pct": null,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "COFFEEDAY",
+   "company": "Coffee Day Enterprises Ltd",
+   "forum": "NCLAT",
+   "case": "NCLAT Chennai sets aside CIRP admission over IDBI Trusteeship ₹228 cr default claim",
+   "case_number": null,
+   "ruling_date": "2025-02-27",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 228.45,
+   "case_known_since": "2024-08-08",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Supreme Court on 2025-01-31 set a 2025-02-21 deadline for NCLAT to decide, so pendency was public. Exact order date is inferred (a Thursday in late Feb 2025) and unconfirmed. Stock hit upper circuit on 2025-03-03.",
+   "source_url": "https://www.outlookbusiness.com/corporate/coffee-day-enterprises-stock-jumps-20-after-nclat-sets-aside-insolvency-proceedings",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Malavika Hegde",
+    "IDBI Trusteeship Services Limited",
+    "Coffee Day Enterprises Limited"
+   ],
+   "bse": {
+    "mcap_now": 612.21
+   },
+   "rx": {
+    "t0": "2025-02-27",
+    "r0": 0.00011087678764998277,
+    "r1": 0.018644959666695105,
+    "r2": 0.1999620391606831,
+    "cum": 0.2187112323928878,
+    "post": 0.21860244944804175,
+    "sigma": 0.025964047084326695,
+    "gap": 0.0,
+    "px_prev": 21.280000686645508
+   },
+   "_px_now": 28.8700008392334,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-08-08",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 451.25835960028263,
+    "claim_pct": 0.5062510092940047,
+    "thr": 0.06491011771081674
+   }
+  },
+  {
+   "symbol": "BSE",
+   "company": "BSE Limited",
+   "forum": "Bombay High Court",
+   "case": "Stay on special court order directing FIR against BSE officials and ex-SEBI chief (Cals Refineries)",
+   "case_number": null,
+   "ruling_date": "2025-03-04",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-03-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.angelone.in/news/market-updates/bombay-hc-extends-stay-on-fir-order-against-madhabi-puri-buch-and-others-for-four-weeks",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Sundararaman Ramamurthy",
+    "Pramod Agarwal",
+    "Securities and Exchange Board of India"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": {
+    "t0": "2025-03-04",
+    "r0": 0.02326523243164158,
+    "r1": -0.04623363016444193,
+    "r2": -0.019903306876830618,
+    "cum": -0.043546958368950506,
+    "post": -0.06587552599610136,
+    "sigma": 0.033229468540877174,
+    "gap": -0.017743015760516845,
+    "px_prev": 1444.77490234375
+   },
+   "_px_now": 3765.0,
+   "fno": true,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null,
+    "thr": 0.08307367135219293
+   }
+  },
+  {
+   "symbol": "GENSOL",
+   "company": "Gensol Engineering Ltd",
+   "forum": "SEBI",
+   "case": "SEBI interim order bars company and promoters from market over fund diversion; halts stock split",
+   "case_number": null,
+   "ruling_date": "2025-04-15",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2025-03-04",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/here-s-why-investors-are-dumping-gensol-engineering-shares-in-trade-today-125041600185_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Gensol Engineering Limited",
+    "Anmol Singh Jaggi",
+    "Puneet Singh Jaggi"
+   ],
+   "bse": {
+    "mcap_now": 37.62
+   },
+   "rx": {
+    "t0": "2025-04-16",
+    "r0": -0.05468053995048039,
+    "r1": -0.06773237956572331,
+    "r2": -0.06150925601725765,
+    "cum": -0.17687748276650006,
+    "post": -0.1269409694945739,
+    "sigma": 0.04724460679739881,
+    "gap": -0.05002322374945334,
+    "px_prev": 129.13999938964844
+   },
+   "_px_now": 9.739999771118164,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-03-04",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 498.7933153186143,
+    "claim_pct": null,
+    "thr": 0.11811151699349702
+   }
+  },
+  {
+   "symbol": "IRFC",
+   "company": "Indian Railway Finance Corporation Limited",
+   "forum": "Madras High Court",
+   "case": "Rs 230.55 cr sales-tax/GST demand dated 4 Dec 2024 set aside; remanded (date is disclosure date)",
+   "case_number": null,
+   "ruling_date": "2025-04-16",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 230.55,
+   "case_known_since": "2024-12-04",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.angelone.in/news/share-market/irfc-share-price-in-focus-madras-high-court-gave-interim-relief",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Indian Railway Finance Corporation Limited"
+   ],
+   "bse": {
+    "mcap_now": 110036.82
+   },
+   "rx": {
+    "t0": "2025-04-16",
+    "r0": 0.001501537687593757,
+    "r1": -0.014429168992153407,
+    "r2": 0.003576707978276472,
+    "cum": -0.00952866826987786,
+    "post": -0.01100651864464175,
+    "sigma": 0.02257171834330952,
+    "gap": 0.005691109615160617,
+    "px_prev": 123.9771957397461
+   },
+   "_px_now": 84.26000213623047,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-12-04",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 161904.296532807,
+    "claim_pct": 0.0014239893871703596,
+    "thr": 0.056429295858273804
+   }
+  },
+  {
+   "symbol": "JSWSTEEL",
+   "company": "JSW Steel Limited",
+   "forum": "Supreme Court",
+   "case": "SC quashes JSW's Rs 19,700 cr Bhushan Power resolution plan, orders liquidation",
+   "case_number": null,
+   "ruling_date": "2025-05-02",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 19700,
+   "case_known_since": "2019-09-05",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.barandbench.com/news/litigation/bhushan-power-supreme-court-slams-jsw-for-dishonest-fraudulent-conduct-says-resolution-plan-violated-ibc",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "JSW Steel Limited",
+    "Kalyani Transco",
+    "Bhushan Power and Steel Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "COURT NO. : 4",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-05-02/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 326223.56
+   },
+   "rx": {
+    "t0": "2025-05-02",
+    "r0": -0.06101091085350918,
+    "r1": -0.017103981214917074,
+    "r2": 0.015892749044513765,
+    "cum": -0.06236293359028566,
+    "post": -0.0013513285858339774,
+    "sigma": 0.013094805333731863,
+    "gap": -0.008351173457834093,
+    "px_prev": 1021.1689453125
+   },
+   "_px_now": 1336.800048828125,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 249199.0997406974,
+    "claim_pct": 0.07905325509000119,
+    "thr": 0.03273701333432966
+   }
+  },
+  {
+   "symbol": "ADANIPOWER",
+   "company": "Adani Power Limited",
+   "forum": "Supreme Court",
+   "case": "SC dismisses Rajasthan discoms' appeal; Coal India levy is change in law, Adani Power Rajasthan gets compensation",
+   "case_number": "Civil Appeal No. 4336 of 2025 (arising from Diary No. 26876 of 2024)",
+   "ruling_date": "2025-05-23",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": 186,
+   "case_known_since": "2020-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://theprint.in/india/sc-upholds-aptel-verdict-in-adani-power-case-rejects-rajasthan-discoms-plea/2635595",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Power Rajasthan Limited",
+    "Jaipur Vidyut Vitran Nigam Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "COURT NO. : 7 | (TIME : 10:30 AM) | [ JUDGMENT BY :- HONBLE MR. JUSTICE M.M. SUNDRESH ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-05-23/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 405171.44
+   },
+   "rx": {
+    "t0": "2025-05-23",
+    "r0": -0.010795491030179516,
+    "r1": 0.0038064254335665737,
+    "r2": -0.0038329148651978784,
+    "cum": -0.010874242844472026,
+    "post": -9.054038346234528e-05,
+    "sigma": 0.019536450903792295,
+    "gap": 0.00415386575172727,
+    "px_prev": 110.73999786376953
+   },
+   "_px_now": 210.5,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 213152.89501216353,
+    "claim_pct": 0.0008726130601669095,
+    "thr": 0.04884112725948074
+   }
+  },
+  {
+   "symbol": "BHARATFORG",
+   "company": "Bharat Forge Limited",
+   "forum": "Delhi High Court (Single Judge)",
+   "case": "Rs 77 cr Tarsem Jain award vs Bharat Forge and BF Infra set aside; unilateral arbitrator void",
+   "case_number": "OMP (COMM) 378/2019",
+   "ruling_date": "2025-05-26",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 77,
+   "case_known_since": "2019-05-10",
+   "reserved_on": "2025-02-21",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelawbiz.com/arbitration/pre-2015-arbitration-no-shield-for-unilateral-appointment-delhi-high-court-upholds-setting-aside-of-77-crore-award-against-bharat-forge-553407",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-02-21",
+   "court_party_names": [
+    "Tarsem Jain",
+    "Bharat Forge Limited",
+    "BF Infrastructure Limited"
+   ],
+   "bse": {
+    "mcap_now": 84447.17
+   },
+   "rx": {
+    "t0": "2025-05-26",
+    "r0": -0.002260490627130851,
+    "r1": 0.007557845282409104,
+    "r2": 0.0020109831754000496,
+    "cum": 0.0073447720703224695,
+    "post": 0.009547503121831391,
+    "sigma": 0.023326599683230056,
+    "gap": -8.026933144278381e-05,
+    "px_prev": 1234.1876220703125
+   },
+   "_px_now": 1729.199951171875,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-02-21",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 60272.75900756028,
+    "claim_pct": 0.001277525722529834,
+    "thr": 0.05831649920807514
+   }
+  },
+  {
+   "symbol": "ISEC",
+   "company": "ICICI Securities Limited",
+   "forum": "Supreme Court",
+   "case": "SC dismisses investor's plea; upholds ICICI Securities delisting and merger into ICICI Bank",
+   "case_number": null,
+   "ruling_date": "2025-05-28",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2024-02-14",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/companies/news/supreme-court-icici-securities-delisting-dismisses-valuation-plea-125052800746_1.html",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Manu Rishi Gupta",
+    "ICICI Securities Limited",
+    "ICICI Bank Limited"
+   ],
+   "sc": {
+    "lists_found": 5,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "COURT NO. : 3",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-05-28/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Ltd",
+   "forum": "NCLT",
+   "case": "NCLT Mumbai admits company into CIRP on Dhursar Solar (IDBI Trusteeship) default claim",
+   "case_number": null,
+   "ruling_date": "2025-05-30",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 88.68,
+   "case_known_since": "2022-04-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Petition filed April 2022; no pronouncement date published in advance.",
+   "source_url": "https://www.businesstoday.in/latest/corporate/story/r-infra-gets-breather-as-nclat-suspends-insolvency-proceedings-after-full-payment-to-dsppl-479100-2025-06-05",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "IDBI Trusteeship Services Ltd (security trustee of Dhursar Solar Power Pvt Ltd)",
+    "Reliance Infrastructure Limited"
+   ],
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2025-05-30",
+    "r0": 0.058911513657367354,
+    "r1": 0.08110542686531863,
+    "r2": -0.03443022590910483,
+    "cum": 0.10418441800137979,
+    "post": 0.04335886499034003,
+    "sigma": 0.032545438501643445,
+    "gap": 0.0028744614466307272,
+    "px_prev": 313.1000061035156
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2022-04-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 12763.254173616711,
+    "claim_pct": 0.006948071298565297,
+    "thr": 0.0813635962541086
+   }
+  },
+  {
+   "symbol": "RELIANCE",
+   "company": "Reliance Industries Ltd (parent of Reliance Jio Infocomm)",
+   "forum": "TDSAT",
+   "case": "TDSAT quashes DoT spectrum-usage-charge method and ₹1,389 cr demand against Jio",
+   "case_number": "TDSAT petition no. 8 of 2023 (inferred from the order file ID 070110000082023; not confirmed)",
+   "ruling_date": "2025-05-30",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 1389.1,
+   "case_known_since": "2023-01-05",
+   "reserved_on": "2025-05-01",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.multibagg.ai/market-pulse/articles/ipo/rjil-tdsat-ruling-supreme-court-drhp-cmuuwnp0l0002o7n19ixw1o31",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-05-01",
+   "court_party_names": [
+    "Reliance Jio Infocomm Limited",
+    "Union of India (Department of Telecommunications)"
+   ],
+   "bse": {
+    "mcap_now": 1853957.8
+   },
+   "rx": {
+    "t0": "2025-05-30",
+    "r0": 0.005524654384053362,
+    "r1": -0.003689540479502651,
+    "r2": 0.001243560201831917,
+    "cum": 0.003046583697853933,
+    "post": -0.0024262932165689532,
+    "sigma": 0.01069150968295663,
+    "gap": 0.00014097988097616643,
+    "px_prev": 1405.660888671875
+   },
+   "_px_now": 1375.5999755859375,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-05-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1894472.2411747004,
+    "claim_pct": 0.0007332385082289009,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Ltd",
+   "forum": "NCLAT",
+   "case": "NCLAT stays NCLT's CIRP admission after company says it paid ₹92.68 cr",
+   "case_number": null,
+   "ruling_date": "2025-06-04",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 92.68,
+   "case_known_since": "2025-05-30",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://insolvencytracker.in/2025/06/04/nclat-stays-insolvency-proceedings-against-reliance-infrastructure/",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Reliance Infrastructure Limited",
+    "IDBI Trusteeship Services Limited"
+   ],
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2025-06-04",
+    "r0": 0.10953697397088957,
+    "r1": -0.02934966825383023,
+    "r2": -0.009245336380303781,
+    "cum": 0.06821015268857877,
+    "post": -0.03867173821417624,
+    "sigma": 0.03308364188081612,
+    "gap": -0.00014614177679495022,
+    "px_prev": 342.04998779296875
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 13943.375436539585,
+    "claim_pct": 0.006646884064896196,
+    "thr": 0.08270910470204029
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Limited",
+   "forum": "Bombay High Court",
+   "case": "MMRDA told to deposit Rs 1,169 cr to stay Mumbai Metro One award; no unconditional stay",
+   "case_number": "Commercial Arbitration Petition No. 427 of 2024",
+   "ruling_date": "2025-06-10",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 1169,
+   "case_known_since": "2023-08-29",
+   "reserved_on": "2025-05-06",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.angelone.in/news/share-market/high-court-directs-mmrda-to-deposit-1-169-crore-in-reliance-infra-arbitration-dispute",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Mumbai Metropolitan Region Development Authority",
+    "Mumbai Metro One Private Limited"
+   ],
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2025-06-10",
+    "r0": 0.03646384098241873,
+    "r1": -0.010501085012366462,
+    "r2": -0.0036463360444113357,
+    "cum": 0.021629858742428176,
+    "post": -0.01400876926675143,
+    "sigma": 0.03484508944642596,
+    "gap": 0.011912370497699554,
+    "px_prev": 390.3500061035156
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-05-06",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 15912.284405784505,
+    "claim_pct": 0.07346525302017855,
+    "thr": 0.0871127236160649
+   }
+  },
+  {
+   "symbol": "BSE",
+   "company": "BSE Ltd",
+   "forum": "SEBI",
+   "case": "SEBI interim order bars Jane Street, disgorgement ₹4,844 cr; exchange volume risk",
+   "case_number": null,
+   "ruling_date": "2025-07-03",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2024-01-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/nuvama-angle-one-bse-slide-up-to-7-per-cent-after-sebi-ban-on-jane-street-125070400226_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Jane Street Group LLC",
+    "JSI Investments Private Limited",
+    "Jane Street Asia Trading Limited"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": {
+    "t0": "2025-07-04",
+    "r0": -0.06775752841495186,
+    "r1": 0.0003676423967182707,
+    "r2": -0.06279350331201317,
+    "cum": -0.12627553621917542,
+    "post": -0.06244880460323221,
+    "sigma": 0.027019790789143346,
+    "gap": -0.014928585666613037,
+    "px_prev": 2812.68994140625
+   },
+   "_px_now": 3765.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-01-24",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": null,
+    "claim_pct": null,
+    "thr": 0.06754947697285836
+   }
+  },
+  {
+   "symbol": "ANGELONE",
+   "company": "Angel One Ltd",
+   "forum": "SEBI",
+   "case": "SEBI interim order bars Jane Street; broker affected by F&O volume concerns",
+   "case_number": null,
+   "ruling_date": "2025-07-03",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": null,
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/nuvama-angle-one-bse-slide-up-to-7-per-cent-after-sebi-ban-on-jane-street-125070400226_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Jane Street Group LLC",
+    "JSI Investments Private Limited",
+    "Jane Street Singapore Pte Ltd"
+   ],
+   "bse": {
+    "mcap_now": 30839.53
+   },
+   "rx": {
+    "t0": "2025-07-04",
+    "r0": -0.061366616455623246,
+    "r1": 0.006616333560131915,
+    "r2": -0.03883348005134868,
+    "cum": -0.09205276875004953,
+    "post": -0.03245863737169297,
+    "sigma": 0.02636277957873667,
+    "gap": -0.022232565482555033,
+    "px_prev": 288.0898742675781
+   },
+   "_px_now": 336.45001220703125,
+   "fno": true,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 26406.764743120824,
+    "claim_pct": null,
+    "thr": 0.06590694894684167
+   }
+  },
+  {
+   "symbol": "NUVAMA",
+   "company": "Nuvama Wealth Management Ltd",
+   "forum": "SEBI",
+   "case": "SEBI interim order bars Jane Street; Nuvama named as its local trading partner",
+   "case_number": null,
+   "ruling_date": "2025-07-03",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": null,
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.outlookbusiness.com/markets/jane-street-fallout-nuvama-wealth-angel-one-bse-shares-plunge-5-7-after-sebi-crackdown",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Jane Street Group LLC",
+    "JSI Investments Private Limited",
+    "Jane Street Singapore Pte Ltd"
+   ],
+   "bse": {
+    "mcap_now": 33873.16
+   },
+   "rx": {
+    "t0": "2025-07-04",
+    "r0": -0.11405102039427284,
+    "r1": 0.032628361594045696,
+    "r2": -0.006538075031705559,
+    "cum": -0.09127452158899385,
+    "post": 0.02595530873801377,
+    "sigma": 0.02369651235086756,
+    "gap": -0.02880553775509198,
+    "px_prev": 1604.4306640625
+   },
+   "_px_now": 1834.5999755859375,
+   "fno": false,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 29623.42598709446,
+    "claim_pct": null,
+    "thr": 0.0592412808771689
+   }
+  },
+  {
+   "symbol": "TI",
+   "company": "Tilaknagar Industries Limited",
+   "forum": "Bombay High Court (Division Bench)",
+   "case": "Mansion House: appeals allowed, status quo of non-launch by ABD continues until suit decided",
+   "case_number": null,
+   "ruling_date": "2025-07-16",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-02-07",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://filingreader.com/news-wire/mumbai/2025-07-17/tilaknagar-industries-wins-trademark-dispute-at-bombay-high-court",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Tilaknagar Industries Limited",
+    "Allied Blenders and Distillers Limited"
+   ],
+   "bse": {
+    "mcap_now": 13599.68
+   },
+   "rx": {
+    "t0": "2025-07-16",
+    "r0": 0.11549226092783904,
+    "r1": 0.004625490415589795,
+    "r2": 0.013187694264892746,
+    "cum": 0.1342380380201359,
+    "post": 0.01779521309277421,
+    "sigma": 0.032096458682912214,
+    "gap": 0.01077704752206432,
+    "px_prev": 351.1631774902344
+   },
+   "_px_now": 550.0499877929688,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-02-07",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 8682.314239861234,
+    "claim_pct": null,
+    "thr": 0.08024114670728054
+   }
+  },
+  {
+   "symbol": "JSWSTEEL",
+   "company": "JSW Steel Limited",
+   "forum": "Supreme Court",
+   "case": "SC recalls May 2 Bhushan Power liquidation judgment on review; appeals restored",
+   "case_number": "Civil Appeal No. 1808 of 2020 (Kalyani Transco v. Bhushan Power & Steel Ltd); review petition numbers unknown",
+   "ruling_date": "2025-07-31",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 19700,
+   "case_known_since": "2019-09-01",
+   "reserved_on": null,
+   "date_known_in_advance": true,
+   "advance_evidence": "Business Today, 29 Jul 2025: SC to hear JSW review pleas in open court on July 31",
+   "source_url": "https://www.barandbench.com/news/supreme-court-recalls-judgment-liquidating-bhushan-power-jsw-resolution-plan-to-be-considered-afresh",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-07-29",
+   "court_party_names": [
+    "JSW Steel Limited",
+    "Bhushan Power & Steel Limited",
+    "Kalyani Transco"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 3,
+    "where": "CHIEF JUSTICE'S COURT | (TIME : 3:00 P.M.) | MISCELLANEOUS HEARING | AFTER NOTICE",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-07-31/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 326223.56
+   },
+   "rx": {
+    "t0": "2025-07-31",
+    "r0": 0.013508476596135077,
+    "r1": -0.0113595375880029,
+    "r2": 0.020932589056494866,
+    "cum": 0.022665619118800828,
+    "post": 0.00909091934196915,
+    "sigma": 0.01026462618117132,
+    "gap": -0.01917340396311118,
+    "px_prev": 1031.9725341796875
+   },
+   "_px_now": 1336.800048828125,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 251835.5338312855,
+    "claim_pct": 0.07822565664302879,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "SITINET",
+   "company": "Siti Networks Ltd",
+   "forum": "NCLAT",
+   "case": "NCLAT judgment on CIRP stay-period appropriations; creditors to remit amounts; SC later stayed remittance",
+   "case_number": null,
+   "ruling_date": "2025-07-31",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-02-22",
+   "reserved_on": null,
+   "date_known_in_advance": true,
+   "advance_evidence": "Matters were listed for judgment in the NCLAT supplementary cause list dated 2025-07-31. Outcome comes from a secondary summary.",
+   "source_url": "https://nclat.nic.in/sites/default/files/2025-07/Supp_Causelist_ch_31.07.2025.pdf",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Axis Bank Ltd",
+    "Asset Reconstruction Company (India) Ltd",
+    "Siti Networks Limited"
+   ],
+   "bse": {
+    "mcap_now": 42.73
+   },
+   "rx": {
+    "t0": "2025-07-31",
+    "r0": 0.0034882717656889994,
+    "r1": -0.009985856705423068,
+    "r2": -0.02492602554404577,
+    "cum": -0.031040816049948794,
+    "post": -0.0345226657555322,
+    "sigma": 0.017047682852623678,
+    "gap": -0.03636370926848953,
+    "px_prev": 0.550000011920929
+   },
+   "_px_now": 0.23999999463558197,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "news: date public in advance",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 97.92292097783655,
+    "claim_pct": null,
+    "thr": 0.04261920713155919
+   }
+  },
+  {
+   "symbol": "ARSSINFRA",
+   "company": "ARSS Infrastructure Projects Ltd",
+   "forum": "NCLT",
+   "case": "NCLT Cuttack approves resolution plan; shares suspended from trading for six months",
+   "case_number": null,
+   "ruling_date": "2025-08-29",
+   "ruling_time": "unknown",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "2023-04-20",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Oral approval on this date; written order uploaded 2025-09-02.",
+   "source_url": "https://nsearchives.nseindia.com/corporate/ARSSINFRA_03092025133500_APPROVAL_OF_RESOLUTION_PLAN_ARSS.pdf",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "ARSS Infrastructure Projects Limited",
+    "Ocean Capital Market Limited"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": {
+    "t0": "2025-08-29",
+    "r0": 0.05295518550885736,
+    "r1": 0.04178996443931848,
+    "r2": 0.05181524170340834,
+    "cum": 0.15419943220417953,
+    "post": 0.0961138628063658,
+    "sigma": 0.026455908272508964,
+    "gap": -0.0024630678622346025,
+    "px_prev": 44.65999984741211
+   },
+   "_px_now": 54.27000045776367,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-04-20",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null,
+    "thr": 0.06613977068127241
+   }
+  },
+  {
+   "symbol": "ADANIENT",
+   "company": "Adani Enterprises Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final orders clear Adani group of Hindenburg-linked related-party/conduit allegations",
+   "case_number": null,
+   "ruling_date": "2025-09-18",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/sebi-adani-group-allegations-hindenburg-research-125091800949_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Enterprises Limited",
+    "Adicorp Enterprises Private Limited",
+    "Milestone Tradelinks Limited"
+   ],
+   "bse": {
+    "mcap_now": 365155.46
+   },
+   "rx": {
+    "t0": "2025-09-19",
+    "r0": 0.05458864739199931,
+    "r1": 0.046722378548424315,
+    "r2": 0.019139473365480275,
+    "cum": 0.12423276066393296,
+    "post": 0.06660095828367896,
+    "sigma": 0.012003844882663012,
+    "gap": 0.038717768196468993,
+    "px_prev": 2400.926513671875
+   },
+   "_px_now": 2703.10009765625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-01-24",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 324335.5384013383,
+    "claim_pct": null,
+    "thr": 0.03000961220665753
+   }
+  },
+  {
+   "symbol": "ADANIPORTS",
+   "company": "Adani Ports and Special Economic Zone Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final orders clear Adani group of Hindenburg-linked related-party/conduit allegations",
+   "case_number": null,
+   "ruling_date": "2025-09-18",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/adani-group-mcap-gains-66k-cr-after-sebi-relief-125091900950_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Ports and Special Economic Zone Limited",
+    "Adicorp Enterprises Private Limited",
+    "Milestone Tradelinks Limited"
+   ],
+   "bse": {
+    "mcap_now": 441668.96
+   },
+   "rx": {
+    "t0": "2025-09-19",
+    "r0": 0.014414794124549934,
+    "r1": 0.016409840853694346,
+    "r2": -0.00049688619721866,
+    "cum": 0.03037964600452614,
+    "post": 0.015885858168661948,
+    "sigma": 0.010093242807015504,
+    "gap": 0.024773472121399243,
+    "px_prev": 1406.870849609375
+   },
+   "_px_now": 1917.0999755859375,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-01-24",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 324120.3864766494,
+    "claim_pct": null,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "ADANIPOWER",
+   "company": "Adani Power Ltd",
+   "forum": "SEBI",
+   "case": "SEBI final orders clear Adani group of Hindenburg-linked related-party/conduit allegations",
+   "case_number": null,
+   "ruling_date": "2025-09-18",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2023-01-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.deccanherald.com/business/companies/sebi-clears-adani-group-gautam-adani-of-hindenburg-linked-allegations-3734605",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Power Limited",
+    "Adicorp Enterprises Private Limited",
+    "Rehvar Infrastructure Private Limited"
+   ],
+   "bse": {
+    "mcap_now": 405171.44
+   },
+   "rx": {
+    "t0": "2025-09-19",
+    "r0": 0.12742165544025352,
+    "r1": 0.20488130516348924,
+    "r2": -0.04509887923838385,
+    "cum": 0.29573163091155286,
+    "post": 0.15049750979749954,
+    "sigma": 0.013854694651233944,
+    "gap": 0.07072147416316676,
+    "px_prev": 126.2699966430664
+   },
+   "_px_now": 210.5,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-01-24",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 243045.1133903391,
+    "claim_pct": null,
+    "thr": 0.03463673662808486
+   }
+  },
+  {
+   "symbol": "PVRINOX",
+   "company": "PVR INOX Limited",
+   "forum": "Karnataka High Court (Single Judge)",
+   "case": "Rs 200 film ticket cap notification stayed; petitioners incl. a PVR INOX shareholder; stock rose",
+   "case_number": "WP 28138/2025 (connected matters)",
+   "ruling_date": "2025-09-23",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-09-12",
+   "reserved_on": "2025-09-16",
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.barandbench.com/news/karnataka-high-court-stays-rule-capping-film-ticket-prices-at-200",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-09-16",
+   "court_party_names": [
+    "Hombale Films LLP",
+    "Multiplex Association of India",
+    "Shareholder of PVR INOX (name unknown)"
+   ],
+   "bse": {
+    "mcap_now": 16677.79
+   },
+   "rx": {
+    "t0": "2025-09-23",
+    "r0": 0.007801585274497591,
+    "r1": 0.003397656572517005,
+    "r2": 0.0027669402876143723,
+    "cum": 0.013894210647683702,
+    "post": 0.006139103548096547,
+    "sigma": 0.016544841042511603,
+    "gap": 0.004061371841155292,
+    "px_prev": 1108.0
+   },
+   "_px_now": 1698.800048828125,
+   "fno": false,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-09-16",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 10877.67293905323,
+    "claim_pct": null,
+    "thr": 0.04136210260627901
+   }
+  },
+  {
+   "symbol": "DABUR",
+   "company": "Dabur India Limited",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "Patanjali ad appeal disposed: '40 herbs' line removed, 'ordinary' claim allowed",
+   "case_number": "CS(COMM) 1195/2024 (underlying suit)",
+   "ruling_date": "2025-09-23",
+   "ruling_time": "unknown",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "2025-07-03",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/industry/news/delhi-hc-patanjali-dabur-chyawanprash-disparagement-case-125092301040_1.html",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Patanjali Ayurved Limited",
+    "Patanjali Foods Limited",
+    "Dabur India Limited"
+   ],
+   "bse": {
+    "mcap_now": 69361.72
+   },
+   "rx": {
+    "t0": "2025-09-23",
+    "r0": -0.012201098626153484,
+    "r1": 0.009910630459365688,
+    "r2": -0.015582447094597218,
+    "cum": -0.017809609802732274,
+    "post": -0.0058222152835337715,
+    "sigma": 0.01412214957133169,
+    "gap": -9.585677334156273e-05,
+    "px_prev": 507.9403381347656
+   },
+   "_px_now": 390.6499938964844,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-07-03",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 90187.16513725255,
+    "claim_pct": null,
+    "thr": 0.03530537392832923
+   }
+  },
+  {
+   "symbol": "JSWSTEEL",
+   "company": "JSW Steel Limited",
+   "forum": "Supreme Court",
+   "case": "SC upholds JSW's Rs 19,700 cr Bhushan Power resolution plan after rehearing",
+   "case_number": null,
+   "ruling_date": "2025-09-26",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": 19700,
+   "case_known_since": "2019-09-05",
+   "reserved_on": "2025-08-11",
+   "date_known_in_advance": true,
+   "advance_evidence": "Supreme Court pronouncement after reserving on 11 Aug 2025; I assumed it was listed in the 26 Sep cause list and did not confirm that.",
+   "source_url": "https://www.businesstoday.in/markets/stocks/story/jsw-steel-share-price-rises-as-sc-upholds-resolution-plan-for-bpsl-495842-2025-09-26",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-08-11",
+   "court_party_names": [
+    "JSW Steel Limited",
+    "Bhushan Power and Steel Limited",
+    "Kalyani Investment Company Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 326223.56
+   },
+   "rx": {
+    "t0": "2025-09-26",
+    "r0": -0.00592393630191923,
+    "r1": -0.006802206921627807,
+    "r2": 0.019233839888890047,
+    "cum": 0.006189030825301534,
+    "post": 0.012291926662566066,
+    "sigma": 0.00952730343933999,
+    "gap": 0.0056595451546346265,
+    "px_prev": 1141.9407958984375
+   },
+   "_px_now": 1336.800048828125,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "news: date public in advance (SC list didn't match)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 278671.43786670995,
+    "claim_pct": 0.0706925695392673,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "MANINDS",
+   "company": "Man Industries (India) Ltd",
+   "forum": "SEBI",
+   "case": "SEBI order penalises company and bars it and officials; stock fell about 11%",
+   "case_number": null,
+   "ruling_date": "2025-09-29",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2022-05-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/markets/capital-market-news/man-industries-slumps-after-sebi-order-125093000359_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Man Industries (India) Ltd",
+    "Merino Shelters Pvt Ltd",
+    "Ramesh Mansukhani"
+   ],
+   "bse": {
+    "mcap_now": 5735.98
+   },
+   "rx": {
+    "t0": "2025-09-30",
+    "r0": -0.10402528025706825,
+    "r1": -0.0028317427095947423,
+    "r2": 0.022373328740738385,
+    "cum": -0.08761158947708714,
+    "post": 0.01967634806063656,
+    "sigma": 0.026429298457103387,
+    "gap": -0.12417014626076017,
+    "px_prev": 406.70001220703125
+   },
+   "_px_now": 764.4500122070312,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2022-05-01",
+    "is_sc": false,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": false,
+    "as_expected": true,
+    "mcap_cr": 3051.6359458013885,
+    "claim_pct": null,
+    "thr": 0.06607324614275847
+   }
+  },
+  {
+   "symbol": "RELINFRA",
+   "company": "Reliance Infrastructure Limited",
+   "forum": "Bombay High Court",
+   "case": "Anil Ambani plea against SBI fraud classification of RCom account dismissed; group stocks fell 1-2%",
+   "case_number": null,
+   "ruling_date": "2025-10-03",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 2929.05,
+   "case_known_since": "2025-06-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.barandbench.com/news/litigation/bombay-high-court-dismisses-anil-ambani-plea-against-sbi-move-to-classify-his-loan-account-as-fraud",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Anil Dhirubhai Ambani",
+    "State Bank of India",
+    "Reliance Communications Ltd"
+   ],
+   "bse": {
+    "mcap_now": 2355.76
+   },
+   "rx": {
+    "t0": "2025-10-03",
+    "r0": 0.02217314132591075,
+    "r1": -0.03068638418242442,
+    "r2": -0.03674892023950915,
+    "cum": -0.04588457335644658,
+    "post": -0.06661585429679828,
+    "sigma": 0.030776401325225047,
+    "gap": 0.00570583878398212,
+    "px_prev": 243.61000061035156
+   },
+   "_px_now": 57.790000915527344,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-06-13",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 9930.55348583057,
+    "claim_pct": 0.2949533481874219,
+    "thr": 0.07694100331306261
+   }
+  },
+  {
+   "symbol": "RPOWER",
+   "company": "Reliance Power Limited",
+   "forum": "Bombay High Court",
+   "case": "Anil Ambani plea against SBI fraud classification dismissed; indirectly affects group company",
+   "case_number": null,
+   "ruling_date": "2025-10-03",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2025-06-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.lokmattimes.com/business/anil-ambanis-reliance-power-and-infra-shares-price-drop-after-bombay-high-court-denies-personal-hearing-in-sbi-fraud-case-a475",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Anil Dhirubhai Ambani",
+    "State Bank of India",
+    "Reliance Communications Ltd"
+   ],
+   "bse": {
+    "mcap_now": 7374.08
+   },
+   "rx": {
+    "t0": "2025-10-03",
+    "r0": 0.01473455992488204,
+    "r1": -0.03167873385247877,
+    "r2": -0.018642222201971315,
+    "cum": -0.03589699309717864,
+    "post": -0.049906453005767126,
+    "sigma": 0.028889908733183808,
+    "gap": 0.003938737465443376,
+    "px_prev": 45.70000076293945
+   },
+   "_px_now": 17.81999969482422,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-06-13",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 18911.08122318634,
+    "claim_pct": null,
+    "thr": 0.07222477183295951
+   }
+  },
+  {
+   "symbol": "VISAKAIND",
+   "company": "Visaka Industries Limited",
+   "forum": "Supreme Court",
+   "case": "SC dismisses Hyderabad Cricket Association SLP; Rs 25.92 cr arbitral award in Visaka's favour stands",
+   "case_number": null,
+   "ruling_date": "2025-10-07",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 25.92,
+   "case_known_since": "2016-03-15",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://filingreader.com/news-wire/mumbai/2025-10-07/visaka-industries-wins-cricket-association-dispute-set-to-enforce-2592",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Hyderabad Cricket Association",
+    "Visaka Industries Limited"
+   ],
+   "sc": {
+    "lists_found": 5,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 734.79
+   },
+   "rx": {
+    "t0": "2025-10-07",
+    "r0": 0.03850793379435791,
+    "r1": 0.0025955001272671696,
+    "r2": 0.033872642425486266,
+    "cum": 0.076556535524676,
+    "post": 0.036486271574309725,
+    "sigma": 0.01918709031082956,
+    "gap": 1.432674756607355e-08,
+    "px_prev": 78.0132827758789
+   },
+   "_px_now": 85.18000030517578,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2016-03-15",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 672.9675962140719,
+    "claim_pct": 0.03851597037631335,
+    "thr": 0.0479677257770739
+   }
+  },
+  {
+   "symbol": "NATCOPHARM",
+   "company": "Natco Pharma Limited",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "Roche appeal dismissed; Natco may sell generic risdiplam (SMA); stock +6.3% next day",
+   "case_number": "FAO(OS)(COMM) 43/2025 (inferred from court file name)",
+   "ruling_date": "2025-10-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2024-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelaw.in/amp/high-court/delhi-high-court/delhi-high-court-allows-natco-to-sell-spinal-muscular-atrophy-drug-rejects-roches-patent-infringement-appeal-306539",
+   "_slice": "hc:2024",
+   "enriched": true,
+   "court_party_names": [
+    "F. Hoffmann-La Roche AG & Anr.",
+    "Natco Pharma Ltd."
+   ],
+   "bse": {
+    "mcap_now": 16115.2
+   },
+   "rx": {
+    "t0": "2025-10-09",
+    "r0": 0.00020814483230324754,
+    "r1": 0.03552911020029925,
+    "r2": -0.0048000948481169425,
+    "cum": 0.030837054466203107,
+    "post": 0.030457236696072476,
+    "sigma": 0.015565164341018992,
+    "gap": 0.0012360442130836535,
+    "px_prev": 803.6135864257812
+   },
+   "_px_now": 821.9500122070312,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 15755.694963974072,
+    "claim_pct": null,
+    "thr": 0.03891291085254748
+   }
+  },
+  {
+   "symbol": "VEDL",
+   "company": "Vedanta Limited",
+   "forum": "Supreme Court",
+   "case": "SC dismisses PIL seeking probe into Viceroy short-seller allegations against Vedanta group",
+   "case_number": "OMP (COMM) 208/2020",
+   "ruling_date": "2025-10-10",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2011-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelaw.in/top-stories/supreme-court-refuses-to-entertain-pil-seeking-probe-into-us-based-short-seller-viceroys-allegations-against-vedanta-group-306535",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-09-19",
+   "court_party_names": [
+    "Shakti Bhatia",
+    "Union of India",
+    "Vedanta Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "COURT NO. : 7",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-10-10/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 95178.85
+   },
+   "rx": {
+    "t0": "2025-10-10",
+    "r0": -0.008242511063616731,
+    "r1": -0.0037204235053591717,
+    "r2": 0.004809278365969671,
+    "cum": -0.007129349254611728,
+    "post": 0.0010720015335893285,
+    "sigma": 0.012767175109381117,
+    "gap": -0.0024782762121873247,
+    "px_prev": 466.95550537109375
+   },
+   "_px_now": 243.6999969482422,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 182372.95264237837,
+    "claim_pct": null,
+    "thr": 0.031917937773452795
+   }
+  },
+  {
+   "symbol": "MANINDS",
+   "company": "Man Industries (India) Ltd",
+   "forum": "SAT",
+   "case": "SAT stays SEBI's 29 Sep 2025 order against company and three noticees",
+   "case_number": null,
+   "ruling_date": "2025-10-10",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-09-29",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Interim stay on appeal; no pronouncement date was published in advance.",
+   "source_url": "https://www.business-standard.com/amp/markets/news/sat-has-granted-stay-on-sebi-order-to-ban-firm-officials-man-industries-125101400971_1.html",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Man Industries (India) Limited",
+    "Securities and Exchange Board of India"
+   ],
+   "bse": {
+    "mcap_now": 5735.98
+   },
+   "rx": {
+    "t0": "2025-10-10",
+    "r0": 0.031244188188244593,
+    "r1": -0.016023596527614314,
+    "r2": -0.025410725918575183,
+    "cum": -0.011292161106324694,
+    "post": -0.040916875411551534,
+    "sigma": 0.029220397153751427,
+    "gap": 0.01598481115936279,
+    "px_prev": 369.1000061035156
+   },
+   "_px_now": 764.4500122070312,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-09-29",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 2769.507775789359,
+    "claim_pct": null,
+    "thr": 0.07305099288437857
+   }
+  },
+  {
+   "symbol": "DCMSRIND",
+   "company": "DCM Shriram Industries Ltd",
+   "forum": "NGT",
+   "case": "NGT Bhopal bench wastewater directions for Kota unit; no penalty or closure imposed",
+   "case_number": "Original Application No. 189/2023 (CZ)",
+   "ruling_date": "2025-10-16",
+   "ruling_time": "after_market",
+   "direction": "neutral",
+   "claim_cr": null,
+   "case_known_since": "2023-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://filingreader.com/news-wire/mumbai/2025-10-17/dcm-shriram-unit-receives-ngt-directives-no-penalties-imposed",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Shriram Rayons (unit of DCM Shriram Industries Ltd), respondent no. 8"
+   ],
+   "bse": {
+    "mcap_now": 497.42
+   },
+   "rx": {
+    "t0": "2025-10-17",
+    "r0": -0.0038321650933899054,
+    "r1": 0.004357555960873505,
+    "r2": 0.0034566756640863616,
+    "cum": 0.004003812900508441,
+    "post": 0.007851507635024735,
+    "sigma": 0.015864576990875522,
+    "gap": -0.015019012236442864,
+    "px_prev": 171.9123992919922
+   },
+   "_px_now": 57.939998626708984,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2023-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1475.883114992057,
+    "claim_pct": null,
+    "thr": 0.03966144247718881
+   }
+  },
+  {
+   "symbol": "IDEA",
+   "company": "Vodafone Idea Limited",
+   "forum": "Supreme Court",
+   "case": "SC lets Centre reassess Vi's additional AGR demand (about Rs 9,450 cr)",
+   "case_number": "Diary No. 51232/2025 (taken from the order PDF filename; the W.P.(C) number is unknown)",
+   "ruling_date": "2025-10-27",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": 9450,
+   "case_known_since": "2025-09-19",
+   "reserved_on": null,
+   "date_known_in_advance": true,
+   "advance_evidence": "Business Standard, Deccan Herald and TelecomTalk reported on 13 Oct 2025 that the SC had deferred the hearing to 27 Oct 2025. The bench was CJI Gavai with Justices Chandran and Pancholi.",
+   "source_url": "https://www.outlookbusiness.com/markets/vodafone-idea-shares-hit-10-upper-circuit-after-sc-modifies-agr-ruling",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-10-13",
+   "court_party_names": [
+    "Vodafone Idea Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT",
+    "url": "https://api.sci.gov.in/jonew/cl/2025-10-27/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 131203.42
+   },
+   "rx": {
+    "t0": "2025-10-27",
+    "r0": 0.029757284969136766,
+    "r1": -0.05200990773588077,
+    "r2": -0.01301267266058126,
+    "cum": -0.03705800642047741,
+    "post": -0.0645668590023657,
+    "sigma": 0.03551401049745135,
+    "gap": 0.0,
+    "px_prev": 9.619999885559082
+   },
+   "_px_now": 12.109999656677246,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 104226.00505104207,
+    "claim_pct": 0.09066835091081252,
+    "thr": 0.08878502624362837
+   }
+  },
+  {
+   "symbol": "IDEA",
+   "company": "Vodafone Idea Limited",
+   "forum": "Supreme Court",
+   "case": "SC modifies Oct 27 order; Centre may reassess all AGR dues incl. interest and penalties",
+   "case_number": "Diary No. 51232/2025 (taken from the order PDF filename; the W.P.(C) number is unknown)",
+   "ruling_date": "2025-11-03",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 83400,
+   "case_known_since": "2019-10-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Clarification/modification application; listing not reported as a pronouncement",
+   "source_url": "https://www.business-standard.com/amp/markets/news/vodafone-idea-shares-zoom-10pc-after-sc-clarifies-on-agr-dues-details-here-125110300662_1.html",
+   "_slice": "sc:2024",
+   "enriched": true,
+   "last_hearing_before": "2025-10-27",
+   "court_party_names": [
+    "Vodafone Idea Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 131203.42
+   },
+   "rx": {
+    "t0": "2025-11-03",
+    "r0": 0.09117987873517741,
+    "r1": -0.00719525965218315,
+    "r2": -0.011441816960224949,
+    "cum": 0.07011328417004925,
+    "post": -0.018456438479554915,
+    "sigma": 0.03679591575454378,
+    "gap": 0.04810997689770269,
+    "px_prev": 8.729999542236328
+   },
+   "_px_now": 12.109999656677246,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2019-10-24",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 94583.47060383967,
+    "claim_pct": 0.8817608348219602,
+    "thr": 0.09198978938635945
+   }
+  },
+  {
+   "symbol": "ALPSINDUS",
+   "company": "ALPS Industries Ltd",
+   "forum": "NCLT",
+   "case": "NCLT Allahabad approves resolution plan; disclosed to NSE 10 Nov 2025",
+   "case_number": "IA (Plan) No. 6/2025 in CP (IB) No. 46/ALD/2024, NCLT Allahabad",
+   "ruling_date": "2025-11-04",
+   "ruling_time": "unknown",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "2024-09-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://nsearchives.nseindia.com/corporate/ALPSINDUS_10112025132306_final_file.pdf",
+   "_slice": "trib:2024",
+   "enriched": true,
+   "court_party_names": [
+    "Alps Industries Limited"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": {
+    "t0": "2025-11-04",
+    "r0": -0.03356837507326704,
+    "r1": 0.029477573636420784,
+    "r2": 0.015910419326129244,
+    "cum": 0.010520713813795712,
+    "post": 0.045782222126895644,
+    "sigma": 0.03275268335130416,
+    "gap": 0.0,
+    "px_prev": 20.0
+   },
+   "_px_now": 34.29999923706055,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-09-13",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null,
+    "thr": 0.08188170837826039
+   }
+  },
+  {
+   "symbol": "SPLIL",
+   "company": "SPL Industries Ltd",
+   "forum": "Delhi High Court",
+   "case": "Impugned order quashed and matter disposed of, per company filing",
+   "case_number": "W.P.(C) 2357/2025",
+   "ruling_date": "2025-11-24",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-04-12",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/markets/spl-industries-ltd-share-price-3598/announcements/bse-exchange-50149462",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "SPL Industries Limited",
+    "Regional Director, Northern Region, Ministry of Corporate Affairs"
+   ],
+   "bse": {
+    "mcap_now": 78.3
+   },
+   "rx": {
+    "t0": "2025-11-25",
+    "r0": 0.021168638523326178,
+    "r1": -0.015204483220018328,
+    "r2": -0.004508482559833271,
+    "cum": 0.0013724916716566504,
+    "post": -0.019706186803126302,
+    "sigma": 0.02456371042407214,
+    "gap": 0.011758577411988602,
+    "px_prev": 38.27000045776367
+   },
+   "_px_now": 26.59000015258789,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-04-12",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 112.69428426653299,
+    "claim_pct": null,
+    "thr": 0.06140927606018035
+   }
+  },
+  {
+   "symbol": "DRONACHRYA",
+   "company": "Droneacharya Aerial Innovations Ltd",
+   "forum": "SEBI",
+   "case": "SEBI order bars promoters for two years; ₹75 lakh total penalty; fraudulent scheme",
+   "case_number": null,
+   "ruling_date": "2025-11-28",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 0.75,
+   "case_known_since": "2025-05-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "NSE and BSE circulars dated 28 Nov 2025. Shares reportedly fell about 20%. NSE Emerge symbol is from memory and not verified.",
+   "source_url": "https://entrackr.com/news/droneacharya-plunge-20-after-sebis-two-year-ban-on-promoters-10827898",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Droneacharya Aerial Innovations Limited",
+    "Prateek Srivastava",
+    "Nikita Srivastava"
+   ],
+   "bse": {
+    "mcap_now": 67.14
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-05-01",
+    "is_sc": false,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "BLSE",
+   "company": "BLS International Services Ltd",
+   "forum": "Delhi High Court",
+   "case": "Challenge to MEA two-year tender debarment; debarment order set aside, MEA given liberty to issue fresh show-cause notice",
+   "case_number": "W.P.(C) 16352/2025",
+   "ruling_date": "2025-12-18",
+   "ruling_time": "after_market",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-10-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.business-standard.com/amp/markets/news/why-did-bls-international-share-price-rally-7-in-trade-today-details-here-125121900215_1.html",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "BLS International Services Limited",
+    "Union of India"
+   ],
+   "bse": {
+    "mcap_now": 2687.53
+   },
+   "rx": {
+    "t0": "2025-12-19",
+    "r0": -0.0007419641189740922,
+    "r1": -0.01112371051147798,
+    "r2": -0.0015877783132450807,
+    "cum": -0.013521258947018167,
+    "post": -0.012708442036234557,
+    "sigma": 0.03280921995277893,
+    "gap": 0.0034981240680871384,
+    "px_prev": 102.44515991210938
+   },
+   "_px_now": 147.8800048828125,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-10-13",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1861.8097885293698,
+    "claim_pct": null,
+    "thr": 0.08202304988194734
+   }
+  },
+  {
+   "symbol": "KIRLOSBROS",
+   "company": "Kirloskar Brothers Limited",
+   "forum": "Supreme Court",
+   "case": "Extended interim stay on Bombay HC order; asked HC to expedite the appeal",
+   "case_number": null,
+   "ruling_date": "2026-01-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-07-25",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "The original stay was granted on 2025-10-17 and extended on 2026-01-09. The company received the order copy on 2026-01-13.",
+   "source_url": "https://www.investywise.com/?p=37410",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Kirloskar Proprietary Limited",
+    "Kirloskar Brothers Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "COURT NO. : 14",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-01-09/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 12632.37
+   },
+   "rx": {
+    "t0": "2026-01-09",
+    "r0": -0.012638180425050494,
+    "r1": 0.005287482389639164,
+    "r2": 0.007641670289857294,
+    "cum": 6.588601615487022e-05,
+    "post": 0.012989498297271584,
+    "sigma": 0.017860794102854665,
+    "gap": -0.0014720479360552652,
+    "px_prev": 1624.222900390625
+   },
+   "_px_now": 1590.199951171875,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 12902.644491396968,
+    "claim_pct": null,
+    "thr": 0.044651985257136664
+   }
+  },
+  {
+   "symbol": "ALLCARGO",
+   "company": "Allcargo Logistics Ltd",
+   "forum": "CCI",
+   "case": "₹50 lakh gun-jumping penalty (s.43A) over acquisition of remaining stake in Gati Express",
+   "case_number": null,
+   "ruling_date": "2026-01-09",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 0.5,
+   "case_known_since": "2025-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No advance date found. Immaterial amount.",
+   "source_url": "https://www.mondaq.com/competition-monthly-february-2026/1746038",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Allcargo Logistics Limited",
+    "Gati-Kintetsu Express Private Limited",
+    "Allcargo Gati Limited"
+   ],
+   "bse": {
+    "mcap_now": 1437.87
+   },
+   "rx": {
+    "t0": "2026-01-09",
+    "r0": 0.008383706850425332,
+    "r1": -0.02132762149952161,
+    "r2": 0.02154841677676178,
+    "cum": 0.008298481986315331,
+    "post": -0.00010112832716480114,
+    "sigma": 0.09048526865189917,
+    "gap": 0.0,
+    "px_prev": 11.0600004196167
+   },
+   "_px_now": 9.59000015258789,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1658.2734671868418,
+    "claim_pct": 0.0003015184225604351,
+    "thr": 0.2262131716297479
+   }
+  },
+  {
+   "symbol": "NESTLEIND",
+   "company": "Nestlé India Limited",
+   "forum": "Supreme Court",
+   "case": "Income tax department's appeals on ₹101.21 cr licensing fee dispute dismissed as withdrawn",
+   "case_number": null,
+   "ruling_date": "2026-01-13",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 101.21,
+   "case_known_since": "2014-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The company disclosed the order to the exchanges on 2026-01-21.",
+   "source_url": "https://www.taxscan.in/income-tax/big-relief-for-nestl-india-supreme-court-dismisses-101-crore-income-tax-appeals-1442222",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Nestlé India Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 251722.15
+   },
+   "rx": {
+    "t0": "2026-01-13",
+    "r0": 0.007047226433441689,
+    "r1": -0.006204356815185719,
+    "r2": 0.0,
+    "cum": 0.0007948197005794855,
+    "post": -0.006204356815185719,
+    "sigma": 0.009682695873957608,
+    "gap": -2.6171350420156614e-08,
+    "px_prev": 1299.107421875
+   },
+   "_px_now": 1303.4000244140625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2014-01-01",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 250893.1311876718,
+    "claim_pct": 0.0004033988476324344,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "BOMDYEING",
+   "company": "Bombay Dyeing & Manufacturing Co Ltd",
+   "forum": "SAT",
+   "case": "SAT split verdict quashes SEBI 2022 order alleging inflated revenue and profits; penalties set aside",
+   "case_number": null,
+   "ruling_date": "2026-01-16",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 15,
+   "case_known_since": "2017-08-19",
+   "reserved_on": "2025-04-03",
+   "date_known_in_advance": false,
+   "advance_evidence": "SEBI order dates to Oct 2022 (exact day unknown). Presiding officer dissented. Penalty of over ₹15 cr, with a refund directed. Business Standard URL suggests 16 Jan; Bar & Bench is dated 17 Jan.",
+   "source_url": "https://moneylife.in/article/sat-quashes-sebi-order-accusing-bombay-dyeing-of-orchestrating-fraud-scheme-presiding-officer-dissents/79406.html",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "last_hearing_before": "2025-04-03",
+   "court_party_names": [
+    "The Bombay Dyeing & Manufacturing Company Limited",
+    "Scal Services Limited",
+    "Nusli N. Wadia"
+   ],
+   "bse": {
+    "mcap_now": 2103.97
+   },
+   "rx": {
+    "t0": "2026-01-16",
+    "r0": -0.007166152516597801,
+    "r1": -0.00014319477876145736,
+    "r2": -0.033449846690990714,
+    "cum": -0.04027970918141499,
+    "post": -0.03344457157191871,
+    "sigma": 0.013706939932771122,
+    "gap": 0.0015315713908554685,
+    "px_prev": 123.63428497314453
+   },
+   "_px_now": 101.9800033569336,
+   "fno": false,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2025-04-03",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 2550.7238477381475,
+    "claim_pct": 0.005880683639391712,
+    "thr": 0.03426734983192781
+   }
+  },
+  {
+   "symbol": "NCC",
+   "company": "NCC Ltd",
+   "forum": "Delhi High Court",
+   "case": "Two-year NHAI debarment of step-down subsidiary O B Infrastructure kept in abeyance until 10 March 2026",
+   "case_number": null,
+   "ruling_date": "2026-02-20",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2026-02-17",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://tradebrains.in/infra-stock-jumps-after-delhi-high-court-grants-interim-relief-against-nhai-debarment/",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "O B Infrastructure Limited",
+    "NCC Limited",
+    "National Highways Authority of India"
+   ],
+   "bse": {
+    "mcap_now": 8457.09
+   },
+   "rx": {
+    "t0": "2026-02-20",
+    "r0": -0.013106032859890315,
+    "r1": -0.0003108933510214129,
+    "r2": 0.005541794748260442,
+    "cum": -0.007812320974748599,
+    "post": 0.00526338492051337,
+    "sigma": 0.01553191943105964,
+    "gap": -0.009045586110204451,
+    "px_prev": 148.06442260742188
+   },
+   "_px_now": 134.67999267578125,
+   "fno": false,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 9297.551350507138,
+    "claim_pct": null,
+    "thr": 0.0388297985776491
+   }
+  },
+  {
+   "symbol": "TATAPOWER",
+   "company": "Tata Power Co Ltd",
+   "forum": "APTEL",
+   "case": "APTEL rules CERC can adjudicate wider PPA disputes, not arbitration (three appeals)",
+   "case_number": "APTEL Appeal Nos. 348, 371 and 400 of 2025",
+   "ruling_date": "2026-02-25",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2025-11-19",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No advance date found. Direction is my inference, since Tata Power argued the disputes were arbitrable.",
+   "source_url": "https://www.saurenergy.com/solar-energy-news/arbitration-vs-regulatory-jurisdiction-aptels-february-2026-ruling-draws-a-line-11170847",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Gujarat Urja Vikas Nigam Ltd",
+    "Tata Power Company Ltd (formerly Coastal Gujarat Power Ltd)",
+    "Central Electricity Regulatory Commission"
+   ],
+   "bse": {
+    "mcap_now": 108641.54
+   },
+   "rx": {
+    "t0": "2026-02-25",
+    "r0": 0.0016746071590620915,
+    "r1": -0.0027808758393820243,
+    "r2": 0.004976228611739519,
+    "cum": 0.003882335362307976,
+    "post": 0.0022189313230359664,
+    "sigma": 0.010161318095430492,
+    "gap": 0.0006583034936342713,
+    "px_prev": 377.4113464355469
+   },
+   "_px_now": 340.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-11-19",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 120595.73497126858,
+    "claim_pct": null,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "SARDAENR",
+   "company": "Sarda Energy & Minerals Limited",
+   "forum": "Supreme Court",
+   "case": "Dismissed rival bidders' appeals against NCLT approval of Sarda's SKS Power resolution plan",
+   "case_number": "2026 INSC 206 (Torrent Power Ltd v. Ashish Arjunkumar Rathi); the civil appeal number is unknown",
+   "ruling_date": "2026-02-27",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2024-08-13",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The company disclosed the order to the exchanges on 2026-02-27 and said the detailed judgment was awaited.",
+   "source_url": "https://hdfcsky.com/news/sarda-energy-minerals-share-price-up-5-8-percent",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Torrent Power Limited",
+    "Ashish Arjunkumar Rathi",
+    "Sarda Energy & Minerals Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "party name",
+    "name_hits": 3,
+    "where": "COURT NO. : 4 | (TIME : 10:30 AM) | FRESH MATTERS | AFTER NOTICE | [ JUDGMENT BY : HON. MRS. JUSTICE B.V. NAGARATHNA ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-02-27/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (party name)",
+    "is_sc": true,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "PANACEABIO",
+   "company": "Panacea Biotec Ltd",
+   "forum": "ITAT",
+   "case": "ITAT cancels ₹329.49 cr tax demand for AY 2005-06 to 2012-13",
+   "case_number": null,
+   "ruling_date": "2026-02-27",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 329.49,
+   "case_known_since": "2015-07-27",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Order dated 27 Feb 2026 per one source, and received by the company on 10 Mar 2026. Another source gives 10 Mar as the issue date. Stock rose 5.94% to ₹353.75 on 10 Mar 2026. Disclosure came after the order date, so the market learned late.",
+   "source_url": "https://www.angelone.in/news/stocks/panacea-biotec-share-price-in-focus-itat-cancels-329-49-crore-tax-demand",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Panacea Biotec Ltd"
+   ],
+   "bse": {
+    "mcap_now": 2163.99
+   },
+   "rx": {
+    "t0": "2026-02-27",
+    "r0": -0.002852155045804161,
+    "r1": -0.0014680719847532941,
+    "r2": -0.0028911653894431177,
+    "cum": -0.007003564853030997,
+    "post": -0.004296315804185991,
+    "sigma": 0.03717416583335327,
+    "gap": 0.002231146849971166,
+    "px_prev": 336.1499938964844
+   },
+   "_px_now": 352.8500061035156,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2015-07-27",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 2061.570675100537,
+    "claim_pct": 0.1598247413875014,
+    "thr": 0.09293541458338317
+   }
+  },
+  {
+   "symbol": "IRCON",
+   "company": "Ircon International Limited",
+   "forum": "Supreme Court",
+   "case": "Stayed Patna HC judgment upholding VAT demands on Ganga Bridge project",
+   "case_number": "SLP(C) 10008-10010 of 2026",
+   "ruling_date": "2026-03-16",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 78.64,
+   "case_known_since": "2026-02-25",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. Ircon disclosed the order in a filing dated 2026-03-17.",
+   "source_url": "https://oga-prod.angelone.in/news/stocks/ircon-international-share-price-surges-over-2-supreme-court-stays-78-64-crore-vat-demand",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "IRCON International Limited",
+    "State of Bihar"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "party name (verdict list)",
+    "name_hits": 76,
+    "where": "COURT NO. : 7 | (TIME : 10:30 AM) | for judgment/order by this | for judgment/order should be filed in this email.\" | MISCELLANEOUS HEARING",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-03-16/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 10264.79
+   },
+   "rx": {
+    "t0": "2026-03-16",
+    "r0": -0.04484338559618528,
+    "r1": -0.001879086446213929,
+    "r2": 0.01719029125486471,
+    "cum": -0.030679290342044196,
+    "post": 0.015389797709901787,
+    "sigma": 0.026206639578547436,
+    "gap": 6.224082915728957e-08,
+    "px_prev": 129.37994384765625
+   },
+   "_px_now": 109.19999694824219,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (party name (verdict list))",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 12161.703213576524,
+    "claim_pct": 0.006466199562591816,
+    "thr": 0.06551659894636859
+   }
+  },
+  {
+   "symbol": "JPASSOCIAT",
+   "company": "Jaiprakash Associates Ltd",
+   "forum": "NCLT Allahabad",
+   "case": "NCLT approves Adani Enterprises' ~₹15,000 cr resolution plan; pre-CIRP equity cancelled",
+   "case_number": "IA (PLAN) No. 11/2025 in CP (IB) No. 330/ALD/2018",
+   "ruling_date": "2026-03-17",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2024-06-03",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Bench pronounced orally; the pronouncement date was not reported in advance in the sources found. Claim figures: SBI ₹6,893.15 cr, ICICI Bank over ₹3,000 cr.",
+   "source_url": "https://www.livelawbiz.com/ibc/nclt-allahabad-officially-approves-adanis-resolution-plan-for-jaiprakash-associates-526822",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Jaiprakash Associates Limited",
+    "Adani Enterprises Limited"
+   ],
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-06-03",
+    "is_sc": false,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "VEDL",
+   "company": "Vedanta Limited",
+   "forum": "Supreme Court",
+   "case": "Upheld Bombay HC: Vedanta cannot buy diesel at concessional Form C rate",
+   "case_number": null,
+   "ruling_date": "2026-03-23",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2025-11-05",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The order date is inferred from the report of the 4.11% share fall on 2026-03-23 and is not confirmed.",
+   "source_url": "https://www.kotakneo.com/news/market-news/vedanta-share-fall-sc-diesel-concessional-rate-23-march/",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Vedanta Ltd",
+    "Sesa Mining Corporation Ltd"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 95178.85
+   },
+   "rx": {
+    "t0": "2026-03-23",
+    "r0": -0.01331065061629566,
+    "r1": -0.00869753692460673,
+    "r2": 0.010503091572993783,
+    "cum": -0.012097766755232886,
+    "post": 0.0017511229321929278,
+    "sigma": 0.02399026883610064,
+    "gap": -0.018149354182322663,
+    "px_prev": 648.260009765625
+   },
+   "_px_now": 243.6999969482422,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-11-05",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 253182.77801860272,
+    "claim_pct": null,
+    "thr": 0.0599756720902516
+   }
+  },
+  {
+   "symbol": "FINCABLES",
+   "company": "Finolex Cables Ltd",
+   "forum": "GST authority (Additional Commissioner, CGST Dehradun)",
+   "case": "GST order confirming demand on ITC mismatch and e-way bill differences; company to appeal",
+   "case_number": null,
+   "ruling_date": "2026-03-31",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": null,
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Show-cause notice preceded the order. Demand amount not captured. Company disclosed it under SEBI LODR Reg 30.",
+   "source_url": "https://studycafe.in/finolex-cables-limited-to-challenge-gst-demand-over-itc-mismatch-and-e-way-bill-differences-415302.html",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Finolex Cables Ltd"
+   ],
+   "bse": {
+    "mcap_now": 18465.9
+   },
+   "rx": {
+    "t0": "2026-04-01",
+    "r0": 0.013070819262178901,
+    "r1": -0.002863049327154754,
+    "r2": 0.0032463953590422534,
+    "cum": 0.01359393959206745,
+    "post": 0.00034671283024101385,
+    "sigma": 0.024844525974230435,
+    "gap": 0.023116604033941446,
+    "px_prev": 771.009765625
+   },
+   "_px_now": 1210.800048828125,
+   "fno": false,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 11758.662584160258,
+    "claim_pct": null,
+    "thr": 0.06211131493557609
+   }
+  },
+  {
+   "symbol": "ADANIENT",
+   "company": "Adani Enterprises Limited",
+   "forum": "Supreme Court",
+   "case": "Declined to stay Adani's Jaiprakash Associates resolution plan; rejected Vedanta's challenge",
+   "case_number": null,
+   "ruling_date": "2026-04-06",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": 14535,
+   "case_known_since": "2025-11-01",
+   "reserved_on": null,
+   "date_known_in_advance": true,
+   "advance_evidence": "Likely. The matter was listed for hearing, and the SC said it would go to NCLAT on 2026-04-10. This is not confirmed from a cause list.",
+   "source_url": "https://www.businesstoday.in/markets/stocks/story/jaiprakash-associates-adani-enterprises-shares-jump-4-what-sc-says-on-vedanta-plea-524199-2026-04-06",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Vedanta Limited",
+    "Adani Enterprises Limited",
+    "Jaiprakash Associates Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-04-06/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 365155.46
+   },
+   "rx": {
+    "t0": "2026-04-06",
+    "r0": 0.025839758333563,
+    "r1": -0.01733261589568902,
+    "r2": 0.04813091934013847,
+    "cum": 0.057731004609198555,
+    "post": 0.029634824692481576,
+    "sigma": 0.021316399222853468,
+    "gap": 0.0014720680161648403,
+    "px_prev": 1833.3802490234375
+   },
+   "_px_now": 2703.10009765625,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 247667.0430249836,
+    "claim_pct": 0.058687663172583567,
+    "thr": 0.05329099805713367
+   }
+  },
+  {
+   "symbol": "TATASTEEL",
+   "company": "Tata Steel Ltd",
+   "forum": "Orissa High Court",
+   "case": "Two demand notices on Sukinda chromite block quashed; Mining Plan prevails over MDPA",
+   "case_number": "Two writ petitions. WP(C) No. 31035 of 2025 (the ₹2,410.90 cr demand, filed 2025-10-29) is confirmed. The number of the first petition (the ₹1,902.72 cr demand, filed 2025-08-08) is unknown.",
+   "ruling_date": "2026-04-20",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 4313.6,
+   "case_known_since": "2025-08-08",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.angelone.in/news/stocks/tata-steel-share-price-in-focus-as-orissa-high-court-quashes-4-313-crore-demand-notices-on-sukinda-chromite-block",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Tata Steel Ltd",
+    "State of Odisha",
+    "Deputy Director of Mines, Jajpur"
+   ],
+   "bse": {
+    "mcap_now": 225700.64
+   },
+   "rx": {
+    "t0": "2026-04-20",
+    "r0": -0.0023496229608096497,
+    "r1": -0.007321095461108262,
+    "r2": 0.012887881810911606,
+    "cum": 0.0032820272106586224,
+    "post": 0.005643569862004316,
+    "sigma": 0.016537883842402328,
+    "gap": -0.0005656711837563888,
+    "px_prev": 207.83387756347656
+   },
+   "_px_now": 180.88999938964844,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-08-08",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 259319.14057180687,
+    "claim_pct": 0.016634329384589107,
+    "thr": 0.04134470960600582
+   }
+  },
+  {
+   "symbol": "EMBDL",
+   "company": "Embassy Developments Ltd",
+   "forum": "NCLAT",
+   "case": "NCLAT quashes insolvency admission by NCLT New Delhi (order of 9 Dec 2025)",
+   "case_number": null,
+   "ruling_date": "2026-05-04",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2025-12-09",
+   "reserved_on": "2026-04-24",
+   "date_known_in_advance": false,
+   "advance_evidence": "Appeal pendency was public after the 9 Dec 2025 NCLT admission. Stock jumped about 20% and trading resumed normally on 6 May 2026.",
+   "source_url": "https://www.multibagg.ai/market-pulse/articles/embassy-developments-nclat-cirp-quashed-cmou5d6fb0006oa0i5ehovthc",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "last_hearing_before": "2026-04-24",
+   "court_party_names": [
+    "Embassy Developments Limited",
+    "Canara Bank"
+   ],
+   "bse": {
+    "mcap_now": 7011.57
+   },
+   "rx": {
+    "t0": "2026-05-04",
+    "r0": 0.044840166151954186,
+    "r1": 0.0035863394542201554,
+    "r2": 0.1874294411663855,
+    "cum": 0.24583042003055677,
+    "post": 0.19106027237645007,
+    "sigma": 0.02948627242507019,
+    "gap": -0.006050103428743681,
+    "px_prev": 46.279998779296875
+   },
+   "_px_now": 50.439998626708984,
+   "fno": false,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2026-04-24",
+    "is_sc": false,
+    "impact": "up",
+    "timing": "1-2 days later",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 6433.296191033752,
+    "claim_pct": null,
+    "thr": 0.07371568106267548
+   }
+  },
+  {
+   "symbol": "GRASIM",
+   "company": "Grasim Industries Ltd",
+   "forum": "NCLAT",
+   "case": "NCLAT sets aside CCI ₹301.61 cr VSF abuse-of-dominance penalty on natural-justice grounds; remanded",
+   "case_number": "Competition Appeal (AT) No. 13 of 2020, arising from CCI Case No. 62 of 2016",
+   "ruling_date": "2026-05-05",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 301.61,
+   "case_known_since": "2020-03-16",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No cause-list or pre-announcement evidence found. Appeal pendency was public. The Supreme Court later dismissed CCI's appeal (PTI report, 31 Jul 2026). One headline reports the stock rose, with no verified magnitude.",
+   "source_url": "https://www.angelone.in/news/stocks/grasim-industries-gets-relief-as-nclat-sets-aside-302-crore-rs-cci-penalty-orders-fresh-hearing",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Grasim Industries Ltd",
+    "Competition Commission of India"
+   ],
+   "bse": {
+    "mcap_now": 211287.27
+   },
+   "rx": {
+    "t0": "2026-05-05",
+    "r0": 0.00901352482435791,
+    "r1": 0.002673330359293402,
+    "r2": 0.01588966212555798,
+    "cum": 0.028027899988154692,
+    "post": 0.018802123975738994,
+    "sigma": 0.010265247556805062,
+    "gap": -0.008753487103304813,
+    "px_prev": 2847.13037109375
+   },
+   "_px_now": 3111.10009765625,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2020-03-16",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 193360.02846570988,
+    "claim_pct": 0.0015598363446325566,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "VEDL",
+   "company": "Vedanta Limited",
+   "forum": "Supreme Court",
+   "case": "Upheld ₹127 cr penalty on Talwandi Sabo Power for misdeclared availability",
+   "case_number": "2026 INSC 515 (Punjab State Power Corporation Ltd v. Talwandi Sabo Power Ltd), decided with Civil Appeal No. 7436 of 2025. The underlying APTEL appeal is Appeal No. 50 of 2018, and APTEL ruled on 2025-03-18.",
+   "ruling_date": "2026-05-20",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": 127,
+   "case_known_since": "2017-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The ruling was reported on 2026-05-22.",
+   "source_url": "https://www.angelone.in/news/stocks/vedanta-share-price-in-focus-as-supreme-court-imposes-127-crore-penalty-on-talwandi-sabo-power-limited-for-misdeclaration",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Talwandi Sabo Power Ltd",
+    "Punjab State Power Corporation Ltd",
+    "Punjab State Electricity Regulatory Commission"
+   ],
+   "sc": {
+    "lists_found": 8,
+    "listed": true,
+    "judgment_section": false,
+    "match": "case number",
+    "name_hits": 4,
+    "where": "COURT NO. : 12 | (TIME : 10:30 AM)",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-05-20/F_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 95178.85
+   },
+   "rx": {
+    "t0": "2026-05-20",
+    "r0": -0.013286375073077616,
+    "r1": -0.011803237037324,
+    "r2": -0.0021244807682407885,
+    "cum": -0.027093780365033404,
+    "post": -0.013934490792256615,
+    "sigma": 0.08683360584186728,
+    "gap": -0.01510442318122629,
+    "px_prev": 331.06298828125
+   },
+   "_px_now": 243.6999969482422,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 129299.11734412165,
+    "claim_pct": 0.000982218615321227,
+    "thr": 0.2170840146046682
+   }
+  },
+  {
+   "symbol": "CHALET",
+   "company": "Chalet Hotels Limited",
+   "forum": "Supreme Court",
+   "case": "Set aside Bombay HC order to restore CIDCO plot; endorsed land regularisation framework (K. Raheja Corp)",
+   "case_number": "2026 INSC 551 / 2026 LiveLaw (SC) 575. This is an appeal against the Bombay HC common judgment of 20-21.11.2014 in PIL No. 131 of 2003 and PIL No. 48 of 2004. The Supreme Court ordered status quo on 2015-01-22. A civil appeal number of 1019 of 2015 is possible but unverified.",
+   "ruling_date": "2026-05-26",
+   "ruling_time": "market_hours",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2003-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The ruling date comes from the company's exchange filing, as summarised by Angel One.",
+   "source_url": "https://www.angelone.in/news/stocks/chalet-hotels-share-price-in-focus-company-updates-investors-on-supreme-court-verdict-in-cidco-land-dispute",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "K. Raheja Corp. Private Limited",
+    "State of Maharashtra",
+    "City and Industrial Development Corporation of Maharashtra Ltd (CIDCO)"
+   ],
+   "sc": {
+    "lists_found": 5,
+    "listed": true,
+    "judgment_section": true,
+    "match": "party name",
+    "name_hits": 59,
+    "where": "COURT NO. : 6 | (TIME : 10:30 AM) | [JUDGMENT BY: HON. MR. JUSTICE ALOK ARADHE ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-05-26/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 17938.9
+   },
+   "rx": {
+    "t0": "2026-05-26",
+    "r0": -0.0028895586799809747,
+    "r1": 0.014474496521250546,
+    "r2": -0.004094298646990402,
+    "cum": 0.0071803063796285205,
+    "post": 0.010104458548613748,
+    "sigma": 0.01695499742570042,
+    "gap": -1.635353075180035e-09,
+    "px_prev": 793.9921264648438
+   },
+   "_px_now": 819.5,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 17380.53124763903,
+    "claim_pct": null,
+    "thr": 0.04238749356425105
+   }
+  },
+  {
+   "symbol": "RELIANCE",
+   "company": "Reliance Industries Limited",
+   "forum": "Supreme Court",
+   "case": "Set aside ₹447 cr SEBI disgorgement in RPL case; ₹25 cr penalty and F&O ban kept",
+   "case_number": null,
+   "ruling_date": "2026-05-29",
+   "ruling_time": "pre_market",
+   "direction": "mixed",
+   "claim_cr": 447.27,
+   "case_known_since": "2009-05-06",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The ruling date is from Angel One, which gave the stock down 1.02% at midday on 2026-05-29.",
+   "source_url": "https://www.angelone.in/news/stocks/reliance-industries-share-price-in-focus-as-supreme-court-grants-partial-relief-in-sebi-case-447-crore-order-quashed",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Reliance Industries Limited",
+    "Securities and Exchange Board of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "party name",
+    "name_hits": 2,
+    "where": "COURT NO. : 6 | (TIME : 10:30 AM) | for judgment/order by this Hon’ble | for judgment/order should be filed in this email.\" | [ JUDGMENT BY: HON. MR. JUSTICE J.B. PARDIWALA ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-05-29/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 1853957.8
+   },
+   "rx": {
+    "t0": "2026-05-29",
+    "r0": -0.006662499755368367,
+    "r1": 0.006105174884517894,
+    "r2": -0.008408252855183429,
+    "cum": -0.008864189129644373,
+    "post": -0.002269082913184395,
+    "sigma": 0.015143070802438914,
+    "gap": 0.009996327649984815,
+    "px_prev": 1344.2845458984375
+   },
+   "_px_now": 1375.5999755859375,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1811752.590520578,
+    "claim_pct": 0.0002468714560366568,
+    "thr": 0.03785767700609728
+   }
+  },
+  {
+   "symbol": "RAJESHEXPO",
+   "company": "Rajesh Exports Ltd",
+   "forum": "SEBI",
+   "case": "SEBI interim order alleging ~99% revenue inflation; restrains promoter and company from securities market",
+   "case_number": null,
+   "ruling_date": "2026-06-03",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": null,
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Interim ex-parte order. No advance notice found. Stock hit lower circuit (-5%) on two consecutive sessions, about -10% in total. One report gives June 4 as the order date.",
+   "source_url": "https://www.multibagg.ai/market-pulse/articles/rajesh-exports-sebi-order-fall-cmq0h5iom0005og0j0u39cp3m",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Rajesh Exports Limited",
+    "Rajesh Mehta"
+   ],
+   "bse": {
+    "mcap_now": 1430.53
+   },
+   "rx": {
+    "t0": "2026-06-04",
+    "r0": -0.05038559776344875,
+    "r1": -0.0478133113521535,
+    "r2": -0.039504826647384306,
+    "cum": -0.1303651362683017,
+    "post": -0.0848465182687631,
+    "sigma": 0.03545984247562241,
+    "gap": -0.04991771093047859,
+    "px_prev": 109.37999725341797
+   },
+   "_px_now": 49.029998779296875,
+   "fno": false,
+   "score": {
+    "level": 0,
+    "basis": "no public trace ≥ 7 days earlier",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 3191.339411923516,
+    "claim_pct": null,
+    "thr": 0.08864960618905601
+   }
+  },
+  {
+   "symbol": "DECCANGOLD",
+   "company": "Deccan Gold Mines Limited",
+   "forum": "Supreme Court",
+   "case": "Upheld company's pre-2015 mining lease rights",
+   "case_number": "Writ Petition (Civil) Diary No. 35746 of 2026",
+   "ruling_date": "2026-06-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2026-01-14",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The order date is from the company's exchange filing. The stock rose 20% to a record high.",
+   "source_url": "https://www.inkl.com/news/deccan-gold-mines-shares-rally-20-to-fresh-lifetime-high-after-this-supreme-court-order",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Karanartham Viramah Foundation",
+    "State of Maharashtra",
+    "Deccan Gold Mines Limited"
+   ],
+   "sc": {
+    "lists_found": 3,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 4,
+    "where": "COURT NO. : 6",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-06-09/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": null
+   },
+   "rx": null,
+   "_px_now": null,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": null,
+    "timing": null,
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": null,
+    "claim_pct": null
+   }
+  },
+  {
+   "symbol": "ABB",
+   "company": "ABB India Ltd",
+   "forum": "Bombay High Court",
+   "case": "Stock-exchange arbitration award directing share restoration or market-value payment set aside; fraud allegations not arbitrable",
+   "case_number": "Commercial Arbitration Petition (L) No. 32954 of 2024",
+   "ruling_date": "2026-06-09",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2024-08-06",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelawbiz.com/arbitration/high-court/bombay-hc-sets-aside-abb-share-transfer-award-says-stock-exchange-arbitration-cannot-cover-serious-fraud-537953",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "ABB India Limited",
+    "Sunil Hariram Jaisingh"
+   ],
+   "bse": {
+    "mcap_now": 147455.38
+   },
+   "rx": {
+    "t0": "2026-06-09",
+    "r0": -0.009031081222210191,
+    "r1": -0.017588143091118003,
+    "r2": -0.009758979225555908,
+    "cum": -0.036018212690768214,
+    "post": -0.027123661179141,
+    "sigma": 0.02072914326011262,
+    "gap": 0.006036260763829127,
+    "px_prev": 6877.04052734375
+   },
+   "_px_now": 6951.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2024-08-06",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 145886.43709320572,
+    "claim_pct": null,
+    "thr": 0.05182285815028155
+   }
+  },
+  {
+   "symbol": "VIKRAMSOLR",
+   "company": "Vikram Solar Ltd",
+   "forum": "NCLT Kolkata",
+   "case": "NCLT admits operational creditor insolvency petition by ISPL; NCLAT then stayed it",
+   "case_number": "CP (IB) 87/KB/2025 (NCLT Kolkata; number taken from the company's NSE filing). The NCLAT appeal is Company Appeal (AT) (Insolvency) 1087/2026.",
+   "ruling_date": "2026-06-22",
+   "ruling_time": "after_market",
+   "direction": "adverse",
+   "claim_cr": null,
+   "case_known_since": "2026-06-12",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Stock fell about 2% on 22 Jun 2026. NCLAT stayed the order and listed the matter for 24 Jun 2026. The exact admission date is unverified and may be a day or two before 22 Jun.",
+   "source_url": "https://www.multibagg.ai/market-pulse/articles/vikram-solar-nclat-stay-cirp-cmqsvflt1tq0ope0jd2vru7e7",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Vikram Solar Limited",
+    "Isitva Steels Private Limited"
+   ],
+   "bse": {
+    "mcap_now": 5002.3
+   },
+   "rx": {
+    "t0": "2026-06-23",
+    "r0": -0.028249201169053828,
+    "r1": -0.008554857048892917,
+    "r2": -0.02739988599547971,
+    "cum": -0.06305216474718878,
+    "post": -0.03595977530526451,
+    "sigma": 0.02197784112785527,
+    "gap": -0.0007570102568691395,
+    "px_prev": 198.16000366210938
+   },
+   "_px_now": 138.10000610351562,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2026-06-12",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 7177.81131433082,
+    "claim_pct": null,
+    "thr": 0.05494460281963817
+   }
+  },
+  {
+   "symbol": "LT",
+   "company": "Larsen & Toubro Ltd",
+   "forum": "Delhi High Court",
+   "case": "IOCL's Section 34 challenge to roughly ₹662 crore award for Toyo-L&T consortium rejected (year and L&T's share unverified)",
+   "case_number": "O.M.P. (COMM) 316/2019",
+   "ruling_date": "2026-07-15",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 662,
+   "case_known_since": "2019-03-11",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelawbiz.com/arbitration/delhi-hc-upholds-662-crore-arbitral-award-in-iocl-toyo-engineering-dispute-541562",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Larsen & Toubro Limited",
+    "Toyo Engineering Corporation",
+    "Indian Oil Corporation Limited"
+   ],
+   "bse": {
+    "mcap_now": 578572.71
+   },
+   "rx": {
+    "t0": "2026-07-15",
+    "r0": -0.01793653274832374,
+    "r1": -0.001954650245581502,
+    "r2": -0.0005620425757328906,
+    "cum": -0.020621070893100724,
+    "post": -0.0025366973111637936,
+    "sigma": 0.010148527242255503,
+    "gap": 0.005014693032188378,
+    "px_prev": 3848.699951171875
+   },
+   "_px_now": 4211.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2019-03-11",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 528794.2913147422,
+    "claim_pct": 0.0012519045891249473,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "STLTECH",
+   "company": "Sterlite Technologies Ltd",
+   "forum": "Delhi High Court",
+   "case": "Union's Section 34 challenge dismissed; award setting aside ₹8.55 crore DoT demand upheld",
+   "case_number": "O.M.P. (COMM) 395/2023",
+   "ruling_date": "2026-08-12",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 8.55,
+   "case_known_since": "2020-08-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelawbiz.com/arbitration/delhi-high-court-upholds-award-setting-aside-855-crore-dot-demand-against-sterlite-technologies-545685",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Sterlite Technologies Limited",
+    "Union of India, through Secretary, Department of Telecommunications"
+   ],
+   "bse": {
+    "mcap_now": 33693.64
+   },
+   "rx": {
+    "t0": "2026-08-12",
+    "r0": 0.05146087117532938,
+    "r1": 0.01669475355802985,
+    "r2": -0.018525218467591253,
+    "cum": 0.049077307646945734,
+    "post": -0.002129765730659261,
+    "sigma": 0.03724693570474046,
+    "gap": 0.0019355035597277137,
+    "px_prev": 620.0
+   },
+   "_px_now": 654.5499877929688,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2020-08-24",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 31915.143517820114,
+    "claim_pct": 0.0002678979022991399,
+    "thr": 0.09311733926185116
+   }
+  },
+  {
+   "symbol": "BBTCL",
+   "company": "Bombay Burmah Trading Corporation Limited",
+   "forum": "Supreme Court",
+   "case": "Recalled observations from the 29 May 2026 order on a ₹4,655 cr lease rent claim",
+   "case_number": null,
+   "ruling_date": "2026-08-19",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 4655,
+   "case_known_since": "2026-05-29",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The company filed an interlocutory application after the 2026-05-29 order. The 2026-08-19 hearing date is not confirmed as publicly listed.",
+   "source_url": "https://www.angelone.in/news/stocks/bombay-burmah-share-price-gains-over-12-as-supreme-court-recalls-4-655-crore-lease-rent-claim-citing-lack-of-notice",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "The Bombay Burmah Trading Corporation Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "CHIEF JUSTICE'S COURT",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-08-19/F_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 451.86
+   },
+   "rx": {
+    "t0": "2026-08-19",
+    "r0": 0.03340307331236336,
+    "r1": 0.0021581439146816095,
+    "r2": -0.033192314588240235,
+    "cum": 0.0013816293334447671,
+    "post": -0.03131567928892909,
+    "sigma": 0.03291911855023964,
+    "gap": 0.08868598110752868,
+    "px_prev": 237.7845001220703
+   },
+   "_px_now": 220.3699951171875,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 487.56775698080787,
+    "claim_pct": 9.547390969463214,
+    "thr": 0.08229779637559911
+   }
+  },
+  {
+   "symbol": "JSWENERGY",
+   "company": "JSW Energy Ltd",
+   "forum": "APTEL",
+   "case": "APTEL dismisses MSEDCL appeal against MERC order on Ratnagiri 300 MW tariff; no review liberty",
+   "case_number": null,
+   "ruling_date": "2026-08-19",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 250,
+   "case_known_since": "2025-12-24",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Dispute was public. Supreme Court ordered an interim ₹250 cr payment by MSEDCL in May 2026, which is the claim_cr used here. Order date comes from one report and is not verified.",
+   "source_url": "https://www.psuconnect.in/power-sector-news/appellate-tribunal-dismisses-msedcl-appeal-against-merc-approach-in-tariff-dispute-with-jsw-energy",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Maharashtra State Electricity Distribution Co Ltd",
+    "JSW Energy (Ratnagiri) Ltd",
+    "Maharashtra Electricity Regulatory Commission"
+   ],
+   "bse": {
+    "mcap_now": 94424.36
+   },
+   "rx": {
+    "t0": "2026-08-19",
+    "r0": -0.004400361547098108,
+    "r1": -0.009961973142612601,
+    "r2": 0.004611260604716394,
+    "cum": -0.009766931945713653,
+    "post": -0.0053755275368772,
+    "sigma": 0.015974627148687127,
+    "gap": 0.0,
+    "px_prev": 548.0999755859375
+   },
+   "_px_now": 515.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-12-24",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 100493.18332178208,
+    "claim_pct": 0.0024877309259822406,
+    "thr": 0.039936567871717815
+   }
+  },
+  {
+   "symbol": "SIEMENS",
+   "company": "Siemens Limited",
+   "forum": "Supreme Court",
+   "case": "Dismissed GST department's SLP against Gujarat HC order quashing ₹34.83 cr show cause notice",
+   "case_number": null,
+   "ruling_date": "2026-08-20",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 34.83,
+   "case_known_since": "2025-09-20",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The company said it received the order on 2026-08-20. The exact pronouncement date is unknown, so this date is approximate.",
+   "source_url": "https://www.investywise.com/siemens-litigation-concluded-in-favour/",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Siemens Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 6,
+    "listed": false,
+    "judgment_section": false,
+    "match": null,
+    "name_hits": 0,
+    "where": null,
+    "url": null
+   },
+   "bse": {
+    "mcap_now": 127736.86
+   },
+   "rx": {
+    "t0": "2026-08-20",
+    "r0": -0.011224558634644777,
+    "r1": 0.009477712004989591,
+    "r2": 0.05084841453745026,
+    "cum": 0.04932392102508709,
+    "post": 0.06083746040559257,
+    "sigma": 0.01662677568169303,
+    "gap": 0.009284720361951049,
+    "px_prev": 3898.89990234375
+   },
+   "_px_now": 3610.0,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-09-20",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 137959.343761689,
+    "claim_pct": 0.0002524656833694813,
+    "thr": 0.04156693920423257
+   }
+  },
+  {
+   "symbol": "ADANIPOWER",
+   "company": "Adani Power Ltd",
+   "forum": "APTEL",
+   "case": "APTEL allows appeal and sets aside MERC order on change-in-law compensation",
+   "case_number": null,
+   "ruling_date": "2026-08-20",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": null,
+   "case_known_since": "2019-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Company announced the ruling on 20 Aug 2026. The pronouncement may have been a day earlier. Amount not captured.",
+   "source_url": "https://www.investywise.com/?p=109743",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Adani Power Maharashtra Limited",
+    "Maharashtra Electricity Regulatory Commission"
+   ],
+   "bse": {
+    "mcap_now": 405171.44
+   },
+   "rx": {
+    "t0": "2026-08-20",
+    "r0": -0.006475113008934219,
+    "r1": 0.006521374830944726,
+    "r2": -0.007400520318911252,
+    "cum": -0.007414021705346885,
+    "post": -0.0009424211398141313,
+    "sigma": 0.01899144387430959,
+    "gap": 0.0023526895279251114,
+    "px_prev": 204.02000427246094
+   },
+   "_px_now": 210.5,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2019-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 392698.71220845205,
+    "claim_pct": null,
+    "thr": 0.04747860968577398
+   }
+  },
+  {
+   "symbol": "ITC",
+   "company": "ITC Ltd",
+   "forum": "Bombay High Court",
+   "case": "Writ petition against Maharashtra Sales Tax (MSE) authorities; outcome not verified",
+   "case_number": "WP/694/2025",
+   "ruling_date": "2026-08-21",
+   "ruling_time": "unknown",
+   "direction": "neutral",
+   "claim_cr": null,
+   "case_known_since": "2025-01-01",
+   "reserved_on": "2026-07-22",
+   "date_known_in_advance": false,
+   "advance_evidence": "Judgment reserved 2026-07-22; pronouncement date not found to have been publicised in advance",
+   "source_url": "https://rawlaw.in/wp-content/uploads/2026/08/ITC-LIMITED.pdf",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "last_hearing_before": "2026-07-22",
+   "court_party_names": [
+    "ITC Limited",
+    "Metropolitan Stock Exchange of India Ltd",
+    "Ashok Mootha"
+   ],
+   "bse": {
+    "mcap_now": 377210.57
+   },
+   "rx": {
+    "t0": "2026-08-21",
+    "r0": -0.009114283262712242,
+    "r1": 0.002472272358296279,
+    "r2": 0.0015342587548554665,
+    "cum": -0.005158573969130553,
+    "post": 0.004020029946351977,
+    "sigma": 0.00842580392433269,
+    "gap": -0.00018401543932222708,
+    "px_prev": 271.6499938964844
+   },
+   "_px_now": 301.0,
+   "fno": true,
+   "score": {
+    "level": 2,
+    "basis": "verdict reserved 2026-07-22",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 340429.39879797143,
+    "claim_pct": null,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "TATASTEEL",
+   "company": "Tata Steel Limited",
+   "forum": "Supreme Court",
+   "case": "Quashed ₹890.52 cr GST ITC demand and equal penalty; fresh Section 74 proceedings allowed",
+   "case_number": null,
+   "ruling_date": "2026-08-25",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 1781,
+   "case_known_since": "2025-06-13",
+   "reserved_on": "2026-08-19",
+   "date_known_in_advance": false,
+   "advance_evidence": "The appeal was heard on 2026-08-19 and judgment was pronounced on 2026-08-25. No evidence found that the date was public beforehand.",
+   "source_url": "https://www.investywise.com/tata-steel-supreme-court-quashes-tax-demand/",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Tata Steel Limited",
+    "Union of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": true,
+    "match": "party name",
+    "name_hits": 4,
+    "where": "COURT NO. : 6 | (TIME : 10:30 AM) | for judgment/order by this Hon’ble | for judgment/order should be filed in this email.\" | [ JUDGMENT BY: HON. MR. JUSTICE K. VINOD CHANDRAN ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-08-25/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 225700.64
+   },
+   "rx": {
+    "t0": "2026-08-25",
+    "r0": -0.0013336569855972868,
+    "r1": 0.010934449421984516,
+    "r2": -0.0016067344590086075,
+    "cum": 0.007977245220887386,
+    "post": 0.009265715483363968,
+    "sigma": 0.010517114355411314,
+    "gap": 0.0,
+    "px_prev": 186.3000030517578
+   },
+   "_px_now": 180.88999938964844,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 232450.82681552554,
+    "claim_pct": 0.0076618355133381095,
+    "thr": 0.03
+   }
+  },
+  {
+   "symbol": "NUVAMA",
+   "company": "Nuvama Wealth Management Limited",
+   "forum": "Supreme Court",
+   "case": "Set aside NSE Clearing/SAT restitution orders against Nuvama Clearing (Anugrah/Vrise matters)",
+   "case_number": "Civil Appeal No. 31 of 2024",
+   "ruling_date": "2026-09-02",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 900,
+   "case_known_since": "2023-12-01",
+   "reserved_on": "2026-07-23",
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. The bench was Justices J.B. Pardiwala and K. Vinod Chandran. The claim is stated as over ₹900 cr of potential liability.",
+   "source_url": "https://www.sahi.com/news/nuvama-wealth-sc-sets-aside-restitution-orders-removing-over-900-crore-potential-liability-3556-PE1_COR",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "last_hearing_before": "2026-07-23",
+   "court_party_names": [
+    "Edelweiss Custodial Services Limited (now Nuvama Clearing Services Limited)",
+    "NSE Clearing Ltd"
+   ],
+   "sc": {
+    "lists_found": 4,
+    "listed": true,
+    "judgment_section": true,
+    "match": "case number",
+    "name_hits": 0,
+    "where": "COURT NO. : 6 | (TIME : 10:30 AM) | for judgment/order by this Hon’ble | for judgment/order should be filed in this email.\" | [ JUDGMENT BY : HON. MR. JUSTICE K. VINOD CHANDRAN ]",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-09-02/M_J_2.pdf"
+   },
+   "bse": {
+    "mcap_now": 33873.16
+   },
+   "rx": {
+    "t0": "2026-09-02",
+    "r0": 0.03724853559703978,
+    "r1": 0.0007366886525890237,
+    "r2": -0.013847425793071633,
+    "cum": 0.023715127794670998,
+    "post": -0.013096449428303014,
+    "sigma": 0.022248811123293494,
+    "gap": 0.0,
+    "px_prev": 1785.0
+   },
+   "_px_now": 1834.5999755859375,
+   "fno": false,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: in the verdict list (case number)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 32957.37021946108,
+    "claim_pct": 0.02730800406728316,
+    "thr": 0.055622027808233734
+   }
+  },
+  {
+   "symbol": "IDEA",
+   "company": "Vodafone Idea Limited",
+   "forum": "Supreme Court",
+   "case": "Dismissed Centre's appeal to revive ₹363 cr GST demand quashed by Bombay HC",
+   "case_number": null,
+   "ruling_date": "2026-09-07",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 363,
+   "case_known_since": "2026-04-29",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Unknown. Bar & Bench said the order came on a Monday, and its report was dated 2026-09-07. The date is inferred.",
+   "source_url": "https://www.barandbench.com/amp/story/news/litigation/supreme-court-refuses-to-revive-363-crore-gst-demand-against-vodafone-idea",
+   "_slice": "sc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Union of India",
+    "Vodafone Mobile Services Ltd",
+    "Vodafone Idea Limited"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 1,
+    "where": "COURT NO. : 6",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-09-07/M_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 131203.42
+   },
+   "rx": {
+    "t0": "2026-09-07",
+    "r0": 0.04357585306728429,
+    "r1": -0.0054806200928175786,
+    "r2": 0.015099399315622541,
+    "cum": 0.05279706850532573,
+    "post": 0.009491766745945318,
+    "sigma": 0.020819813435546907,
+    "gap": 0.0046604322696965905,
+    "px_prev": 15.020000457763672
+   },
+   "_px_now": 12.109999656677246,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 162731.25386701088,
+    "claim_pct": 0.0022306716833673207,
+    "thr": 0.05204953358886727
+   }
+  },
+  {
+   "symbol": "OMAXE",
+   "company": "Omaxe Ltd",
+   "forum": "SEBI",
+   "case": "SEBI order imposing ₹1.92 cr penalty on Omaxe",
+   "case_number": null,
+   "ruling_date": "2026-09-24",
+   "ruling_time": "unknown",
+   "direction": "adverse",
+   "claim_cr": 1.92,
+   "case_known_since": "2026-01-21",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "No advance date found. Reported as a small penalty relative to the company's losses. Stock reaction described as mixed. Date comes from one summary and is not verified against the SEBI order.",
+   "source_url": "https://www.angelone.in/news/market-updates/sebi-action-in-focus-bars-18-entities-imposes-2-8-crore-penalty-in-rgrl-case",
+   "_slice": "trib:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Omaxe Ltd",
+    "Dream Home Developers Pvt Ltd",
+    "Guild Builders Pvt Ltd"
+   ],
+   "bse": {
+    "mcap_now": 1817.67
+   },
+   "rx": {
+    "t0": "2026-09-24",
+    "r0": -0.027978614553030412,
+    "r1": 0.003952552884403326,
+    "r2": -0.05411907416376671,
+    "cum": -0.07601424774097587,
+    "post": -0.05062358798994815,
+    "sigma": 0.047920499823765964,
+    "gap": -0.0034922465261717495,
+    "px_prev": 123.12999725341797
+   },
+   "_px_now": 99.30999755859375,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2026-01-21",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 2253.6472420671503,
+    "claim_pct": 0.0008519523216237189,
+    "thr": 0.1198012495594149
+   }
+  },
+  {
+   "symbol": "SEPC",
+   "company": "SEPC Ltd",
+   "forum": "Madras High Court",
+   "case": "Execution petitions settled for ₹149.5 crore; attachment of ₹154 crore receivables lifted",
+   "case_number": "Execution Petition Nos. 91 and 92 of 2023 and connected petitions",
+   "ruling_date": "2026-09-30",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 149.5,
+   "case_known_since": "2026-02-19",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Interim attachment order of 2026-02-19 was public",
+   "source_url": "https://www.multibagg.ai/market-pulse/articles/sepc-madras-hc-settlement-receivables-cmuuqm9tk00012sn1wz1nvqej",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "last_hearing_before": "2026-09-21",
+   "court_party_names": [
+    "SEPC Limited",
+    "Twarit Consultancy Services Pvt Ltd"
+   ],
+   "bse": {
+    "mcap_now": 790.64
+   },
+   "rx": {
+    "t0": "2026-09-30",
+    "r0": -0.011471206124467614,
+    "r1": 0.02072742559351659,
+    "r2": -6.184864949121405e-05,
+    "cum": 0.009024036291461757,
+    "post": 0.020788526595675094,
+    "sigma": 0.018669103670216486,
+    "gap": 0.009803959150949337,
+    "px_prev": 5.099999904632568
+   },
+   "_px_now": 4.869999885559082,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2026-02-19",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 827.9802914483611,
+    "claim_pct": 0.1805598533492677,
+    "thr": 0.046672759175541215
+   }
+  },
+  {
+   "symbol": "BHARATFORG",
+   "company": "Bharat Forge Ltd",
+   "forum": "Delhi High Court (Division Bench)",
+   "case": "Tarsem Jain appeal dismissed; single-judge order setting aside award of about INR 770 mn stays",
+   "case_number": "FAO(OS)(COMM) 150/2025",
+   "ruling_date": "2026-10-01",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 77,
+   "case_known_since": "2025-05-26",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Company disclosed the order on 2026-10-07 after receiving it",
+   "source_url": "https://www.psuconnect.in/legal-updates/delhi-high-court-dismisses-appeal-against-bharat-forge-in-tarsem-jain-litigation",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Bharat Forge Limited",
+    "BF Infrastructure Limited",
+    "Tarsem Jain"
+   ],
+   "bse": {
+    "mcap_now": 84447.17
+   },
+   "rx": {
+    "t0": "2026-10-01",
+    "r0": -0.017704505067273724,
+    "r1": -0.02836740185006348,
+    "r2": 0.01587191535318322,
+    "cum": -0.03076465608987,
+    "post": -0.013128141678044436,
+    "sigma": 0.017326220927636637,
+    "gap": -0.00830737279335414,
+    "px_prev": 1926.0
+   },
+   "_px_now": 1729.199951171875,
+   "fno": true,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2025-05-26",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 94058.09276699068,
+    "claim_pct": 0.0008186430081115024,
+    "thr": 0.043315552319091594
+   }
+  },
+  {
+   "symbol": "YESBANK",
+   "company": "Yes Bank Limited",
+   "forum": "Supreme Court",
+   "case": "AT1 bond write-off: SC dismisses appeals, upholds Bombay HC quashing the write-off",
+   "ruling_date": "2026-10-15",
+   "ruling_time": "market_hours",
+   "direction": "adverse",
+   "claim_cr": 8415,
+   "case_known_since": "2020-03-09",
+   "_slice": "seed",
+   "enriched": true,
+   "reserved_on": "2026-02-26",
+   "last_hearing_before": "2026-02-26",
+   "court_party_names": [
+    "Yes Bank Limited",
+    "Axis Trustee Services Limited",
+    "Reserve Bank of India"
+   ],
+   "sc": {
+    "lists_found": 7,
+    "listed": true,
+    "judgment_section": false,
+    "match": "party name",
+    "name_hits": 3,
+    "where": "COURT NO. : 6 | (TIME : 3:30 PM) | FRESH MATTERS | REGULAR HEARING | AFTER NOTICE",
+    "url": "https://api.sci.gov.in/jonew/cl/2026-10-15/F_J_1.pdf"
+   },
+   "bse": {
+    "mcap_now": 55969.21
+   },
+   "rx": {
+    "t0": "2026-10-15",
+    "r0": -0.16184382743050252,
+    "r1": -0.04068672506232629,
+    "r2": -0.02431656975515739,
+    "cum": -0.21554280577614848,
+    "post": -0.06371915691168628,
+    "sigma": 0.015205995768004193,
+    "gap": 0.002358454493452289,
+    "px_prev": 21.200000762939453
+   },
+   "_px_now": 17.68000030517578,
+   "fno": true,
+   "score": {
+    "level": 3,
+    "basis": "SC schedule: listed that day (party name)",
+    "is_sc": true,
+    "impact": "down",
+    "timing": "same day",
+    "catch_after": true,
+    "as_expected": true,
+    "mcap_cr": 67112.40238801124,
+    "claim_pct": 0.1253866602978771,
+    "thr": 0.038014989420010484
+   }
+  },
+  {
+   "symbol": "5PAISA",
+   "company": "5paisa Capital Ltd",
+   "forum": "Bombay High Court",
+   "case": "Appellate NSE arbitration award of about ₹15.92 lakh over trading-platform glitch set aside",
+   "case_number": "Arbitration Petition No. 380 of 2020",
+   "ruling_date": "2026-10-30",
+   "ruling_time": "unknown",
+   "direction": "favourable",
+   "claim_cr": 0.16,
+   "case_known_since": "2020-01-01",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": null,
+   "source_url": "https://www.livelawbiz.com/arbitration/bombay-high-court-sets-aside-1592-lakh-award-against-5-paisa-capital-over-trading-platform-glitch-556754",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "5 Paisa Capital Limited",
+    "Ankit Agarwal"
+   ],
+   "bse": {
+    "mcap_now": 1594.7
+   },
+   "rx": {
+    "t0": "2026-10-30",
+    "r0": -0.027974559882882777,
+    "r1": -0.028999741931394984,
+    "r2": -0.0006444527740427919,
+    "cum": -0.05829901217535849,
+    "post": -0.030094149185500907,
+    "sigma": 0.02743798103174156,
+    "gap": 0.00301340961762131,
+    "px_prev": 331.8500061035156
+   },
+   "_px_now": 340.8500061035156,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2020-01-01",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": false,
+    "as_expected": null,
+    "mcap_cr": 1552.5926221417135,
+    "claim_pct": 0.00010305343315317902,
+    "thr": 0.0685949525793539
+   }
+  },
+  {
+   "symbol": "KRBL",
+   "company": "KRBL Ltd",
+   "forum": "Delhi High Court",
+   "case": "Notice issued in Reliable Trading Company's execution of arbitral award; KRBL to file affidavit of assets",
+   "case_number": null,
+   "ruling_date": "2026-11-05",
+   "ruling_time": "unknown",
+   "direction": "mixed",
+   "claim_cr": null,
+   "case_known_since": "2026-02-27",
+   "reserved_on": null,
+   "date_known_in_advance": false,
+   "advance_evidence": "Next hearing listed for 2027-02-12",
+   "source_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/6e08d684-dae7-4bd4-a40c-9e34f40c093e.pdf",
+   "_slice": "hc:2025",
+   "enriched": true,
+   "court_party_names": [
+    "Reliable Trading Company",
+    "KRBL Limited"
+   ],
+   "bse": {
+    "mcap_now": 9650.0
+   },
+   "rx": {
+    "t0": "2026-11-05",
+    "r0": -0.027098317544234307,
+    "r1": -0.018527531650480045,
+    "r2": -0.007800799185962215,
+    "cum": -0.05393016815053797,
+    "post": -0.026351362243057563,
+    "sigma": 0.025825817202428224,
+    "gap": 0.005750657380680035,
+    "px_prev": 408.6499938964844
+   },
+   "_px_now": 421.54998779296875,
+   "fno": false,
+   "score": {
+    "level": 1,
+    "basis": "dispute public since 2026-02-27",
+    "is_sc": false,
+    "impact": "none",
+    "timing": "none",
+    "catch_after": true,
+    "as_expected": null,
+    "mcap_cr": 9354.697082894447,
+    "claim_pct": null,
+    "thr": 0.06456454300607056
+   }
+  }
+ ]
+}

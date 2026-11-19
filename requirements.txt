@@ -13,3 +13,6 @@ pywhatkit>=5.4      # ONLY for legacy WHATSAPP_BACKEND=pywhatkit; the default
                     # "bridge" backend uses the shared whatsapp-bridge package
                     # (run `npm install` in its whatsapp_bridge/bridge/ once).
 flask>=3.0          # web dashboard (run_ui.py)
+pypdf>=5.0          # litigation tracker: read BSE filing PDFs
+curl_cffi>=0.7      # litigation tracker: BSE/NSE endpoints (browser TLS fingerprint)
+pymupdf>=1.24       # litigation tracker: fast text from 300-page court cause lists

@@ -28,6 +28,7 @@ const VIEWS = {
   run: { title: "Run jobs", load: loadRun },
   signals: { title: "Signals", load: loadSignals },
   news: { title: "News & Scout picks", load: loadNews },
+  litigation: { title: "Litigation & legal risk", load: loadLitigation },
   setups: { title: "Setups", load: loadSetups },
   hft: { title: "HFT / Intraday", load: loadHft },
   stocks: { title: "Stocks", load: loadStocks },
@@ -42,6 +43,7 @@ function show(view) {
   $$(".view").forEach(v => v.classList.add("hidden"));
   $(`#view-${view}`).classList.remove("hidden");
   $("#view-title").textContent = VIEWS[view].title;
+  try { history.replaceState(null, "", `#${view}`); } catch (e) { /* file:// or sandboxed */ }
   VIEWS[view].load();
 }
 
@@ -56,8 +58,16 @@ async function refreshPills() {
     const s = await api("/api/status");
     const db = $("#db-pill"); db.className = "pill " + (s.db_ok ? "ok" : "bad");
     db.textContent = s.db_ok ? `db ok · ${s.db_size_mb} MB` : "db error";
-    const o = $("#ollama-pill"); o.className = "pill " + (s.ollama.up ? "ok" : "bad");
-    o.textContent = s.ollama.up ? `ollama · ${(s.ollama.models || []).length} model(s)` : "ollama down";
+    const o = $("#ollama-pill"); const L = s.llm || {};
+    if (L.provider === "claude") {
+      o.className = "pill " + (L.up ? "ok" : "bad");
+      o.textContent = L.up ? `llm · ${esc(L.label || "claude")}` : "claude cli missing";
+      o.title = `Claude via subscription CLI (${L.cli || "?"})` + (L.fallback ? " · falls back to Ollama" : "");
+    } else {
+      o.className = "pill " + (s.ollama.up ? "ok" : "bad");
+      o.textContent = s.ollama.up ? `llm · ollama (${(s.ollama.models || []).length})` : "ollama down";
+      o.title = "Local Ollama";
+    }
     const w = $("#whatsapp-pill"); const wa = s.whatsapp || {};
     if (wa.backend === "bridge") {
       w.className = "pill " + (wa.ready ? "ok" : "bad");
@@ -140,6 +150,8 @@ async function loadDashboard() {
           <tr><td>WhatsApp sender</td><td class="num">${whatsappBadge(s.whatsapp)}</td></tr>
           <tr><td>Ollama</td><td class="num">${s.ollama.up ? `<span class="badge green">up</span> ${esc((s.ollama.models || [])[0] || "")}` : "<span class='badge red'>down</span>"}</td></tr>
           <tr><td>Ollama model (cfg)</td><td class="num mono">${esc(s.config.ollama_model)}</td></tr>
+          <tr><td>Analysis LLM</td><td class="num">${(s.llm || {}).up ? `<span class="badge green">up</span>` : "<span class='badge red'>down</span>"} ${esc((s.llm || {}).label || s.config.llm_provider)}</td></tr>
+          <tr><td>Litigation gate</td><td class="num mono">${esc(s.config.litigation_gate)}</td></tr>
         </tbody></table>
       </div>
       <div class="card">
@@ -613,10 +625,14 @@ async function loadConfig() {
   const v = $("#view-config");
   v.innerHTML = `<div class="loading">Loading config…</div>`;
   const cfg = await api("/api/config");
-  const fields = cfg.keys.map(k => `<div class="field">
-      <label>${esc(k)}</label>
-      <input data-key="${esc(k)}" value="${esc(cfg.values[k])}">
-    </div>`).join("");
+  const choices = cfg.choices || {};
+  const fields = cfg.keys.map(k => {
+    const val = cfg.values[k];
+    const ctl = choices[k]
+      ? `<select data-key="${esc(k)}">${choices[k].map(c => `<option value="${esc(c)}"${c === val ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+      : `<input data-key="${esc(k)}" value="${esc(val)}">`;
+    return `<div class="field"><label>${esc(k)}</label>${ctl}</div>`;
+  }).join("");
   v.innerHTML = `<div class="card">
     <h3>.env settings <span class="faint mono" style="text-transform:none;letter-spacing:0">${esc(cfg.path)}</span></h3>
     <div class="form-grid">${fields}</div>
@@ -627,7 +643,7 @@ async function loadConfig() {
   </div>`;
   $("#cfg-save").addEventListener("click", async () => {
     const upd = {};
-    $$("#view-config input[data-key]").forEach(i => upd[i.dataset.key] = i.value);
+    $$("#view-config [data-key]").forEach(i => upd[i.dataset.key] = i.value);
     const r = await api("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(upd) });
     toast(`Saved ${r.updated.length} setting(s)`);
   });
@@ -651,4 +667,363 @@ async function loadLogs() {
 // ── boot ─────────────────────────────────────────────────────────────────────
 refreshPills();
 setInterval(refreshPills, 8000);
-show("dashboard");
+show(VIEWS[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard");   // deep links, e.g. #litigation
+
+// ── Litigation ───────────────────────────────────────────────────────────────
+// Built for a 30-second read: one-line brief → risk chart → next 3 checks →
+// case cards (plain English up top, details folded away).
+let litFilter = "week";
+let litScanResult = null;
+let litHelpOpen = false;
+try { litHelpOpen = localStorage.getItem("litHelpSeen") !== "1"; } catch (e) { litHelpOpen = true; }
+
+const TIER = {
+  material: { label: "High impact", cls: "red",
+    rule: th => `Could move the stock ${litPctAbs(th.min_move, 0)}+ (or ${litPctAbs(th.materiality, 0)}+ of company value at stake). Gets WhatsApp alerts.` },
+  near: { label: "Medium impact", cls: "amber",
+    rule: th => `Could move the stock ${litPctAbs(th.near_move, 0)}+ (or ${litPctAbs(th.near_materiality, 0)}+ of value at stake). Tracked, no alerts.` },
+  below: { label: "Low impact", cls: "",
+    rule: th => `Likely move under ${litPctAbs(th.near_move, 0)}. Shown for completeness.` },
+};
+const VERDICT = {
+  "Act now": { cls: "red", tip: "A verdict is expected within about a day — look today." },
+  "Prepare": { cls: "amber", tip: "Could land soon (hearing over, or a hearing this week) with a big possible move." },
+  "Watch": { cls: "blue", tip: "Meaningful but no date yet — a weekly glance is enough." },
+  "Low priority": { cls: "", tip: "Small likely move and nothing imminent — safe to ignore." },
+};
+let litTiers = new Set(["material", "near", "below"]);
+try { const s = JSON.parse(localStorage.getItem("litTiers") || "null"); if (Array.isArray(s)) litTiers = new Set(s); } catch (e) { /* storage blocked */ }
+
+const litStat = (k, val, sub, cls = "") => `<div class="card stat ${cls}"><div class="k">${k}</div><div class="v">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ""}</div>`;
+const litPct = (v, d = 0) => (v === null || v === undefined) ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v * 100).toFixed(d)}%`;
+const litPctAbs = (v, d = 1) => (v === null || v === undefined) ? "—" : `${(v * 100).toFixed(d)}%`;
+function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return u; } }
+const fmtDT = s => {
+  if (!s) return "";
+  const d = new Date(s); if (isNaN(d)) return s;
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const d0 = new Date(d); d0.setHours(0, 0, 0, 0);
+  const diff = Math.round((d0 - t0) / 86400000), hm = d.toTimeString().slice(0, 5);
+  if (diff === 0) return `Today ${hm}`;
+  if (diff === 1) return `Tomorrow ${hm}`;
+  if (diff === -1) return `Yesterday ${hm}`;
+  return d.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" }) + " " + hm;
+};
+const fmtD = s => {
+  if (!s) return "";
+  const d = new Date(s + "T00:00:00"); if (isNaN(d)) return s;
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const diff = Math.round((d - t0) / 86400000);
+  const rel = diff === 0 ? "today" : diff === 1 ? "tomorrow" : diff > 1 ? `in ${diff} days` : `${-diff} days ago`;
+  return `${d.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })} <span class="faint">(${rel})</span>`;
+};
+const linkChip = l => `<a class="lit-link ${l.kind}" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" title="${esc(l.hint || l.url)}">${esc(l.label)} ↗</a>`;
+const attachBtn = (caseId, label = "📎 Attach") => `<label class="btn sm lit-attach" title="Attach a PDF / screenshot / saved page from the court website — Claude reads it and updates the dates">${label}
+  <input type="file" accept=".pdf,.html,.htm,.mhtml,.txt,.csv,.png,.jpg,.jpeg,.webp" data-attach="${caseId}" hidden></label>`;
+const verdictChip = v => `<span class="badge ${(VERDICT[v] || {}).cls || ""}" title="${esc((VERDICT[v] || {}).tip || "")}">${esc(v || "")}</span>`;
+
+// ── The impact bar: what the verdict could do vs what options already expect ──
+// Diverging, one shared scale per view. Red (left) = verdict against the company,
+// blue (right) = verdict for it, grey band = move the options market already expects.
+function impactBar(c, S, big = false) {
+  // HTML bars (not SVG) so numbers never stretch. Shared scale S per view; 0 at centre.
+  const i = c.insight || {};
+  const pos = v => Math.max(-1, Math.min(1, v / S)) * 50;          // % offset from centre
+  const adv = c.move_adverse, fav = c.move_favourable, im = c.implied_move;
+  const bar = (v, cls) => {
+    if (v == null || Math.abs(v) < 0.0005) return "";
+    const p = pos(v), left = 50 + Math.min(0, p), w = Math.abs(p);
+    const lab = v < 0 ? `<span class="ib-val l" style="left:${left}%">${litPct(v)}</span>`
+                      : `<span class="ib-val r" style="left:${50 + p}%">${litPct(v)}</span>`;
+    return `<div class="${cls} ${v < 0 ? "goes-l" : "goes-r"}" style="left:${left}%;width:${w}%"></div>${lab}`;
+  };
+  const band = im ? `<div class="ib-band" style="left:${50 - pos(im)}%;width:${2 * pos(im)}%"></div>` : "";
+  const tip = `${i.headline || ""} ${i.priced || ""}`.trim();
+  return `<div class="ib ${big ? "big" : ""}" role="img" aria-label="${esc(tip)}" title="${esc(tip)}">
+    <div class="ib-track">${band}<div class="ib-zero"></div>${bar(adv, "ib-neg")}${bar(fav, "ib-pos")}</div></div>`;
+}
+const impactLegend = `<div class="ib-legend">
+  <span><i class="sw neg"></i>If the court rules <b>against</b> the company</span>
+  <span><i class="sw pos"></i>If it rules <b>for</b> the company</span>
+  <span><i class="sw band"></i>Move the options market already expects</span>
+  <span class="faint">Bar sticking out of the grey = not priced in yet</span></div>`;
+const scaleFor = list => {
+  const m = Math.max(0.05, ...list.map(c => Math.max(Math.abs(c.move_adverse || 0), Math.abs(c.move_favourable || 0), c.implied_move || 0)));
+  return Math.ceil(m * 20) / 20;   // round up to the next 5%
+};
+
+function helpPanel(d) {
+  const th = d.thresholds || {};
+  return `<div class="card lit-help ${litHelpOpen ? "" : "hidden"}" id="lit-help">
+    <div class="lit-help-h"><b>How to read this page</b> <button class="btn sm ghost" id="lit-help-close">Got it ✕</button></div>
+    <ol>
+      <li><b>Top line</b> — the one thing to know today. If it says "all quiet", you can stop there.</li>
+      <li><b>The chart</b> — one row per company with a live court case. <span class="neg-t">Red</span> = how far the stock could fall if the court rules against the company, <span class="pos-t">blue</span> = how far it could rise if the court rules for it, <span class="faint">grey band</span> = the move the options market already expects. A bar poking out of the grey band means the market hasn't priced the case in. The % under the name is the chance the court rules against the company.</li>
+      <li><b>Labels</b> — ${verdictChip("Act now")} verdict expected within a day · ${verdictChip("Prepare")} could land soon · ${verdictChip("Watch")} no date yet, glance weekly · ${verdictChip("Low priority")} ignore.</li>
+      <li><b>Your next checks</b> — Supreme Court, Delhi High Court and NCLAT schedules are read automatically every evening. What's left are 2-minute look-ups on court pages that ask for a captcha, so you do them — each comes with exactly what to type. Open the link, save the page as PDF or screenshot, press <b>📎 Attach</b> — Claude reads it and updates the dates. WhatsApp nudges you at ${esc(d.slots?.morning || "09:00")} and ${esc(d.slots?.evening || "19:30")} when something's due.</li>
+    </ol>
+    <div class="faint" style="font-size:12px">Impact levels: <b>High</b> — ${esc(TIER.material.rule(th))} <b>Medium</b> — ${esc(TIER.near.rule(th))} Estimates come from Claude reading public court and news records; verdicts can go either way.</div>
+  </div>`;
+}
+
+function brief(open) {
+  const by = v => open.filter(c => c.insight?.verdict === v).sort((a, b) => b.insight.score - a.insight.score);
+  const act = by("Act now"), prep = by("Prepare"), watch = by("Watch");
+  let line;
+  if (act.length) line = `⚡ <b>${act.length} case${act.length > 1 ? "s" : ""} need${act.length > 1 ? "" : "s"} you today.</b> ${esc(act[0].insight.headline)} <span class="faint">${esc(act[0].insight.when)}.</span>`;
+  else if (prep.length) line = `<b>Nothing needs you today.</b> ${prep.length} case${prep.length > 1 ? "s" : ""} could move a stock soon — biggest: <b>${esc(prep[0].insight.name)}</b> (${esc(prep[0].insight.when.toLowerCase())}).`;
+  else line = `✅ <b>All quiet.</b> No court decision is likely to move these stocks soon.`;
+  return `<div class="card lit-brief"><div class="lit-brief-line">${line}</div>
+    <div class="grid cards" style="margin-top:12px">
+      ${litStat(`${verdictChip("Act now")}`, act.length, "verdict expected within a day", act.length ? "hot" : "")}
+      ${litStat(`${verdictChip("Prepare")}`, prep.length, "could land soon / big move")}
+      ${litStat(`${verdictChip("Watch")}`, watch.length, "no date yet — weekly glance")}
+    </div></div>`;
+}
+
+function riskChart(open) {
+  const rows = open.filter(c => c.insight && c.insight.verdict !== "Low priority" && c.p_adverse != null)
+    .sort((a, b) => b.insight.score - a.insight.score).slice(0, 8);
+  if (!rows.length) return "";
+  const S = scaleFor(rows);
+  const body = rows.map(c => `<div class="rc-row" data-goto="${c.id}" title="${esc(c.insight.headline)}">
+      <div class="rc-name"><span class="dot tier-dot-${esc(c.tier)}"></span><b>${esc(c.symbol)}</b>
+        <div class="faint">${litPctAbs(c.p_adverse, 0)} chance against</div></div>
+      <div class="rc-bar">${impactBar(c, S)}</div>
+      <div class="rc-when">${verdictChip(c.insight.verdict)}<div class="faint">${esc(c.insight.when)}</div></div>
+    </div>`).join("");
+  return `<div class="card" style="margin-top:16px">
+    <h3>Where the risk is <span class="faint ttl-sub">— how much each verdict could move the stock</span></h3>
+    ${impactLegend}
+    <div class="rc-scale"><span></span><div class="rc-axis"><span style="left:0">−${litPctAbs(S, 0)}</span><span style="left:50%">0</span><span style="left:100%">+${litPctAbs(S, 0)}</span></div><span></span></div>
+    ${body}
+    <div class="faint" style="font-size:11.5px;margin-top:6px">Top ${rows.length} by attention (size of likely move × how soon × not priced in). Click a row for the full story.</div>
+  </div>`;
+}
+
+// ── Search recipe: exactly what to type on the court website ──────────────────
+function searchRecipe(s, opts = {}) {
+  if (!s) return `<div class="recipe empty-recipe">🔎 Search details not found yet — they're looked up automatically each night.</div>`;
+  const conf = { high: ["green", "case number confirmed"], medium: ["amber", "likely right — check the names match"],
+                 low: ["", "number not found — search by company name"] }[s.confidence] || ["", ""];
+  const steps = (s.steps || []).slice(0, opts.compact ? 1 : 3).map((st, k) => `
+    <div class="recipe-step">
+      <div class="recipe-route"><b>${k === 0 ? "Try this" : "Or"}:</b> ${esc(st.route)}
+        ${st.url ? `<a class="btn sm" href="${esc(st.url)}" target="_blank" rel="noopener noreferrer">Open ${esc(st.page)} ↗</a>` : ""}</div>
+      <table class="recipe-fill"><tbody>${(st.fill || []).map(([k2, v]) => `<tr><td>${esc(k2)}</td>
+        <td><b class="mono">${esc(v)}</b> <button class="copy" data-copy="${esc(v)}" title="Copy">⧉</button></td></tr>`).join("")}</tbody></table>
+    </div>`).join("");
+  const ids = s.ids || {};
+  const autoNote = opts.auto ? `<div class="recipe-auto">✅ The daily court schedule for this court is checked automatically — use this only to find the next date sooner or to download hearing notes.</div>` : "";
+  return `<div class="recipe">${autoNote}
+    <div class="recipe-h">🔎 <b>What to type</b> <span class="badge ${conf[0]}">${esc(conf[1])}</span>
+      ${ids.stage_now ? `<span class="faint recipe-now">Latest known: ${esc(ids.stage_now)}</span>` : ""}</div>
+    ${steps}
+    ${(s.spot || []).length ? `<div class="recipe-sub"><b>How to spot the right case</b><ul>${s.spot.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    ${(s.look_for || []).length && !opts.compact ? `<div class="recipe-sub"><b>On the result page, look for</b><ul>${s.look_for.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    ${(s.sources || []).length && !opts.compact ? `<div class="faint recipe-src">Identifiers found in: ${s.sources.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(hostOf(u))}</a>`).join(" · ")}</div>` : ""}
+  </div>`;
+}
+
+function nextChecks(d) {
+  const ch = (d.checks || []).filter(c => litTiers.has(c.tier || "below"));
+  const low = ch.filter(c => c.verdict === "Low priority");
+  const main = ch.filter(c => !c.routine && c.verdict !== "Low priority");
+  const routine = ch.filter(c => c.routine && c.verdict !== "Low priority");
+  const row = (c, compact) => `<div class="chk-row tier-${esc(c.tier)} ${compact ? "compact" : ""}">
+      <div class="chk-when"><b>${esc(fmtDT(c.due))}</b>${c.status === "overdue" ? `<div class="badge red">overdue</div>` : ""}</div>
+      <div class="chk-body">
+        <div>${compact ? "" : verdictChip(c.verdict) + " "}<b>${esc(c.symbol)}</b> <span class="faint">· ${esc(c.court_plain || c.court || "")}${c.auto ? " · checked automatically" : ""}</span></div>
+        <div class="chk-action">${esc(c.action)}</div>
+        ${compact ? "" : `<div class="chk-why">Why bother: ${esc(c.why_time || c.headline || "")}</div>`}
+        ${compact ? `<div class="lit-links">${(c.links || []).slice(0, 1).map(linkChip).join("")}</div>`
+                  : searchRecipe(c.search, { auto: c.auto })}
+      </div>
+      <div class="chk-btns">${attachBtn(c.case_id)}
+        <button class="btn sm" data-done="${esc(c.key)}" data-case="${c.case_id}" title="I've checked this">✓ Done</button></div>
+    </div>`;
+  const top = main.slice(0, 3), more = main.slice(3);
+  return `<div class="card" style="margin-top:16px">
+    <h3>Your next checks <span class="faint ttl-sub">— 2-minute look-ups, most useful first</span></h3>
+    ${top.length ? top.map(c => row(c, false)).join("") : `<div class="empty">Nothing time-sensitive. 🎉</div>`}
+    ${more.length ? `<details class="lit-more"><summary>${more.length} more time-sensitive check(s)</summary>${more.map(c => row(c, false)).join("")}</details>` : ""}
+    ${routine.length ? `<details class="lit-more"><summary>${routine.length} weekly "find the next hearing date" checks — batch them once a week</summary>${routine.map(c => row(c, true)).join("")}</details>` : ""}
+    ${low.length ? `<details class="lit-more"><summary>${low.length} low-priority check(s) — optional, small likely moves</summary>${low.map(c => row(c, true)).join("")}</details>` : ""}
+  </div>`;
+}
+
+function scanCard(d) {
+  const r = litScanResult, plainDoc = (d.plain || {}).doc || {};
+  const res = !r ? "" : r.error ? `<div class="badge red">${esc(r.error)}</div>` : `
+    <div style="margin-top:10px"><b>${esc(r.file)}</b> — checked against ${r.scanned} open case(s).
+      ${r.note ? `<div class="lit-analysis">${esc(r.note)}</div>` : ""}
+      ${(r.matches || []).map(m => `<div class="lit-doc"><b>${esc(m.symbol)}</b> — ${esc(m.title || "")}
+        ${m.case_found ? `<span class="badge green">found</span>` : `<span class="badge">name match only</span>`}
+        <div>${esc(m.summary || "")}</div>${m.action ? `<div class="lit-doc-action">➡️ ${esc(m.action)}</div>` : ""}</div>`).join("")}
+    </div>`;
+  return `<details class="card lit-scan" ${r ? "open" : ""} style="margin-top:16px">
+    <summary><b>Have a court schedule PDF?</b> <span class="faint">Drop it here and every tracked case is searched in it.</span></summary>
+    <div style="margin-top:10px"><label class="btn primary sm lit-attach">📄 Choose file
+      <input type="file" accept=".pdf,.html,.htm,.mhtml,.txt,.csv" data-scan="1" hidden></label>
+      <span class="faint" style="font-size:12px;margin-left:8px">NCLAT schedules are checked automatically every night.</span></div>
+    ${res}
+    ${(d.general_docs || []).slice(0, 3).map(a => `<div class="faint" style="font-size:12px;margin-top:4px">${esc((a.uploaded || "").replace("T", " ").slice(0, 16))} · ${esc(plainDoc[a.doc_type] || "Document")} · ${esc(a.summary || "")}</div>`).join("")}
+  </details>`;
+}
+
+function litCard(c, S, plain) {
+  const i = c.insight || {}, t = TIER[c.tier] || TIER.below;
+  const stage = (plain.stage || {})[c.stage] || c.stage;
+  const srcs = (c.sources || []).filter(u => /^https?:\/\//.test(u));
+  const stake = c.claim_cr ? `₹${Number(c.claim_cr).toLocaleString("en-IN", { maximumFractionDigits: 0 })} cr` : "—";
+  const mat = c.materiality ? ` <span class="faint">(${litPctAbs(c.materiality, 1)} of company value)</span>` : "";
+  const official = (c.links || []).filter(l => l.kind === "official"), news = (c.links || []).filter(l => l.kind === "news");
+  const decoder = (c.decoder || []).length ? `<div class="lit-decoder">📖 ${c.decoder.map(g => `<b>${esc(g.abbr)}</b> = ${esc(g.meaning)}`).join(" · ")}</div>` : "";
+  const docs = (c.attachments || []).map(a => {
+    const an = a.analysis || {};
+    const ch = an.changed && Object.keys(an.changed).length ? ` <span class="badge green">updated the case</span>` : "";
+    return `<div class="lit-doc"><div><b>${esc((plain.doc || {})[an.doc_type || a.doc_type] || "Document")}</b>
+        <span class="faint">· ${esc(a.filename)} · ${esc((a.uploaded || "").replace("T", " ").slice(0, 16))}</span>
+        ${a.case_found ? `<span class="badge green">case found</span>` : `<span class="badge">case not in it</span>`}${ch}</div>
+      ${an.summary ? `<div>${esc(an.summary)}</div>` : ""}${an.action ? `<div class="lit-doc-action">➡️ ${esc(an.action)}</div>` : ""}</div>`;
+  }).join("");
+  return `<div class="card lit-card tier-${esc(c.tier || "below")}" id="lit-case-${c.id}">
+    <div class="lit-head">
+      ${verdictChip(i.verdict)}
+      <span class="sym">${esc(c.symbol)}</span><span class="faint">${esc(i.name || "")}</span>
+      <span class="badge ${t.cls}" title="${esc(c.tier_reason || "")}">${t.label}</span>
+      <span class="when"><b>${esc(i.when || "")}</b> ${attachBtn(c.id)}</span>
+    </div>
+    <div class="lit-headline">${esc(i.headline || c.title || "")}</div>
+    ${c.p_adverse != null ? `<div class="lit-bar">${impactBar(c, S, true)}</div>` : ""}
+    <div class="lit-why"><div>📈 ${esc(i.priced || "")}</div><div>⏱️ ${esc(i.why_time || "")}</div></div>
+    <div class="lit-case-line faint">${esc(c.title || "")} · ${esc(c.court_plain || c.court || "")} · ${esc(stage)}</div>
+    ${decoder}
+    <details class="lit-details"><summary>How to check it yourself, dates & full analysis</summary>
+      ${searchRecipe(c.search, { auto: /supreme|nclat|delhi high court/i.test(c.court || "") })}
+      <div class="lit-dates">
+        <div class="dt ${c.next_date ? "has" : "none"}"><div class="k">Next date</div>
+          <div class="v">${c.next_date ? fmtD(c.next_date) : "Not known yet"}</div>
+          ${c.listing_note ? `<div class="faint">${esc(c.listing_note)}</div>` : ""}
+          ${c.date_source ? `<div class="faint">from: ${/^https?:/.test(c.date_source) ? `<a href="${esc(c.date_source)}" target="_blank" rel="noopener noreferrer">${esc(hostOf(c.date_source))}</a>` : esc(c.date_source)}</div>` : ""}</div>
+        <div class="dt"><div class="k">Where it stands</div><div class="v">${esc(stage)}</div>
+          ${c.stage_date ? `<div class="faint">since ${fmtD(c.stage_date)}</div>` : ""}</div>
+        <div class="dt"><div class="k">Last checked</div><div class="v">${esc((c.last_checked || "—").replace("T", " ").slice(0, 16))}</div>
+          <div class="faint">${(c.attachments || []).length} document(s) attached</div></div>
+      </div>
+      <div class="lit-where"><span class="k">Where to look (official)</span><div class="lit-links">${official.map(linkChip).join("")}</div>
+        <span class="k">News</span><div class="lit-links">${news.map(linkChip).join("")}</div>
+        <div class="faint" style="font-size:11.5px">Court sites ask for a captcha: open, look up the case, save as PDF or screenshot, then 📎 Attach.</div></div>
+      <div class="lit-metrics">
+        <div class="m"><div class="k">Money at stake</div><div class="v">${stake}${mat}</div></div>
+        <div class="m"><div class="k">Chance it goes against them</div><div class="v">${c.p_adverse == null ? "—" : litPctAbs(c.p_adverse, 0)}</div></div>
+        <div class="m"><div class="k">Stock move if against</div><div class="v neg">${litPct(c.move_adverse)}</div></div>
+        <div class="m"><div class="k">Stock move if for</div><div class="v pos">${litPct(c.move_favourable)}</div></div>
+        <div class="m"><div class="k">Typical move</div><div class="v">${litPctAbs(i.typical, 1)}</div></div>
+        <div class="m"><div class="k">Options already expect</div><div class="v">${c.implied_move ? "±" + litPctAbs(c.implied_move, 1) : "no options"}</div></div>
+      </div>
+      <div class="lit-analysis"><b>Claude's reading.</b> ${esc(c.rationale || "Not estimated yet.")}</div>
+      <div class="lit-idea">💡 <b>Possible trade:</b> ${esc(c.trade_idea || "—")}</div>
+      ${docs ? `<div class="lit-docs"><span class="k">Your documents</span>${docs}</div>` : ""}
+      ${srcs.length ? `<div class="lit-sources"><span class="faint">Research sources</span>${srcs.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(hostOf(u))} — ${esc(u)}</a>`).join("")}</div>` : ""}
+    </details>
+  </div>`;
+}
+
+async function litUpload(url, file) {
+  const fd = new FormData(); fd.append("file", file);
+  const r = await fetch(url, { method: "POST", body: fd });
+  let j = {}; try { j = await r.json(); } catch (e) { j = { error: `HTTP ${r.status}` }; }
+  if (!r.ok && !j.error) j.error = `HTTP ${r.status}`;
+  return j;
+}
+
+async function loadLitigation() {
+  const v = $("#view-litigation");
+  if (!v.innerHTML) v.innerHTML = `<div class="loading">Loading…</div>`;
+  const d = await api("/api/litigation?days=7");
+  if (d.error) { v.innerHTML = `<div class="card"><div class="empty">Error: ${esc(d.error)}</div></div>`; return; }
+  const plain = d.plain || {}, th = d.thresholds || {};
+  const all = d.cases || [];
+  const open = all.filter(c => !c.decided), week = all.filter(c => c.upcoming), decided = all.filter(c => c.decided);
+  const bucket = { week, open, decided }[litFilter] || week;
+  const pick = bucket.filter(c => litTiers.has(c.tier || "below"))
+    .sort((a, b) => (b.insight?.score || 0) - (a.insight?.score || 0));
+  const S = scaleFor(pick.filter(c => c.p_adverse != null));
+  const tierCount = (list, t) => list.filter(c => (c.tier || "below") === t).length;
+  const btn = (id, label, n) => `<button class="btn sm ${litFilter === id ? "active" : ""}" data-lf="${id}">${label} (${n})</button>`;
+  const chip = t => `<button class="btn sm lit-chip ${litTiers.has(t) ? "on" : "off"}" data-tier="${t}" title="${esc(TIER[t].rule(th))}">
+      <span class="dot tier-dot-${t}"></span>${TIER[t].label} (${tierCount(bucket, t)})</button>`;
+  const ev = (d.events || []).slice(0, 20).map(e => `<tr><td class="mono">${esc((e.ts || "").replace("T", " ").slice(0, 16))}</td>
+      <td><b>${esc(e.symbol)}</b></td><td>${esc({ new_case: "new case", stage_change: "moved forward", date_change: "new date", document: "your document" }[e.kind] || e.kind)}</td>
+      <td>${esc(e.title || "")}</td><td>${esc((plain.stage || {})[e.new_value] || (plain.doc || {})[e.new_value] || e.new_value || "")}</td></tr>`).join("");
+  v.innerHTML = `
+    <div class="lit-top"><button class="btn sm" id="lit-help-btn" title="A 4-step guide to this page">ⓘ How to read this page</button>
+      <span class="faint" style="font-size:12px">${d.scanned || 0} companies scanned · updated ${esc((d.last_scan || "").replace("T", " ").slice(0, 16))}</span></div>
+    ${d.autoscan ? `<div class="lit-auto">✅ <b>Checked for you automatically:</b> ${Object.entries(d.autoscan.courts || {}).map(([k, n]) => `${esc(k)} (${n})`).join(", ")} court schedules, up to ${fmtD((d.autoscan.dates || []).slice(-1)[0] || "")} — last run ${esc(fmtDT(d.autoscan.ran))}. For cases in these courts you don't need to check the schedule yourself; we'll WhatsApp you if one is listed for a verdict.</div>` : ""}
+    ${helpPanel(d)}
+    ${brief(open)}
+    ${riskChart(open)}
+    ${nextChecks(d)}
+    ${scanCard(d)}
+    <h3 class="lit-section">All cases <span class="faint ttl-sub">— plain English first; open a card for dates, court links and the full analysis</span></h3>
+    <div class="lit-filters">
+      ${btn("week", "Verdict or hearing this week", week.length)}${btn("open", "All open", open.length)}${btn("decided", "Decided", decided.length)}
+      <span class="lit-legend">${["material", "near", "below"].map(chip).join("")}</span>
+    </div>
+    ${pick.length ? `${impactLegend}${pick.map(c => litCard(c, S, plain)).join("")}` : `<div class="card"><div class="empty">${bucket.length ? "All cases here are hidden by the impact filter." : (litFilter === "week" ? "No verdicts or hearings this week." : "Nothing here yet.")}</div></div>`}
+    <details class="card" style="margin-top:16px"><summary><b>Recent changes</b> <span class="faint">(${(d.events || []).length})</span></summary>
+      ${ev ? `<table style="margin-top:8px"><thead><tr><th>When</th><th>Stock</th><th>What happened</th><th>Case</th><th>Now</th></tr></thead><tbody>${ev}</tbody></table>` : `<div class="empty">Nothing yet</div>`}
+    </details>`;
+
+  const help = $("#lit-help");
+  $("#lit-help-btn").addEventListener("click", () => { litHelpOpen = help.classList.toggle("hidden") === false; });
+  $("#lit-help-close").addEventListener("click", () => {
+    help.classList.add("hidden"); litHelpOpen = false;
+    try { localStorage.setItem("litHelpSeen", "1"); } catch (e) { /* storage blocked */ }
+  });
+  v.querySelectorAll("[data-goto]").forEach(r => r.addEventListener("click", () => {
+    const el = $(`#lit-case-${r.dataset.goto}`);
+    if (!el) {                      // card hidden by the current filter → show all open, then jump
+      const id = r.dataset.goto; litFilter = "open"; litTiers = new Set(["material", "near", "below"]);
+      loadLitigation().then(() => { const e2 = $(`#lit-case-${id}`); e2?.querySelector("details")?.setAttribute("open", ""); e2?.scrollIntoView({ behavior: "smooth" }); });
+      return;
+    }
+    el.querySelector("details")?.setAttribute("open", "");
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  v.querySelectorAll("[data-lf]").forEach(b => b.addEventListener("click", () => { litFilter = b.dataset.lf; loadLitigation(); }));
+  v.querySelectorAll("[data-tier]").forEach(b => b.addEventListener("click", () => {
+    const t = b.dataset.tier;
+    litTiers.has(t) ? litTiers.delete(t) : litTiers.add(t);
+    try { localStorage.setItem("litTiers", JSON.stringify([...litTiers])); } catch (e) { /* storage blocked */ }
+    loadLitigation();
+  }));
+  v.querySelectorAll("button[data-copy]").forEach(b => b.addEventListener("click", async (ev) => {
+    ev.stopPropagation();
+    try { await navigator.clipboard.writeText(b.dataset.copy); toast(`Copied: ${b.dataset.copy}`); }
+    catch (e) { toast("Copy blocked by the browser — select the text instead", "bad"); }
+  }));
+  v.querySelectorAll("[data-done]").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    await api("/api/litigation/check/done", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: b.dataset.done, case_id: Number(b.dataset.case) }) });
+    toast("Marked done"); loadLitigation();
+  }));
+  v.querySelectorAll("input[data-attach]").forEach(inp => inp.addEventListener("change", async () => {
+    const f = inp.files[0]; if (!f) return;
+    const lbl = inp.closest("label"); lbl.classList.add("busy"); lbl.firstChild.textContent = "⏳ Claude is reading… ";
+    toast(`Reading ${f.name} — usually 10-60 seconds`);
+    const j = await litUpload(`/api/litigation/case/${inp.dataset.attach}/attach`, f);
+    if (j.error) toast(`Failed: ${j.error}`, "bad");
+    else toast(j.case_found ? `Found it — ${j.summary || "case updated"}` : `This case isn't in ${f.name} — saved anyway`);
+    loadLitigation();
+  }));
+  v.querySelectorAll("input[data-scan]").forEach(inp => inp.addEventListener("change", async () => {
+    const f = inp.files[0]; if (!f) return;
+    const lbl = inp.closest("label"); lbl.classList.add("busy"); lbl.firstChild.textContent = "⏳ Searching… ";
+    toast(`Searching ${f.name} for your cases…`);
+    litScanResult = await litUpload("/api/litigation/scan", f);
+    loadLitigation();
+  }));
+}

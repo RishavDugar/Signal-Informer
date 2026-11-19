@@ -35,3 +35,8 @@ PyWhatKit_DB.txt
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Litigation tracker: downloaded lists / price caches and user-uploaded court documents
+db/cache/
+db/litigation_uploads/
+db/.last_scorecard

@@ -24,12 +24,13 @@ PROJECT = Path(__file__).parent.resolve()
 _TARGETS = {
     "daily": ("path",   str(PROJECT / "pipeline.py")),
     "news":  ("module", "news_analyzer.pipeline"),
+    "litigation": ("module", "litigation.tracker"),
 }
 
 
 def main() -> int:
     if len(sys.argv) < 3 or sys.argv[1] not in _TARGETS:
-        sys.stderr.write("usage: run_task.py <daily|news> <logfile>\n")
+        sys.stderr.write("usage: run_task.py <daily|news|litigation> <logfile>\n")
         return 2
     kind, logfile = sys.argv[1], sys.argv[2]
 

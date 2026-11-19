@@ -55,6 +55,8 @@ log = get_logger("research_listener")
 _REQUEST_RE  = re.compile(rf"^\s*{re.escape(RESEARCH_TRIGGER)}\s+([A-Za-z0-9.&\-]+)",
                           re.IGNORECASE)
 _KEYWORDS_RE = re.compile(r"(?im)^\s*keywords?\s*[:\-]\s*(.+)$")
+# "Legal SYMBOL" → pending-litigation report (web-researched case cards + trade idea).
+_LEGAL_RE = re.compile(r"^\s*legal\s+([A-Za-z0-9.&\-]+)", re.IGNORECASE)
 
 
 def _parse_keywords(body: str) -> list[str]:
@@ -79,6 +81,50 @@ def _handle(symbol: str, keywords: list[str], sender: str) -> None:
     send_to_group(RESEARCH_GROUP, message)
 
 
+def _handle_legal(symbol: str, sender: str) -> None:
+    log.info(f"listener: legal request for {symbol!r} from {sender!r}")
+    send_to_group(RESEARCH_GROUP, f"⚖️ Checking court/regulatory cases for *{symbol.upper()}* "
+                                  f"— ~1-2 min...")
+    try:
+        from litigation.tracker import report
+        message = report(symbol)
+    except Exception as exc:
+        log.exception(f"listener: legal report crashed for {symbol!r} — {exc}")
+        message = (f"*⚖️ Legal check — {symbol.upper()}*\n"
+                   "❌ Failed. Please try again shortly.")
+    send_to_group(RESEARCH_GROUP, message)
+
+
+_SCAN_SLOTS = ("21:15", "07:15")      # after tomorrow's lists go up / before market open
+_scan_done: set[str] = set()
+
+
+def _maybe_autoscan() -> None:
+    """Read the free court schedules (SC daily+advance, Delhi HC, NCLAT) twice a day
+    and WhatsApp any change — e.g. a tracked case listed for a verdict tomorrow."""
+    import datetime as _dt
+    now = _dt.datetime.now()
+    for slot in _SCAN_SLOTS:
+        h, m = map(int, slot.split(":"))
+        key = f"{now:%Y-%m-%d} {slot}"
+        if key in _scan_done or not (0 <= (now - now.replace(hour=h, minute=m, second=0)).total_seconds() < 3600):
+            continue
+        _scan_done.add(key)
+
+        def _run(slot=slot):
+            try:
+                from litigation.attachments import auto_scan_public_lists
+                from litigation.tracker import send_alerts
+                found = auto_scan_public_lists()
+                sent = send_alerts()
+                log.info(f"listener: schedule scan {slot} — {found} tracked case(s) found, {sent} alert(s)")
+            except Exception as exc:
+                log.warning(f"listener: schedule scan {slot} failed — {exc}")
+
+        import threading
+        threading.Thread(target=_run, name=f"court-scan-{slot}", daemon=True).start()
+
+
 def _watch_loop() -> None:
     since = int(time.time() * 1000)   # only react to messages from now on
     log.info(f"listener: watching group {RESEARCH_GROUP!r} for "
@@ -90,12 +136,22 @@ def _watch_loop() -> None:
             # when needed, so the log isn't spammed with a "READY" line every poll.
             if not bridge_health().get("ready"):
                 ensure_bridge_ready()
+            # Legal check-queue reminders (self-throttled to 1/min; only sends when a
+            # check becomes due — LITIGATION_MORNING / LITIGATION_EVENING slots).
+            try:
+                from litigation.checks import send_due_reminders
+                send_due_reminders()
+            except Exception as exc:
+                log.warning(f"listener: legal reminders failed — {exc}")
+            _maybe_autoscan()
             for m in poll_group(RESEARCH_GROUP, since):
                 since = max(since, int(m.get("ts", since)))
                 body  = (m.get("body") or "").strip()
                 match = _REQUEST_RE.match(body)
                 if match:
                     _handle(match.group(1), _parse_keywords(body), m.get("from", "?"))
+                elif (lm := _LEGAL_RE.match(body)):
+                    _handle_legal(lm.group(1), m.get("from", "?"))
         except Exception as exc:
             log.warning(f"listener: watch loop error — {exc}")
         time.sleep(WHATSAPP_POLL_INTERVAL_S)

@@ -49,7 +49,25 @@ JOBS: dict[str, dict] = {
         "label": "News + AI picks",
         "group": "Daily run",
         "base": ["-m", "news_analyzer.pipeline"],
-        "desc": "Fetch news, run Ollama analysis + 3 scout lenses, send picks.",
+        "desc": "Fetch news, run LLM analysis (Claude/Ollama) + 3 scout lenses, send picks.",
+    },
+    "litigation_daily": {
+        "label": "Legal-risk tracker",
+        "group": "Litigation",
+        "base": ["-m", "litigation.tracker", "daily"],
+        "desc": "BSE legal filings + refresh hot cases + rolling web discovery; WhatsApp stage-change alerts.",
+    },
+    "litigation_sweep": {
+        "label": "Upcoming-week legal sweep",
+        "group": "Litigation",
+        "base": ["-m", "litigation.tracker", "sweep", "--days", "7", "--top", "60"],
+        "desc": "Themed court/regulator web sweep + top-60 F&O discovery for rulings due in 7 days (~30-60 min).",
+    },
+    "litigation_casestudy": {
+        "label": "Yes Bank case study",
+        "group": "Litigation",
+        "base": ["-m", "litigation.tracker", "casestudy"],
+        "desc": "Point-in-time replay of the AT1 verdict with real NSE option prices.",
     },
     "backtester": {
         "label": "Backtester",

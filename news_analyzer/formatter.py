@@ -85,7 +85,8 @@ def _build_part(recs: list[dict], run_date: str, part: int, total: int) -> str:
     hdr = f"*NEWS PICKS  {run_date}*"
     if total > 1:
         hdr += f"  (Part {part}/{total})"
-    lines += [hdr, "_Fundamental + news catalyst analysis  |  Ollama AI_", ""]
+    from news_analyzer.llm import label as _llm_label
+    lines += [hdr, f"_Fundamental + news catalyst analysis  |  {_llm_label()}_", ""]
 
     for i, rec in enumerate(recs, 1):
         clean   = rec.get("clean", rec["symbol"].replace(".NS","").replace(".BO",""))
@@ -150,7 +151,8 @@ def format_scout_messages(picks: list[dict], label: str, tag: str,
     if not picks:
         return []
     run_date = run_date or date.today().strftime("%d %b %Y")
-    subtitle = subtitle or "Ollama AI"
+    from news_analyzer.llm import label as _llm_label
+    subtitle = subtitle or _llm_label()
 
     lines = [f"*{label}  {run_date}*", f"_{subtitle}_", ""]
     for i, pick in enumerate(picks, 1):

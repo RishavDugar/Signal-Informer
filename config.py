@@ -123,6 +123,30 @@ SCHEDULE_TZ     = os.getenv("SCHEDULE_TZ",         "Asia/Kolkata")
 NEWS_SCHEDULE_HOUR   = int(os.getenv("NEWS_SCHEDULE_HOUR",   "7"))
 NEWS_SCHEDULE_MINUTE = int(os.getenv("NEWS_SCHEDULE_MINUTE", "0"))
 
+# ── LLM provider toggle ───────────────────────────────────────────────────────
+# Which model does ALL analysis (news picks, scout lenses, research listener,
+# litigation tracker):
+#   "claude" — Claude via the Claude Code CLI in headless mode (`claude -p`),
+#              authenticated with the subscription you're logged into on this
+#              machine (Pro/Max). NO API key and no per-token billing; usage
+#              counts against the plan's normal limits. Default.
+#   "ollama" — the local Ollama model (free, offline, slower, weaker).
+# Flip it here, in .env (LLM_PROVIDER=ollama), or from the dashboard Config page.
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "claude").strip().lower()
+# Claude model alias or full id passed to `claude --model` ("sonnet", "opus",
+# "haiku", or e.g. "claude-sonnet-5-5").
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "sonnet").strip()
+# Path to the claude executable. Empty = auto-discover (PATH, ~/.local/bin, npm,
+# then the newest VS Code extension's bundled native binary).
+CLAUDE_CLI = os.getenv("CLAUDE_CLI", "").strip()
+# Per-call wall-clock budget (s). Web-research calls (litigation) take ~30-120s.
+CLAUDE_TIMEOUT = int(os.getenv("CLAUDE_TIMEOUT", "600"))
+# Max concurrent `claude -p` processes (keeps us polite to the plan's rate limits).
+CLAUDE_MAX_PARALLEL = int(os.getenv("CLAUDE_MAX_PARALLEL", "3"))
+# If a Claude call fails (plan usage limit hit, logged out, network), retry the
+# same prompt on local Ollama instead of failing the run.
+LLM_FALLBACK = os.getenv("LLM_FALLBACK", "true").lower() == "true"
+
 # Ollama (local inference)
 OLLAMA_HOST  = os.getenv("OLLAMA_HOST",  "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "")  # empty = auto-detect best model by score
@@ -144,6 +168,45 @@ SCOUT_DEDUP_DAYS = int(os.getenv("SCOUT_DEDUP_DAYS", "5"))  # days before re-sur
 SCORECARD_DAYS = int(os.getenv("SCORECARD_DAYS", "30"))
 # Weekday the weekly WhatsApp scorecard is sent (0=Mon .. 6=Sun). Default 4=Fri.
 SCORECARD_WEEKDAY = int(os.getenv("SCORECARD_WEEKDAY", "4"))
+
+# ── Litigation tracker ────────────────────────────────────────────────────────
+# Discovers pending court / tribunal / regulatory cases against listed companies,
+# scores whether a ruling could move the stock, tracks stage changes (hearing →
+# judgment reserved → listed for pronouncement → decided) and suggests a
+# short-dated derivatives structure for the event. See litigation/ package.
+LITIGATION_ENABLED = os.getenv("LITIGATION_ENABLED", "true").lower() == "true"
+# Universe: "fno" (NSE F&O stocks — the ones you can actually trade options on)
+# or "db" (every active stock in the local DB).
+LITIGATION_UNIVERSE = os.getenv("LITIGATION_UNIVERSE", "fno").strip().lower()
+# A case is "material" when the money at stake ≥ this fraction of market cap,
+# or the LLM rates its price impact ≥ LITIGATION_MIN_MOVE.
+LITIGATION_MATERIALITY = float(os.getenv("LITIGATION_MATERIALITY", "0.02"))
+LITIGATION_MIN_MOVE = float(os.getenv("LITIGATION_MIN_MOVE", "0.05"))
+# Web-researched discovery is rolling: this many symbols (stalest first) per run,
+# so the whole F&O universe is re-scanned roughly weekly without a usage spike.
+LITIGATION_DISCOVERY_PER_RUN = int(os.getenv("LITIGATION_DISCOVERY_PER_RUN", "40"))
+LITIGATION_REDISCOVER_DAYS = int(os.getenv("LITIGATION_REDISCOVER_DAYS", "7"))
+# What the technical pipeline does with a BUY/SELL signal on a stock that has a
+# material case at the judgment-reserved / listed-for-pronouncement stage:
+#   "flag" — keep it, add a ⚖️ legal-risk line (default)
+#   "skip" — drop it from the alert
+#   "off"  — ignore litigation entirely
+LITIGATION_GATE = os.getenv("LITIGATION_GATE", "flag").strip().lower()
+# Evening tracker run (catches the next day's pronouncement lists + today's rulings).
+LITIGATION_SCHEDULE_HOUR = int(os.getenv("LITIGATION_SCHEDULE_HOUR", "20"))
+LITIGATION_SCHEDULE_MINUTE = int(os.getenv("LITIGATION_SCHEDULE_MINUTE", "30"))
+# WhatsApp group for legal alerts + check reminders (defaults to the signal group).
+# Sent only when the bridge is already up — never auto-starts it (litigation.db.wa_send).
+LITIGATION_GROUP = os.getenv("LITIGATION_GROUP", "") or WHATSAPP_SIGNAL_GROUP
+# Check-queue reminder slots (IST, HH:MM): MORNING = before the open / court sits
+# (same-day hearings, weekly status checks); EVENING = after the next day's cause
+# lists are usually up (listed? reserved judgment coming? today's order?).
+LITIGATION_MORNING = os.getenv("LITIGATION_MORNING", "09:00")
+LITIGATION_EVENING = os.getenv("LITIGATION_EVENING", "19:30")
+# WhatsApp the due checks at those times (sent by the always-on research listener).
+LITIGATION_REMINDERS = os.getenv("LITIGATION_REMINDERS", "true").lower() == "true"
+# Link included in reminders for attaching downloaded files.
+LITIGATION_DASHBOARD_URL = os.getenv("LITIGATION_DASHBOARD_URL", "http://127.0.0.1:5500/#litigation")
 
 # Ensure directories exist at import time
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)

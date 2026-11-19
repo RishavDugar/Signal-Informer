@@ -35,7 +35,7 @@ import requests
 
 from config import OLLAMA_GEN_TIMEOUT, OLLAMA_THINK_TIMEOUT
 from data.stocks_list import NSE_500
-from news_analyzer.ollama_client import generate
+from news_analyzer.llm import generate
 from utils.logger import get_logger
 
 log = get_logger("web_scout")

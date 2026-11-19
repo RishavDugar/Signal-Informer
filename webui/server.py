@@ -12,6 +12,7 @@ from flask import Flask, jsonify, render_template, request
 from webui import jobs, queries
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 60 * 1024 * 1024   # court PDFs can be large
 
 
 # ── Page ───────────────────────────────────────────────────────────────────────
@@ -52,6 +53,55 @@ def api_setups():
 @app.get("/api/hft")
 def api_hft():
     return jsonify(queries.hft_results())
+
+
+@app.get("/api/litigation")
+def api_litigation():
+    days = int(request.args.get("days", 7))
+    return jsonify(queries.litigation(days=days))
+
+
+def _upload():
+    f = request.files.get("file")
+    if not f or not f.filename:
+        return None, None
+    return f.filename, f.read()
+
+
+@app.post("/api/litigation/case/<int:case_id>/attach")
+def api_litigation_attach(case_id: int):
+    """Attach a downloaded court document to one case → Claude reads it."""
+    name, data = _upload()
+    if not name:
+        return jsonify({"error": "no file"}), 400
+    try:
+        from litigation.attachments import analyze_for_case, save_upload
+        path = save_upload(name, data, case_id)
+        return jsonify(analyze_for_case(case_id, path))
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.post("/api/litigation/scan")
+def api_litigation_scan():
+    """Attach a whole cause list / order list → checked against every tracked case."""
+    name, data = _upload()
+    if not name:
+        return jsonify({"error": "no file"}), 400
+    try:
+        from litigation.attachments import save_upload, scan_document
+        return jsonify(scan_document(save_upload(name, data, None)))
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.post("/api/litigation/check/done")
+def api_litigation_check_done():
+    body = request.get_json(silent=True) or {}
+    from litigation import db as ldb
+    ldb.mark_check(str(body.get("key")), body.get("case_id"), bool(body.get("done", True)),
+                   str(body.get("note") or "marked in dashboard"))
+    return jsonify({"ok": True})
 
 
 @app.get("/api/outcomes")

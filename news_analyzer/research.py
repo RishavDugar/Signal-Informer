@@ -35,8 +35,8 @@ from news_analyzer.fetcher import (
 )
 from news_analyzer.formatter import _price_line, _technical_line
 from news_analyzer.web_scout import _REDDIT_FEEDS
-from news_analyzer.ollama_client import (
-    available_model, ensure_available, generate, warmup_model,
+from news_analyzer.llm import (
+    available_model, ensure_available, generate, label as llm_label, warmup_model,
 )
 from news_analyzer.pipeline import _enrich_technicals
 from utils.logger import get_logger
@@ -388,7 +388,7 @@ def _news_block(sym: dict) -> str | None:
     """A short LLM-written news briefing for the stock, or None if no stock-
     specific articles were found, Ollama is unavailable, or it produced nothing."""
     if not ensure_available():
-        log.warning(f"research[{sym['clean']}]: Ollama unavailable — no insights")
+        log.warning(f"research[{sym['clean']}]: LLM unavailable — no insights")
         return None
 
     relevant = _relevant_articles(sym, _fetch_symbol_news(sym))
@@ -490,7 +490,7 @@ def research_symbol(query: str, keywords: list[str] | None = None) -> str:
     else:
         body.append(f"❌ No recent news insights found for {display}.")
 
-    body += ["", "_On-demand research · price/technicals + Ollama AI news read. "
+    body += ["", f"_On-demand research · price/technicals + {llm_label()} news read. "
                  "Not investment advice._"]
 
     log.info(f"research: DONE  symbol={sym['symbol']}  "

@@ -1,0 +1,277 @@
+{
+ "model": "Claude Sonnet",
+ "lot": 31100,
+ "generated": "2026-11-18T20:04:21",
+ "timeline": [
+  {
+   "date": "2020-03-14",
+   "label": "Write-down",
+   "what": "Administrator writes \u20b98,415 cr AT1 bonds to zero, a day after the final scheme took effect.",
+   "price": null
+  },
+  {
+   "date": "2023-01-20",
+   "label": "Bombay HC quashes write-down",
+   "what": "Stock \u22122.0% that day, \u22128.1% next session (with weak Q3).",
+   "price": 19.75
+  },
+  {
+   "date": "2023-03-03",
+   "label": "SC stays HC order",
+   "what": "Appeal pending; risk looks parked.",
+   "price": 16.85
+  },
+  {
+   "date": "2025-02-19",
+   "label": "SLPs admitted",
+   "what": "Final hearing track.",
+   "price": 18.0
+  },
+  {
+   "date": "2026-02-26",
+   "label": "Judgment reserved",
+   "what": "Tracker flips the case HOT \u2192 legal-risk flag on every YESBANK signal.",
+   "price": 21.04
+  },
+  {
+   "date": "2026-05-20",
+   "label": "Reserved again",
+   "what": "Bench asks for Cabinet papers \u2014 signals scrutiny of the scheme approval.",
+   "price": 22.0
+  },
+  {
+   "date": "2026-10-14",
+   "label": "T-1",
+   "what": "Options priced only \u00b15.3% to Oct expiry \u2014 no event premium.",
+   "price": 21.2
+  },
+  {
+   "date": "2026-10-15",
+   "label": "Verdict: appeals dismissed",
+   "what": "Open \u20b921.25, low \u20b916.96 (\u221220%), close \u20b918.12 (\u221214.5%).",
+   "price": 18.12
+  },
+  {
+   "date": "2026-10-30",
+   "label": "Drift",
+   "what": "\u20b915.15 \u2014 a further \u221216% in 11 sessions.",
+   "price": 15.15
+  }
+ ],
+ "assessments": [
+  {
+   "asof": "2026-02-26",
+   "stage": "Judgment reserved",
+   "price": 21.04,
+   "implied_move": 0.05275665399239543,
+   "materiality": 0.12748301216953936,
+   "p_adverse": 0.4,
+   "move_adverse": -0.12,
+   "move_favourable": 0.04,
+   "expected_abs_move": 0.07200000000000001,
+   "rationale": "The HC reasoning on the omitted clause and post-scheme timing is textually strong for bondholders. The SC stay, leave granted, and RBI/Union backing, plus public-interest concern over bank resolution, favour the appellants. Adverse outcome is a meaningful minority risk with a large capital hit (~250 bps CET1) and likely dilution. Favourable outcome is partly priced in, so the upside is limited.",
+   "confidence": "low",
+   "trade_idea": "Enter when the case is LISTED FOR PRONOUNCEMENT (day before); LONG STRADDLE 21 2026-03-30 @\u2248\u20b91.11 \u2248 \u20b934,521/lot \u2014 direction unclear (P adverse 40%) but our expected |move| 7% vs \u00b15.3% priced."
+  },
+  {
+   "asof": "2026-05-20",
+   "stage": "Re-reserved after Cabinet-papers request",
+   "price": 22.0,
+   "implied_move": 0.030909090909090907,
+   "materiality": 0.12192012239824052,
+   "p_adverse": 0.4,
+   "move_adverse": -0.14,
+   "move_favourable": 0.04,
+   "expected_abs_move": 0.08000000000000002,
+   "rationale": "The HC reasoning on text and timing is strong, and the Bench's request for Cabinet records signals real doubt on process. Still, the SC stayed the order, the state and RBI defend the write-down, and courts are cautious about unwinding a 2020 rescue. Adverse outcome means a ~250 bps CET1 hit with dilution risk, and the market has priced little of it. Favourable outcome mostly removes an overhang.",
+   "confidence": "low",
+   "trade_idea": "Enter when the case is LISTED FOR PRONOUNCEMENT (day before); LONG STRADDLE 22 2026-05-26 @\u2248\u20b90.68 \u2248 \u20b921,148/lot \u2014 direction unclear (P adverse 40%) but our expected |move| 8% vs \u00b13.1% priced."
+  },
+  {
+   "asof": "2026-10-14",
+   "stage": "T-1: listed for pronouncement (if seen)",
+   "price": 21.2,
+   "implied_move": 0.05283018867924529,
+   "materiality": 0.12652087718082652,
+   "p_adverse": 0.4,
+   "move_adverse": -0.14,
+   "move_favourable": 0.06,
+   "expected_abs_move": 0.092,
+   "rationale": "The HC reasoning on the omitted clause and timing is textually strong, but the SC stay, admission of the SLPs and the state-backed appellants favour a policy-driven reversal. The Bench's request for Cabinet papers suggests it is probing the scheme's intent. Adverse outcome means ~250 bps CET1 hit and a likely raise, so the downside is larger than the upside, which is mostly relief already partly priced in.",
+   "confidence": "low",
+   "trade_idea": "Listed \u2014 enter at next open; LONG STRADDLE 21 2026-10-27 @\u2248\u20b91.12 \u2248 \u20b934,832/lot \u2014 direction unclear (P adverse 40%) but our expected |move| 9% vs \u00b15.3% priced."
+  }
+ ],
+ "trades": [
+  {
+   "name": "T-1: buy 21 PE (Oct)",
+   "entry": "14 Oct close",
+   "exit": "15 Oct close",
+   "px_in": 0.48,
+   "px_out": 2.86,
+   "multiple": 5.958333333333333,
+   "pnl_lot": 74018.0
+  },
+  {
+   "name": "T-1: buy 21 PE (Oct), hold to expiry",
+   "entry": "14 Oct close",
+   "exit": "27 Oct expiry",
+   "px_in": 0.48,
+   "px_out": 5.37,
+   "multiple": 11.1875,
+   "pnl_lot": 152079.00000000003
+  },
+  {
+   "name": "T-1: buy 20 PE (Oct)",
+   "entry": "14 Oct close",
+   "exit": "15 Oct close",
+   "px_in": 0.17,
+   "px_out": 2.0,
+   "multiple": 11.76470588235294,
+   "pnl_lot": 56913.0
+  },
+  {
+   "name": "T-1: buy 20 PE (Oct), hold to expiry",
+   "entry": "14 Oct close",
+   "exit": "27 Oct expiry",
+   "px_in": 0.17,
+   "px_out": 4.54,
+   "multiple": 26.705882352941174,
+   "pnl_lot": 135907.0
+  },
+  {
+   "name": "T-1: long 21 straddle (Oct)",
+   "entry": "14 Oct close",
+   "exit": "15 Oct close",
+   "px_in": 1.12,
+   "px_out": 2.96,
+   "multiple": 2.642857142857143,
+   "pnl_lot": 57223.99999999999
+  },
+  {
+   "name": "Same day: buy 21 PE at 15 Oct open",
+   "entry": "15 Oct open",
+   "exit": "15 Oct close",
+   "px_in": 0.49,
+   "px_out": 2.86,
+   "multiple": 5.836734693877551,
+   "pnl_lot": 73707.0
+  },
+  {
+   "name": "Reactive drift: short Oct futures",
+   "entry": "16 Oct open",
+   "exit": "27 Oct expiry",
+   "px_in": 17.65,
+   "px_out": 15.9,
+   "multiple": null,
+   "pnl_lot": 54424.99999999994
+  },
+  {
+   "name": "Blind: roll ~5% OTM monthly puts from 26 Feb (8 legs)",
+   "entry": "26 Feb",
+   "exit": "27 Oct",
+   "px_in": 1.4100000000000001,
+   "px_out": 5.45,
+   "multiple": 3.8652482269503543,
+   "pnl_lot": 125644.0
+  }
+ ],
+ "blind_roll": {
+  "legs": [
+   {
+    "entry": "2026-02-26",
+    "expiry": "2026-03-30",
+    "strike": 19.0,
+    "spot": 21.04,
+    "cost": 0.08,
+    "value": 1.77
+   },
+   {
+    "entry": "2026-03-30",
+    "expiry": "2026-04-28",
+    "strike": 16.0,
+    "spot": 17.25,
+    "cost": 0.31,
+    "value": 0.01
+   },
+   {
+    "entry": "2026-04-29",
+    "expiry": "2026-05-26",
+    "strike": 19.0,
+    "spot": 20.27,
+    "cost": 0.17,
+    "value": 0.01
+   },
+   {
+    "entry": "2026-05-27",
+    "expiry": "2026-06-30",
+    "strike": 21.0,
+    "spot": 22.76,
+    "cost": 0.17,
+    "value": 0.01
+   },
+   {
+    "entry": "2026-07-01",
+    "expiry": "2026-07-28",
+    "strike": 23.0,
+    "spot": 24.58,
+    "cost": 0.37,
+    "value": 0.28
+   },
+   {
+    "entry": "2026-07-29",
+    "expiry": "2026-08-25",
+    "strike": 21.0,
+    "spot": 22.84,
+    "cost": 0.1,
+    "value": 0.01
+   },
+   {
+    "entry": "2026-08-26",
+    "expiry": "2026-09-29",
+    "strike": 21.0,
+    "spot": 22.38,
+    "cost": 0.1,
+    "value": 0.01
+   },
+   {
+    "entry": "2026-09-30",
+    "expiry": "2026-10-27",
+    "strike": 19.0,
+    "spot": 20.95,
+    "cost": 0.11,
+    "value": 3.35
+   }
+  ],
+  "total_cost": 1.4100000000000001,
+  "total_value": 5.45,
+  "pnl_lot": 125644.0,
+  "multiple": 3.8652482269503543
+ },
+ "filings": {
+  "announcements": 728,
+  "legal_flagged": 72,
+  "at1_mentions": [
+   {
+    "dt": "2023-03-04",
+    "subject": "Disclosure Under Regulation 30 And Other Applicable Provisions Of The SEBI (Listing Obligations And Disclosure Requirements) Regulations, 20"
+   },
+   {
+    "dt": "2023-01-20",
+    "subject": "Disclosure Under Regulation 30 Of The SEBI (Listing Obligations And Disclosure Requirements) Regulations, 2015 Disclosure under Regulation 3"
+   }
+  ]
+ },
+ "gate": {
+  "setup_signals_fired": 289,
+  "signal_days": 51
+ },
+ "verdict": "Partly. The tracker would have flagged YESBANK from 26 Feb 2026 (judgment reserved; \u20b98,415 cr = 13% of market cap) \u2014 7.5 months before the drop \u2014 and put a legal-risk line on every technical signal. Claude Sonnet rated the ruling 40% likely to go against the bank at reservation and 40% at T-1, with an adverse move of -14%. The options market priced only \u00b15.3% to expiry, so long puts were cheap: the 21 PE bought at T-1 returned 6.0\u00d7 by the verdict close. The catch is TIMING \u2014 the exact date is only knowable from the Supreme Court's next-day pronouncement list (captcha-gated; needs a manual check or a legal-news hit). Without it, rolling OTM puts from reservation returned 3.87\u00d7 on premium paid. The post-verdict drift (short futures from the next open) worked without any foresight.",
+ "caveats": [
+  "One event \u2014 this is a case study, not a backtest; base rates for SC outcomes are not established here.",
+  "The LLM may have absorbed post-as-of information in training; the prompt forbids it but can't guarantee it.",
+  "Settlement/close prices ignore bid-ask spread, STT and slippage; YESBANK options are liquid near ATM but far OTM fills are worse.",
+  "Lot size held at today's 31,100 for all legs.",
+  "The blind roll's March leg (19 PE \u2192 1.77) paid off on an unrelated March sell-off, not the case; excluding it the roll still returned ~2.8\u00d7 on premium."
+ ]
+}
